@@ -1,0 +1,23 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+% Dedication page
+\begin{dedication}
+	\vspace*{1in}
+	\begin{center}
+    \emph{To my friends and family} \\
+    \emph{For bearing through it all with me.}
+	\end{center}
+	\vspace*{1in}
+	\begin{center}
+    \emph{And especially, to my mother, Janice} \\
+    \emph{For guiding me in all aspects of life.}
+	\end{center}
+\end{dedication}
+
+\end{document}

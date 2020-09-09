@@ -1,0 +1,16 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Introduction}
+
+\begin{itemize}
+  \item Introduction to \gls{power}/\gls{power10}.
+  \item Introduction to \gls{mma} as an extension to \gls{vsx}/\gls{simd}.
+\end{itemize}
+
+\end{document}
