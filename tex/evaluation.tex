@@ -1,0 +1,44 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Evaluation}
+\section{Experimental Methodology}
+\begin{itemize}
+  \item
+    Machine info:
+    \begin{itemize}
+      \item CPU used (P10 obviously).
+      \item Frequencies (if we can?).
+      \item Cache properties (hopefully available).
+      \item Main memory properties.
+    \end{itemize}
+  \item
+    Experimental procedure.
+    \begin{itemize}
+      \item Run count.
+      \item Run order.
+    \end{itemize}
+\end{itemize}
+
+\section{Experimental Results}
+\begin{itemize}
+  \item Comparison between:
+  \begin{itemize}
+    \item Matmul with default llvm code path.
+    \item Matmul with default llvm intrinsic.
+    \item Matmul with llvm intrinsic + mma.
+    \item Matmul with libraries.
+    \item Matmul on GPU?
+  \end{itemize}
+\end{itemize}
+
+\begin{itemize}
+  \item Small matrices vs big matrices (call costs).
+\end{itemize}
+
+\end{document}
