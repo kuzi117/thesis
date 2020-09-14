@@ -112,6 +112,13 @@ mincitenames=1,maxcitenames=2%
 \def\etc{\emph{etc}\onedot} \def\vs{vs\onedot}
 \def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
 \def\etal{\emph{et al}\onedot}
+\newcommand{\rcha}[1]{Chapter~\ref{cha:#1}}
+\newcommand{\rsec}[1]{Section~\ref{sec:#1}}
+\newcommand{\rtab}[1]{Table~\ref{tab:#1}}
+\newcommand{\rfig}[1]{Figure~\ref{fig:#1}}
+\newcommand{\rlst}[1]{Listing~\ref{lst:#1}}
+\newcommand{\ralg}[1]{Algorithm~\ref{alg:#1}}
+\newcommand{\rdef}[1]{Definition~\ref{def:#1}}
 \makeatother
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -229,6 +236,10 @@ mincitenames=1,maxcitenames=2%
 % See FGSR requirements for any additional requirements on the body
 
 \subfile{\main/tex/introduction.tex}
+\subfile{\main/tex/related.tex}
+\subfile{\main/tex/matmul.tex}
+\subfile{\main/tex/mma.tex}
+\subfile{\main/tex/evaluation.tex}
 \subfile{\main/tex/conclusion.tex}
 
 % Renaming the bibliography: See http://tex.stackexchange.com/questions/12597/renaming-the-bibliography-page-using-bibtex
