@@ -12,7 +12,33 @@
 \begin{itemize}
   \item Introduction to \gls{power}/\gls{power10}.
   \item Introduction to \gls{mma} as an extension to \gls{vsx}/\gls{simd}.
-  \item Introduction to matrix multiplication, optimization (point to \rcha{related}).
+  \item Introduction to matrix multiplication, optimisation (point to \rcha{related}).
 \end{itemize}
 
+\section{IBM Power}
+\Gls{ibm} has decades of history in computing, tracing their roots back to the 1880s; first incorporated as the Computing-Tabulating-Recording Company in 1911, it was eventually renamed to \gls{ibm} in 1924~\autocite{ibmarchive}.
+Throughout this history, \gls{ibm} has made a point of innovating and pioneering numerous technologies in hardware, software, and the intermingling of the two.
+One such innovation was the \gls{power} \gls{isa}.
+
+The \gls{power} \gls{isa} itself was first announced in 1990 along with its primary instantiatiaion in the \gls{ibm} System/6000~\autocite{montoye1990design}.
+The System/6000, a \gls{risc}, implemented new features such as register renaming and out-of-order execution via the Tomasulo algorithm~\autocite{tomasulo1967efficient}, previously available only in the \gls{ibm} System/360, for the first time in a microprocessor.
+
+Years later, in August 2020, \gls{ibm} remains competitive in its technology offerings with the announcement of the tenth generation of the \gls{power} \gls{isa}, aptly named \gls{power10}.
+
+\subsection{Matrix Math Assist}
+\label{sec:mmaintro}
+Flynn characterised a \gls{simd} processor as having the ability to apply a single ``master'' instruction over a vector of related operands~\autocite{flynn1972some}.
+Such an architecture is desirable for its ability to increase the throughput of repeated operations through data level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
+This process of increasing the throughput of loops through what is essentially a reduction in the number of instructions executed has developed into what is now the well-known and well-studied process of ``vectorisation''.
+
+Initially, the \gls{power} architecture implemented its \gls{simd} capabilities through the \gls{altivec} standard which described a \gls{simd} instruction set for floating point and integer values.
+\Gls{altivec} itself was designed through a collaboration between \gls{ibm}, Apple, and Motorola though it was not first instantiated by IBM until \gls{power}6 (\gls{power} \gls{isa} v2.03).
+Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
+Both continue to exist to this day in the most recent version of the \gls{isa} (\gls{power} \gls{isa} v3.1), though many refer to them collectively under the second name, \gls{vsx}.
+
+As part of the new \gls{power10}'s offerings, a new facility, dubbed \gls{mma}, was implemented into the \gls{isa}.
+This feature continues \gls{ibm}'s commitment to providing cutting edge hardware for the software needs of the current era.
+\gls{mma} is an optional addition to these preexisting \gls{simd} facilities.
+
+\subsection{Matrix Multiplication}
 \end{document}
