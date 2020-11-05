@@ -1,32 +1,78 @@
+% A
+\longnewglossaryentry{altivec}{name={AltiVec},text={AltiVec}}{
+  A \gls{simd} instruction set designed for use with single-precision floating point and integer values.
+}
+
+% C
+\newacronym[
+  description={
+    The number of CPU clock cycles required to complete an instruction.
+    Often used as a performance metric where it refers to the ratio of total instructions executed to total clock cycles.
+  }
+]{cpi}{CPI}{Cycles Per Instruction}
+
 % H
 \newacronym[
-  description={The area of computing concerned with performing large scale calculations in the most efficient way possible through the minimization of required time and resources.}
+  description={The area of computing concerned with performing large scale computations in the most efficient way possible through the minimization of required time and resources.}
 ]{hpc}{HPC}{High Performance Computing}
 
 % I
 \newacronym[
+  description={An American multinational technology company with a long history in the computing domain.}
+]{ibm}{IBM}{International Business Machines}
+\newacronym[
+  description={A language-agnostic representation of a program encoding all of the semantics of the original program and potentially annotated with debugging and optimisation information.}
+]{ir}{IR}{Intermediate Representation}
+\newacronym[
   description={The abstract model of a computer, including registers, supported datatypes, instructions, \etc}
 ]{isa}{ISA}{Instruction Set Architecture}
 
+% L
+\longnewglossaryentry{llvm}{name={LLVM},text={LLVM}}{
+  The name of an umbrella project of compiler technologies including an \gls{ir}, debugger, a variety of machine backends, \etc
+  May also be used to refer specifically to the combination of optimiser and backend as part of the \gls{lowering} process.
+}
+\longnewglossaryentry{lowering}{name={Lowering},text={lowering}}{
+  The process of transforming one representation of a program to another representation that encodes the same semantics but is closer to a final product.
+  Typically begins with source code in a high level language and ends with binary machine code; transitional steps often include a language agnostic \gls{ir} and an \gls{isa} specific assembly listing.
+}
+
 % M
 \newacronym[
-  description={An extension to the \gls{power} \gls{isa}'s \gls{vsx} introduced in \gls{power10}}.
+  description={
+    An extension to the \gls{power} \gls{isa}'s \gls{vsx} facility introduced in \gls{power10}.
+    See \rsec{mmaintro}.
+  }
 ]{mma}{MMA}{Matrix Math Assist}
 
 % P
 \longnewglossaryentry{power}{name={POWER},text={POWER}}{
-  IBM's high performance computing architecture built for \gls{hpc}.
+  \gls{ibm}'s high performance computing architecture built for \gls{hpc} and other applications.
 }
-\longnewglossaryentry{power10}{name={POWER10},text={POWER10}}{%
-  The tenth generation of IBM's \gls{power} architecture announced in August 2020.
+\longnewglossaryentry{power10}{name={POWER10},text={POWER10}}{
+  The tenth generation of \gls{ibm}'s \gls{power} architecture announced in August 2020.
 }
+
+% R
+\newacronym[
+  description={A computer focused on a small, simple, and optimized instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.}
+]{risc}{RISC}{Reduced Instruction Set Computer}
 
 % S
 \newacronym[
   description={Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.}
 ]{simd}{SIMD}{Single Instruction, Multiple Data}
+\longnewglossaryentry{spill}{name={Spill},text={spill}}{
+  The act of storing an in-use register to memory temporarily in order to free the register for another value.
+}
 
 % V
+\longnewglossaryentry{vectorisation}{name={Vectorisation},text={vectorisation}}{
+  The process of transforming a loop in order to perform multiple iterations simultaneously in a \gls{simd} architecture.
+}
 \newacronym[
-  description={An extension to the \gls{power} \gls{isa} enabling greater \gls{simd} capabilities.}
+  description={An extension to the \gls{power} \gls{isa} implementing the \gls{altivec} standard.}
+]{vmx}{VMX}{Vector Multimedia Extension}
+\newacronym[
+  description={An extension to the \gls{power} \gls{vmx} enabling even greater \gls{simd} capabilities.}
 ]{vsx}{VSX}{Vector Scalar Extension}
