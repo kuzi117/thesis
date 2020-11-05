@@ -1,5 +1,6 @@
 PREFIX=thesis
 SUBFILES=$(wildcard tex/*)
+BIB=refs.bib
 LATEX=pdflatex -halt-on-error
 BIBTEX=bibtex
 
@@ -7,7 +8,7 @@ all: $(PREFIX).pdf
 
 pdf: $(PREFIX).pdf
 
-%.pdf: %.tex $(SUBFILES)
+%.pdf: %.tex $(SUBFILES) $(BIB)
 	$(LATEX)	$(PREFIX)
 	$(BIBTEX)	$(PREFIX)
 	$(LATEX)	$(PREFIX)
