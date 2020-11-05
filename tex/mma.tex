@@ -13,4 +13,24 @@
     \item Comparison from MMA to other \gls{isa} analogues (SSE-x86, SVE-ARM).
 \end{itemize}
 
+\section{MMA Method Implementation}
+\todo{find a better section name}
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c | c | c | c |}
+    \hline
+    Name & Input Type & Output Type & Input Dim. & Smallest Computation \\\hline
+    \code{xvi4ger8}  & \code{i4}     & \code{i32}    & $4 \times 8$ & \matmul{4}{8}{4} \\\hline
+    \code{xvi8ger4}  & \code{i8}     & \code{i32}    & $4 \times 4$ & \matmul{4}{4}{4} \\\hline
+    \code{xvi16ger2} & \code{i16}    & \code{i32}    & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
+    \code{xvf16ger2} & \code{half}   & \code{float}  & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
+    \code{xvf32ger}  & \code{float}  & \code{float}  & $4 \times 1$ & \matmul{4}{1}{4} \\\hline
+    \code{xvf64ger}  & \code{double} & \code{double} & $4 \times 1$ & \matmul{4}{1}{2} \\\hline
+  \end{tabular}
+  \caption[MMA Instruction Description]{A description of \gls{mma} instructions investigated. Input dimension is transposed for second argument.\footnotemark}
+  \label{tab:mmainsts}
+\end{table}
+\footnotetext{\todo{Ensure this is on the same page as the table.}This does not represent all \gls{mma} instructions; each instruction has a ``family'' of variations but the inputs do not differ.}
+
+Each of these instructions uses a single 128-bit vector register as an operand, with the exception of \code{xvf64ger} which uses two registers to represent $A$.
 \end{document}
