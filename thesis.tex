@@ -36,13 +36,18 @@
 \usepackage{multirow} % For multirow/multicolumn cells in a table. See https://en.wikibooks.org/wiki/LaTeX/Tables#Columns_spanning_multiple_rows
 \usepackage{graphicx}
 %\usepackage{subcaption} % A package that can be used to create sub-figures
-\usepackage{enumitem} % for more control over enumerate
-\usepackage{mdwlist}	% the 'note' environment
+\usepackage[inline]{enumitem} % for more control over enumerate
+% \usepackage{mdwlist}	% the 'note' environment; disabled because it conflicts with enumerate*. If we need note, we'll need to add something else.
 \usepackage{xspace}
 \usepackage{xcolor}
 \usepackage{csquotes} % Also used with biblatex
 \usepackage{xmpincl} % Seems to be needed when converting to PDF/A,
                      % particularly on Macs
+
+% (Added by Braedy)
+\usepackage{listings} % code listings
+\usepackage{soul} % strikethrough
+\usepackage[all]{hypcap} % Fixes hyperref linking to the bottom of a figure.
 
 %%%%%%%%%%%%%%%
 % biblatex    %
@@ -105,6 +110,7 @@ mincitenames=1,maxcitenames=2%
 \makeatletter
 \DeclareRobustCommand\onedot{\futurelet\@let@token\@onedot}
 \def\@onedot{\ifx\@let@token.\else.\null\fi\xspace}
+\makeatother
 
 \def\eg{\emph{e.g}\onedot} \def\Eg{\emph{E.g}\onedot}
 \def\ie{\emph{i.e}\onedot} \def\Ie{\emph{I.e}\onedot}
@@ -112,14 +118,39 @@ mincitenames=1,maxcitenames=2%
 \def\etc{\emph{etc}\onedot} \def\vs{vs\onedot}
 \def\wrt{w.r.t\onedot} \def\dof{d.o.f\onedot}
 \def\etal{\emph{et al}\onedot}
-\newcommand{\rcha}[1]{Chapter~\ref{cha:#1}}
-\newcommand{\rsec}[1]{Section~\ref{sec:#1}}
-\newcommand{\rtab}[1]{Table~\ref{tab:#1}}
-\newcommand{\rfig}[1]{Figure~\ref{fig:#1}}
-\newcommand{\rlst}[1]{Listing~\ref{lst:#1}}
-\newcommand{\ralg}[1]{Algorithm~\ref{alg:#1}}
-\newcommand{\rdef}[1]{Definition~\ref{def:#1}}
-\makeatother
+
+% Set the automatic text for autoref.
+\def\sectionautorefname{Section}
+\def\subsectionautorefname{Section}
+\def\tableautorefname{Table}
+
+% Set up autoref convenience commands.
+\newcommand{\rcha}[1]{\autoref{cha:#1}}
+\newcommand{\rsec}[1]{\autoref{sec:#1}}
+\newcommand{\rtab}[1]{\autoref{tab:#1}}
+\newcommand{\rfig}[1]{\autoref{fig:#1}}
+\newcommand{\rlst}[1]{\autoref{lst:#1}}
+\newcommand{\ralg}[1]{\autoref{alg:#1}}
+\newcommand{\rdef}[1]{\autoref{def:#1}}
+
+% Other convenience commands.
+\newcommand{\code}[1]{\lstinline[basicstyle=\ttfamily]|#1|}
+\newcommand{\mat}[3]{$\underset{(#2 \times #3)}{#1}$}
+\newcommand{\matmul}[3]{$\underset{(#1 \times #2)}{A} \times \underset{(#2 \times #3)}{B} = \underset{(#1 \times #3)}{C}$}
+
+% Reviewer nnotation commands.
+\newif\ifcomments
+\commentstrue % Comment out or set \commentsfalse to disable comments.
+\newcommand{\bk}[1]{\ifcomments\textcolor{blue}{([Braedy]: #1)}\fi}
+\newcommand{\jc}[1]{\ifcomments\textcolor{orange}{([João]: #1)}\fi}
+\newcommand{\nelson}[1]{\ifcomments\textcolor{red}{([Nelson]: #1)}\fi}
+\newcommand{\guido}[1]{\ifcomments\textcolor{cyan}{([Guido]: #1)}\fi}
+\newcommand{\kit}[1]{\ifcomments\textcolor{purple}{([Kit]: #1)}\fi}
+\newcommand{\jm}[1]{\ifcomments\textcolor{olive}{([JM]: #1)}\fi}
+\newcommand{\del}[1]{\ifcomments\textcolor{gray}{\st{#1}}\fi}
+\newcommand{\new}[1]{\textcolor{green}{#1}}
+\newcommand{\ed}[1]{\textcolor{violet}{#1}}
+\newcommand{\todo}[1]{\textcolor{magenta}{#1}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Title page and Table of Contents Tweaks %
