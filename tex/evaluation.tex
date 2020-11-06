@@ -48,7 +48,7 @@ For example, when considering \code{xvi4ger8}, the $A$ matrix must have a vertic
 For the $B$ matrix, the restrictions are transposed with the dimensions.
 
 Further restriction comes from the hardware accumulator count.
-Through the magic of an \gls{ir}, it is possible to have ``more'' than eight accumulators simultaneously active, but doing so will necessarily cause a resident accumulator to \gls{spill} to memory during \gls{lowering}.
+Through the magic of an \gls{ir}, it is possible to have more than eight accumulators simultaneously active, but doing so will necessarily cause a resident accumulator to \gls{spill} to memory during \gls{lowering}.
 Therefore, experimentation must also be restricted to eight or less accumulators so as to not cause unneccessary memory operations to confound results.
 With this knowledge in mind, we perform two experiments in order to gain insight into the questions listed above.
 
