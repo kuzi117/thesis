@@ -105,10 +105,10 @@ Given this, the implementation using \gls{mma} will use the whole input in a sin
 \begin{itemize}
   \item Examining only the mma speedups should show an optimal layout using all eight accumulators in some orientation
   \item
-    Comparison between mma and vectorisation of types <32 bit: vectorisation should be slower due to extra/wasted operations since column size doesn't match vector size.
+    Comparison between mma and vectorisation of types $<32$ bit: vectorisation should be slower due to extra/wasted operations since column size doesn't match vector size.
     If mma \emph{is} slower then the cost of the operation is too high while vectorisation could overcome wasted data through pipelining.
   \item
-    Comparison between mma and vectorisation of types >=32 bit: vectorisation should be faster for small accumulator layouts but slower for full accumulator layouts.
+    Comparison between mma and vectorisation of types $\geq 32$ bit: vectorisation should be faster for small accumulator layouts but slower for full accumulator layouts.
     Reference optimal layout size from previous examination.
 \end{itemize}
 
