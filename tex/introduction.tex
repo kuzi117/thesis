@@ -11,34 +11,84 @@
 
 \begin{itemize}
   \item Introduction to \gls{power}/\gls{power10}.
-  \item Introduction to \gls{mma} as an extension to \gls{vsx}/\gls{simd}.
+  \item Introduction to MMA as an extension to VSX/SIMD.
   \item Introduction to matrix multiplication, optimisation (point to \rcha{related}).
 \end{itemize}
+
+\section{SIMD Architecture}
+First introduced as part of the ILLIAC IV~\autocite{barnes1968illiac}, processors capable of \gls{simd} computation were a crucial advancement in high-performance computing history.
+\bk{Join better.}
+Flynn characterised a \gls{simd} processor as having the ability to apply a single ``master'' instruction over a vector of related operands~\autocite{flynn1972some}.
+Such an architecture is desirable for its ability to increase the throughput of repeated operations through data level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
+This process of increasing the throughput of loops, through what is essentially a reduction in the number of instructions executed, has developed into what is now the well-known and well-studied process of ``\gls{vectorisation}''.
 
 \section{IBM Power}
 \Gls{ibm} has decades of history in computing, tracing their roots back to the 1880s; first incorporated as the Computing-Tabulating-Recording Company in 1911, it was eventually renamed to \gls{ibm} in 1924~\autocite{ibmarchive}.
 Throughout this history, \gls{ibm} has made a point of innovating and pioneering numerous technologies in hardware, software, and the intermingling of the two.
 One such innovation was the \gls{power} \gls{isa}.
 
-The \gls{power} \gls{isa} itself was first announced in 1990 along with its primary instantiatiaion in the \gls{ibm} System/6000~\autocite{montoye1990design}.
-The System/6000, a \gls{risc}, implemented new features such as register renaming and out-of-order execution via the Tomasulo algorithm~\autocite{tomasulo1967efficient}, previously available only in the \gls{ibm} System/360, for the first time in a microprocessor.
+The \gls{power} \gls{isa} was first announced in 1990 along with its primary instantiatiaion in the \gls{ibm} System/6000~\autocite{montoye1990design}.
+The System/6000, a \gls{risc}, implemented new features such as register renaming and out-of-order execution via the Tomasulo algorithm~\autocite{tomasulo1967efficient}  for the first time in a microprocessor when it was previously available only in the \gls{ibm} System/360 mainframe.
 
 Years later, in August 2020, \gls{ibm} remains competitive in its technology offerings with the announcement of the tenth generation of the \gls{power} \gls{isa}, aptly named \gls{power10}.
 
-\subsection{Matrix Math Assist}
-\label{sec:mmaintro}
-Flynn characterised a \gls{simd} processor as having the ability to apply a single ``master'' instruction over a vector of related operands~\autocite{flynn1972some}.
-Such an architecture is desirable for its ability to increase the throughput of repeated operations through data level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
-This process of increasing the throughput of loops through what is essentially a reduction in the number of instructions executed has developed into what is now the well-known and well-studied process of ``vectorisation''.
+\subsection{SIMD History in IBM Power}
+Initially, the \gls{power} architecture implemented its \gls{simd} capabilities through a common standard named \gls{altivec}.
+\Gls{altivec} was designed through a collaboration between \gls{ibm}, Apple, and Motorola and described a \gls{simd} instruction set for floating point and integer values.
+This implementation, presented under the name \gls{vmx}, was first instantiated by IBM as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007 despite the standard being presented in 1999~\autocite{tyler1999altivec}.
+\bk{Both Apple and Motorola used AltiVec in the mean time. I can't tell if it's necessary to mention this or if I should just focus on IBM.}
 
-Initially, the \gls{power} architecture implemented its \gls{simd} capabilities through the \gls{altivec} standard which described a \gls{simd} instruction set for floating point and integer values.
-\Gls{altivec} itself was designed through a collaboration between \gls{ibm}, Apple, and Motorola though it was not first instantiated by IBM until \gls{power}6 (\gls{power} \gls{isa} v2.03).
 Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
+\bk{Expand.}
 Both continue to exist to this day in the most recent version of the \gls{isa} (\gls{power} \gls{isa} v3.1), though many refer to them collectively under the second name, \gls{vsx}.
 
-As part of the new \gls{power10}'s offerings, a new facility, dubbed \gls{mma}, was implemented into the \gls{isa}.
-This feature continues \gls{ibm}'s commitment to providing cutting edge hardware for the software needs of the current era.
-\gls{mma} is an optional addition to these preexisting \gls{simd} facilities.
+\subsection{Matrix Math Assist}
+\label{sec:mmaintro}
+As part of the new \gls{power10}'s offerings, a new facility, dubbed \gls{mma}, was implemented into the \gls{isa}, continuing \gls{ibm}'s commitment to providing cutting edge hardware for the software needs of the current era.
+\gls{mma} is an addition to \gls{power}'s preexisting \gls{vmx} and \gls{vsx} \gls{simd} facilities.
+It provides a high-throughput and low-latency method for calculating matrix multiplications.
 
-\subsection{Matrix Multiplication}
+The state of the art for hardware which performs matrix multiplication falls into two categories:
+\begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+  \item via external component (\eg \gls{gpu}, \gls{fpga}, or \gls{asic} such as Google's \gls{tpu})
+  \item via \gls{cpu} \gls{isa} extensions (\eg Intel's MMX or ARM's matrix extension\bk{Is there a better name for ARM's extension?})
+\end{enumerate*}
+\Gls{mma} belongs to the second category as the facility is built directly into the \gls{cpu}.
+This means that the facility is amenable to tasks that would normally incur prohibitive overhead, for example, while sending data to an external component such as a \gls{gpu}.
+See \rcha{mma} for further discussion.
+
+\section{Matrix Multiplication}
+Matrix multiplication has long been intrinsic to scientific computation and it is well known that many neural network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
+Optimisation of the operation therefore has the potential to improve many \gls{hpc} tasks in both the research and business domains.
+
+The operation itself, in its most naive form, is quite simple:
+\begin{lstlisting}[caption={[Basic Matrix Multiplication]A basic matrix multiplication.},label=lst:basicmatmul]
+for (uint64_t i = 0; i < M; ++i)
+  for (uint64_t j = 0; j < N; ++j)
+      for (uint64_t k = 0; k < D; ++k)
+        C[i][j] += A[i][k] * B[k][j];
+\end{lstlisting}
+\bk{The above listing and description seem out of place and potentially useless. The listing may be pertinent but the explaning paragraph needs to be improved.}
+The \code{i} loop iterates the rows of \code{A}, also choosing a row in \code{C}, while the \code{j} loop iterates the columns of \code{B}, also choosing a cell in the chosen row of \code{C}.
+The final \code{k} loop iterates through the elements of the chosen row of \code{A} and column of \code{B}, reducing each of the pair-wise products into the chosen cell of \code{C}.
+
+Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to improved in both software and hardware.
+Seminal research such as that by Goto \etal~\autocite{goto2008anatomy} have resulted in high performance software implementations, \eg EIGEN\todo{cite} and BLAS\todo{cite}.
+These implementations often outperform the naive version by hundreds or thousands of times, turning hours of serial work into seconds or less.
+This is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop switching.
+
+However, when one looks more closely, it is hard to classify any optimisation here as hardware or software only.
+\Gls{simd}, though it is a hardware feature, enables software to execute less instructions and loop switching is actually optimising data reuse in the hardware cache.
+It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimisation of this operation.
+
+\section{Contributions}
+This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC
+This work addresses multiple questions of interest when considering MMA.
+\begin{enumerate}
+  \item
+    Does an \gls{mma} kernel perform better than the vectorised equivalent?
+  \item
+    Does \gls{mma} offer greater benefits when using different datatypes?
+\end{enumerate}
+
 \end{document}
