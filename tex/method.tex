@@ -1,0 +1,84 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Method}
+\label{cha:method}
+This chapter discusses the contributed implementation of a high-performance and library-free matrix-matrix multiplication algorithm which makes use of \gls{mma}.
+Due to its implementation in the LLVM compiler framework, the method has immediate performance enhancing potential on the \gls{power10} platform.
+
+\section{Intrinsics in LLVM}
+\todo{add text here?}
+\subsubsection{Builtin vs. Intrinsic}
+Before continuing, we must disambiguate two terms: \gls{intrinsic} and \gls{builtin}.
+In general, definitions in this text defer to the \gls{llvm} community's usage where there are conflicts; this specific case is not an exception.
+Both terms describe a function which implements a well-defined operation with well-defined semantics.
+However, differences exist in their availability to the end user and their reason for existing.
+
+A \gls{builtin} is a function available to be called in a high-level language but is typically specific to a platform.
+These exist in order to hide the complexity of low-level operations which are not supported natively by the user's language of choice.
+A common example is operations which are necessarily implemented in assembly (\eg \gls{simd} operations, accessing a processor's special registers).
+Other platform-agnostic \glspl{builtin} provide common functionality extended with useful semantics or from a specific standard to avoid duplication or incorrect implementation.
+These include things like \gls{clang}'s checked arithmetic builtins~\autocite{llvmCheckArith} or GCC's provision of ISO C functions~\autocite{gccOtherBuiltins}.
+Most compilers use \gls{builtin} in this manner, while others (\eg MSVC, ICC \bk{Do I need to add these to the list of acronyms?}) use \gls{intrinsic} in their documentation to refer to this concept.
+
+An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available to an end user.
+These functions' most important role is to symbolise the concept of a common operation in a representation that must lowered to many disparate forms while maintaining efficiency and correctness.
+They are therefore not platform-specific but their lowering may be if the semantics necessitate it or if the maintainer wants to provide a more efficient version.
+For example, the \gls{llvm} \gls{intrinsic} \code{llvm.vector.reduce.add.*} may be generically lowered to a series of vector operations at the \gls{ir} level, or, if the \gls{isa} provides a reduction instruction, it could be lowered more efficiently by the backend.
+
+\subsubsection{Intrinsic Format}
+Within \gls{llvm} \gls{ir}, \glspl{intrinsic} appear simply as external function declarations whose names are prefixed with ``\code{llvm.}''.
+Names within \gls{llvm} are permitted to contain periods, a feature which \glspl{intrinsic} make use of often to mangle what are called ``families'' of \glspl{intrinsic}.
+Families arise from the need to provide generic \glspl{intrinsic} to a strongly typed language where overloading is not allowed.
+Take for example the \code{llvm.smax.*} \gls{intrinsic} which takes two signed integers of the same type and returns the largest.
+\Gls{llvm} documentation uses the ``\code{.*}'' suffix to represent the \glslink{mangle}{mangled} portion of the name.
+An actual definition will replace the asterisk with a type name; if the function is generic in multiple places (return value, arguments) then the other type names will be appended and separated with more periods.
+The \code{llvm.smax.*} \gls{intrinsic} only has one generic type.
+We can see in \rlst{intrinsics} a declaration for a scalar integer, typed and \glslink{mangle}{mangled} as \code{i32}, as well as for a vector of integers, typed as \code{<4 x i32>} and \glslink{mangle}{mangled} as \code{v4i32}.
+
+\begin{lstlisting}[caption={[Inrinsic Declarations]A set of basic intrinsic declarations~\autocite{llvmLangref}.},
+      label=lst:intrinsics,numbers=none,language=llvm,float]
+declare i32 @llvm.smax.i32(i32 %a, i32 %b)
+declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a,
+  <4 x i32> %b)
+\end{lstlisting}
+
+\section{The \texorpdfstring{\code{llvm.matrix.multiply.*}}{llvm.matrix.multiply.*} Intrinsic}
+The \code{llvm.matrix.multiply.*} \gls{intrinsic} existed prior to this work and warrants a brief explanation to provide context~\autocite{llvmLangref}.
+The \gls{intrinsic} has three generic types: the return and the two input matrices.
+Each of the three matrices is typed as flattened vectors and therefore the signature requires three extra arguments to describe the dimensions as in \matmul{m}{d}{n}.
+
+The original implementers require that input dimensions be statically known constants.
+As well, those familiar with the analogous \gls{blas} routines may notice that arguments describing data access order are conspicuously absent.
+The original interface assumes that all matrices are collectively column-major.
+Users may include a specific flag in their compiler invocation to change this setting to row-major.
+This means that a user may not mix data orientations within their program.
+\rlst{matMulIntr} provides an example declaration and invocation of the intrinsic which computes \matmul{1}{10}{5}.
+
+\begin{lstlisting}[caption={[Declaration and Use of \code{llvm.matrix.multiply.*}]An example declaration and usage of the \code{llvm.matrix.multiply.*} intrinsic.},
+      label=lst:matMulIntr,language=llvm,basicstyle=\footnotesize,float]
+declare <5 x i32> @llvm.matrix.multiply.v5i32.v10i32.v50i32(
+  <10 x i32> %A, <50 x i32> %B,
+  i32 %outerRows, i32 %inner, i32 %outerCols)
+
+define void @foo() {
+  ; Declaration and construction of %A and %B...
+  %C = call <5 x i32> @llvm.matrix.multiply.v5i32.v10i32.v50i32(
+      %A, %B, 1, 10, 5)
+    )
+  ; Function continues...
+}
+\end{lstlisting}
+
+During lowering, the \code{call} statement will be replaced pass with a series of \gls{llvm} \gls{ir} vector operations by the \code{LowerMatrixIntrinsics}.
+This version of the lowering is what we refer to as the default ``vectorisation'' method.
+Because the dimensions of the operation are known statically, the computation is completely unrolled: no loops will be generated.
+Such a lowering is ideal because it removes the need for loop analysis and allows later passes to further vectorise or pipeline the operation.
+\bk{I'm not sure I need to expand on the vectorisation lowering. It's laid out very simply here, but more info may help contrast more.}
+
+\end{document}
