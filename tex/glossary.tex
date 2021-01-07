@@ -2,29 +2,84 @@
 \longnewglossaryentry{altivec}{name={AltiVec},text={AltiVec}}{
   A \gls{simd} instruction set designed for use with single-precision floating point and integer values.
 }
+\newacronym[
+  description={
+    An \gls{integrated circuit} built for a specific use instead of general purpose use.
+  }
+]{asic}{ASIC}{Application-Specific Integrated Circuit}
+
+% B
+\newacronym[
+  description={
+    A set of highly-optimised, low-level routines used as building blocks in many larger linear algebra operations.
+  }
+]{blas}{BLAS}{Basic Linear Algebra Subprograms}
+\longnewglossaryentry{builtin}{name={Builtin}, text={builtin}}{
+  A function callable from a higher-level language (\eg C/C++) which encapsulates a well-known functionality with well-defined semantics.
+  Such a function may be implemented in header files, as language-specific keywords, or conditionally available functions.
+}
 
 % C
+\longnewglossaryentry{clang}{name={Clang}, text={Clang}}{
+  The C/C++ frontend available as part of the \gls{llvm} project.
+}
 \newacronym[
   description={
     The number of CPU clock cycles required to complete an instruction.
     Often used as a performance metric where it refers to the ratio of total instructions executed to total clock cycles.
   }
 ]{cpi}{CPI}{Cycles Per Instruction}
+\newacronym[
+  description={
+    The main component of a computer which interacts with and controls all other subcomponents according to the instructions contained in a program.
+  }
+]{cpu}{CPU}{Central Processing Unit}
+
+% F
+\newacronym[
+  description={
+    An \gls{integrated circuit} which is configurable post-production via reconfigurable interconnects between logic blocks which perform operations.
+  }
+]{fpga}{FPGA}{Field-Programmable Gate Array}
+
+% G
+\newacronym[
+  description={
+    Originally designed to accelerate image creation for display devices, it was soon repurposed into a general purpose, high performance compute device.
+  }
+]{gpu}{GPU}{Graphics Processing Unit}
 
 % H
 \newacronym[
-  description={The area of computing concerned with performing large scale computations in the most efficient way possible through the minimization of required time and resources.}
+  description={
+    The area of computing concerned with performing large scale computations in the most efficient way possible through the minimization of required time and resources.
+  }
 ]{hpc}{HPC}{High Performance Computing}
 
 % I
 \newacronym[
-  description={An American multinational technology company with a long history in the computing domain.}
+  description={
+    A multinational technology company with a long history in the computing domain.
+  }
 ]{ibm}{IBM}{International Business Machines}
 \newacronym[
-  description={A language-agnostic representation of a program encoding all of the semantics of the original program and potentially annotated with debugging and optimisation information.}
+  description={
+    A language-agnostic representation of a program encoding all of the semantics of the original program and potentially annotated with debugging and optimisation information.
+  }
 ]{ir}{IR}{Intermediate Representation}
+\longnewglossaryentry{integrated circuit}{name={Integrated Circuit},text={integrated circuit}}{
+  A set of electronic circuits built into a semiconductor, typically silicon.
+  These circuits are set in place and cannot be changed.
+}
+\longnewglossaryentry{intrinsic}{name={Intrinsic},text={intrinsic}}{
+  A generic function within an \gls{ir} which encapsulates a well-known functionality with well-defined semantics.
+  The function will eventually be \glslink{lowering}{lowered} to either a call to an existing function or inline code.
+  Some compilers (\eg Microsoft Visual C++) may use this term to refer to a \gls{builtin}.
+}
 \newacronym[
-  description={The abstract model of a computer, including registers, supported datatypes, instructions, \etc}
+  description={
+    The abstract model of a computer, including registers, supported datatypes, instructions, \etc.
+  }
 ]{isa}{ISA}{Instruction Set Architecture}
 
 % L
@@ -38,9 +93,12 @@
 }
 
 % M
+\longnewglossaryentry{mangle}{name=Mangle,text={mangle}}{
+  The act of encoding extra information into a string such that the result is unique and the information recoverable.
+}
 \newacronym[
   description={
-    An extension to the \gls{power} \gls{isa}'s \gls{vsx} facility introduced in \gls{power10}.
+    An extension to the \gls{power} \gls{isa}'s \gls{simd} capabilities introduced in \gls{power10}.
     See \rsec{mmaintro}.
   }
 ]{mma}{MMA}{Matrix Math Assist}
@@ -55,24 +113,46 @@
 
 % R
 \newacronym[
-  description={A computer focused on a small, simple, and optimized instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.}
+  description={
+    A computer focused on a small, simple, and optimized instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.
+  }
 ]{risc}{RISC}{Reduced Instruction Set Computer}
 
 % S
 \newacronym[
-  description={Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.}
+  description={
+    Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.
+  }
 ]{simd}{SIMD}{Single Instruction, Multiple Data}
+% \newacronym[
+%   description={
+%     An \gls{integrated circuit} which is composed of all or most components of a computer (\eg \gls{cpu}, memory, signal processors).
+%     This is in opposition to a motherboard-based architecture where components may be swapped and are connected via the interfacing motherboard.
+%   }
+% ]{soc}{SoC}{System on a chip}
 \longnewglossaryentry{spill}{name={Spill},text={spill}}{
   The act of storing an in-use register to memory temporarily in order to free the register for another value.
 }
+
+% T
+\newacronym[
+  description={
+    An external \gls{asic} for accelerating AI designed by Google.
+  }
+]{tpu}{TPU}{Tensor Processing Unit}
 
 % V
 \longnewglossaryentry{vectorisation}{name={Vectorisation},text={vectorisation}}{
   The process of transforming a loop in order to perform multiple iterations simultaneously in a \gls{simd} architecture.
 }
 \newacronym[
-  description={An extension to the \gls{power} \gls{isa} implementing the \gls{altivec} standard.}
+  description={
+    An extension to the \gls{power} \gls{isa} implementing the \gls{altivec} standard.
+  }
 ]{vmx}{VMX}{Vector Multimedia Extension}
 \newacronym[
-  description={An extension to the \gls{power} \gls{vmx} enabling even greater \gls{simd} capabilities.}
+  description={
+    An extension to the \gls{power} \gls{vmx} enabling even greater \gls{simd} capabilities.
+    \todo{VSX and VMX aren't sorted correctly for some reason\ldots}
+  }
 ]{vsx}{VSX}{Vector Scalar Extension}
