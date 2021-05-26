@@ -20,8 +20,16 @@
 }
 
 % C
+\newacronym[
+  description={
+    The main component of a computer which interacts with and controls all other subcomponents according to the instructions contained in a program.
+  }
+]{cpu}{CPU}{Central Processing Unit}
 \longnewglossaryentry{clang}{name={Clang}, text={Clang}}{
   The C/C++ frontend available as part of the \gls{llvm} project.
+}
+\longnewglossaryentry{compilation unit}{name={Compilation Unit}, text={compilation unit}}{
+  See \gls{translation unit}.
 }
 \newacronym[
   description={
@@ -29,11 +37,6 @@
     Often used as a performance metric where it refers to the ratio of total instructions executed to total clock cycles.
   }
 ]{cpi}{CPI}{Cycles Per Instruction}
-\newacronym[
-  description={
-    The main component of a computer which interacts with and controls all other subcomponents according to the instructions contained in a program.
-  }
-]{cpu}{CPU}{Central Processing Unit}
 
 % F
 \newacronym[
@@ -52,7 +55,7 @@
 % H
 \newacronym[
   description={
-    The area of computing concerned with performing large scale computations in the most efficient way possible through the minimization of required time and resources.
+    The area of computing concerned with performing large scale computations in the most efficient way possible through the minimisation of required time and resources.
   }
 ]{hpc}{HPC}{High Performance Computing}
 
@@ -83,6 +86,10 @@
 ]{isa}{ISA}{Instruction Set Architecture}
 
 % L
+\longnewglossaryentry{linking}{name={Linking},text={linking}}{
+Achieved through a program called a ``Linker'', this is typically the final step in the compilation process.
+The procedure involves combining all \glspl{object file} into a single binary, resolving symbols, as well as several more involved processes.
+}
 \longnewglossaryentry{llvm}{name={LLVM},text={LLVM}}{
   The name of an umbrella project of compiler technologies including an \gls{ir}, debugger, a variety of machine backends, \etc
   May also be used to refer specifically to the combination of optimiser and backend as part of the \gls{lowering} process.
@@ -91,6 +98,12 @@
   The process of transforming one representation of a program to another representation that encodes the same semantics but is closer to a final product.
   Typically begins with source code in a high level language and ends with binary machine code; transitional steps often include a language agnostic \gls{ir} and an \gls{isa} specific assembly listing.
 }
+\newacronym[
+  description={
+    Optimisations performed after compilation when \gls{linking} compilation units together.
+    Often achieved through ``fat'' binaries, which contain both compiled code and \gls{ir} code, allowing linkers a complete view of all code, including libraries, which is unavailable while compiling individual compilation units.
+  }
+]{lto}{LTO}{Link-Time Optimisation}
 
 % M
 \longnewglossaryentry{mangle}{name=Mangle,text={mangle}}{
@@ -103,6 +116,12 @@
   }
 ]{mma}{MMA}{Matrix Math Assist}
 
+% O
+\longnewglossaryentry{object file}{name=Object File,text={object file}}{
+  The result of compiling a \gls{translation unit} into a binary.
+  Compilers may skip this and directly generate an executable \bk{gls?} if a program consists of a single translation unit.
+}
+
 % P
 \longnewglossaryentry{power}{name={POWER},text={POWER}}{
   \gls{ibm}'s high performance computing architecture built for \gls{hpc} and other applications.
@@ -110,11 +129,16 @@
 \longnewglossaryentry{power10}{name={POWER10},text={POWER10}}{
   The tenth generation of \gls{ibm}'s \gls{power} architecture announced in August 2020.
 }
+\newacronym[
+  description={
+    An old name for the \gls{power} \gls{isa} which is still in use in some contexts as a shorthand.
+  }
+]{ppc}{PPC}{Power PC}
 
 % R
 \newacronym[
   description={
-    A computer focused on a small, simple, and optimized instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.
+    A computer focused on a small, simple, and optimised instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.
   }
 ]{risc}{RISC}{Reduced Instruction Set Computer}
 
@@ -133,6 +157,13 @@
 \longnewglossaryentry{spill}{name={Spill},text={spill}}{
   The act of storing an in-use register to memory temporarily in order to free the register for another value.
 }
+\newacronym[
+  description={
+    A programming paradigm common to \glspl{ir} where each variable in a program is assigned to a single time in the program text.
+    This format makes reasoning about code much easier for many optimisations.
+    See \rsec{ir}.
+  }
+]{ssa}{SSA}{Static Single Assignment}
 
 % T
 \newacronym[
@@ -140,6 +171,10 @@
     An external \gls{asic} for accelerating AI designed by Google.
   }
 ]{tpu}{TPU}{Tensor Processing Unit}
+\longnewglossaryentry{translation unit}{name={Translation Unit},text={translation unit}}{
+A single input file to a compiler after the preprocessing step.
+All \code{include} directives have been resolved and replaced and preprocessor commands processed.
+}
 
 % V
 \longnewglossaryentry{vectorisation}{name={Vectorisation},text={vectorisation}}{
