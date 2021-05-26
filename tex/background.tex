@@ -1,0 +1,25 @@
+% A workaround to allow relative paths in included subfiles
+% that are to be compiled separately
+% See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
+\providecommand{\main}{..}
+\documentclass[\main/thesis.tex]{subfiles}
+
+\begin{document}
+
+\chapter{Background}
+\label{cha:background}
+
+How did we end up here?
+Why is therer a matrix accelerator in power 10?
+Why is it in hardware \_now\_? No market.
+Relate to TPU? Deep learning? Convolution?
+
+-> Questions:
+  What's the best way to use it?
+    libraries - widely used
+    llvm intrinsic - library independent, necessary
+\begin{itemize}
+  \item
+\end{itemize}
+
+\end{document}
