@@ -72,7 +72,7 @@ for (uint64_t i = 0; i < M; ++i)
 The \code{i} loop iterates the rows of \code{A}, also choosing a row in \code{C}, while the \code{j} loop iterates the columns of \code{B}, also choosing a cell in the chosen row of \code{C}.
 The final \code{k} loop iterates through the elements of the chosen row of \code{A} and column of \code{B}, reducing each of the pair-wise products into the chosen cell of \code{C}.
 
-Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to improved in both software and hardware.
+Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
 Seminal research such as that by Goto \etal~\autocite{goto2008anatomy} have resulted in high performance software implementations, \eg EIGEN\todo{cite} and BLAS\todo{cite}.
 These implementations often outperform the naive version by hundreds or thousands of times, turning hours of serial work into seconds or less.
 This is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop switching.
@@ -80,6 +80,10 @@ This is possible through the use of hardware features, such as \gls{simd}, and s
 However, when one looks more closely, it is hard to classify any optimisation here as hardware or software only.
 \Gls{simd}, though it is a hardware feature, enables software to execute less instructions and loop switching is actually optimising data reuse in the hardware cache.
 It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimisation of this operation.
+
+\section{LLVM IR}
+\label{sec:ir}
+\bk{Would it be useful to have a section on LLVM IR?}
 
 \section{Contributions}
 This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC
