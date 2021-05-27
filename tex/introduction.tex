@@ -101,7 +101,7 @@ These include \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
 \label{sec:ir}
 The main pillar upon which \gls{llvm}'s compilation pipeline is built is its \gls{ir}.
 An \gls{ir} is a programming language in its own right, though its intended use is a frontend-language-agnostic and backend-target-agnostic intermediary language.
-In this way, all frontends may target their \gls{lowering} towards a producing a single shared language and all backends may consume a single shared language to produce their platform specific assembly.
+In this way, all frontends may target their \gls{lowering} toward producing a single shared language and all backends may consume a single shared language to produce their platform specific assembly.
 Given this shared middle point, it is easy to create an optimiser which both consumes and produces the single intermediate language.
 Thus, any combination of high-level language and destination platform may benefit from new or improved optimisations in the optimiser.
 
@@ -111,7 +111,7 @@ A critical feature of the \gls{ir} is that it is in \gls{ssa} form.
 
 \Gls{ssa} was formalised by Cytron \etal~\autocite{cytron1989efficient} though its use was seen as a side effect in previous works~\autocite{rosen1988global,alpern1988detecting}.
 Efficient methods for its construction followed shortly after~\autocite{cytron1991efficiently,brandis1994single}.
-Intuitively, a program in \gls{ssa} form's main property is that each variable in the program text (static) is assigned to exactly once (single assignment); this does not preclude an assignment to a variable from executing multiple times with different values.
+Intuitively, a program in \gls{ssa} form's main property is that each variable in the program text (static) is assigned to exactly once (single assignment); this property does not preclude executing an assignment multiple times at runtime, potentially with different values.
 
 \noindent
 \begin{minipage}[t]{0.45\linewidth}
