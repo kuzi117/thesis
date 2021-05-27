@@ -35,7 +35,7 @@ Years later, in August 2020, \gls{ibm} remains competitive in its technology off
 \subsection{SIMD History in IBM Power}
 Initially, the \gls{power} architecture implemented its \gls{simd} capabilities through a common standard named \gls{altivec}.
 \Gls{altivec} was designed through a collaboration between \gls{ibm}, Apple, and Motorola and described a \gls{simd} instruction set for floating point and integer values.
-This implementation, presented under the name \gls{vmx}, was first instantiated by IBM as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007 despite the standard being presented in 1999~\autocite{tyler1999altivec}.
+This implementation, presented under the name \gls{vmx}, was first instantiated by IBM as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007~\autocite{eisen2007ibm} despite the standard being presented in 1999~\autocite{tyler1999altivec}.
 \bk{Both Apple and Motorola used AltiVec in the mean time. I can't tell if it's necessary to mention this or if I should just focus on IBM.}
 
 Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
@@ -81,9 +81,77 @@ However, when one looks more closely, it is hard to classify any optimisation he
 \Gls{simd}, though it is a hardware feature, enables software to execute less instructions and loop switching is actually optimising data reuse in the hardware cache.
 It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimisation of this operation.
 
-\section{LLVM IR}
+\section{LLVM}
+\label{sec:llvm}
+\Gls{llvm}, originally an initialism for Low Level Virtual Machine, is as a compilation framework devised by Chris Lattner~\autocite{lattner2002llvm,lattner2004llvm}.
+Lattner originally positions \gls{llvm} as a ``unique multi-stage optimization system'' which aims to ``support extensive interprocedural and profile-driven optimizations, while being efficient enough for use in commercial compiler systems''~\autocite{lattner2002llvm}.
+\Gls{llvm}, now a mononym, has evolved into a project covering a wide range of compilation-related tools including frontends for many languages, an optimiser, backends for many platforms, a \glslink{linking}{linker}, debugger, and several other projects.
+
+Frontends exist for a multitude of languages including C/C++ (\code{clang}), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
+Backends also exist for a wide variety of platforms, such as X86, ARM, PowerPC, and WebAssembly.
+The \gls{llvm} optimiser, named \code{opt}, is a popular target compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
+\bk{
+  There are obviously a ton of papers in each of these areas, I stopped only after two examples.
+  If I should, how do I say these are only several examples.
+}
+The framework has also been adopted by several large companies who have based their own products off the ever-improving set of open-source tools.
+These include \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
+
+\subsection{LLVM's Intermediate Representation}
 \label{sec:ir}
-\bk{Would it be useful to have a section on LLVM IR?}
+The main pillar upon which \gls{llvm}'s compilation pipeline is built is its \gls{ir}.
+An \gls{ir} is a programming language in its own right, though its intended use is a frontend-language-agnostic and backend-target-agnostic intermediary language.
+In this way, all frontends may target their \gls{lowering} towards a producing a single shared language and all backends may consume a single shared language to produce their platform specific assembly.
+Given this shared middle point, it is easy to create an optimiser which both consumes and produces the single intermediate language.
+Thus, any combination of high-level language and destination platform may benefit from new or improved optimisations in the optimiser.
+
+\Gls{llvm} \gls{ir} is known for being strongly typed and maintaining much of the high level type information from the original input.
+It can also be annotated with large amounts of debugging information all while remaining easily serializable.
+A critical feature of the \gls{ir} is that it is in \gls{ssa} form.
+
+\Gls{ssa} was formalised by Cytron \etal~\autocite{cytron1989efficient} though its use was seen as a side effect in previous works~\autocite{rosen1988global,alpern1988detecting}.
+Efficient methods for its construction followed shortly after~\autocite{cytron1991efficiently,brandis1994single}.
+Intuitively, a program in \gls{ssa} form's main property is that each variable in the program text (static) is assigned to exactly once (single assignment); this does not preclude an assignment to a variable from executing multiple times with different values.
+
+\noindent
+\begin{minipage}[t]{0.45\linewidth}
+\centering
+\begin{lstlisting}[caption={[Example C program, pre-SSA conversion.]An simple example C program, pre-conversion to \gls{ssa}.},
+      label=lst:cSSA,numbers=none,language=c]
+int foo(int a) {
+  int x = a + 2;
+  int y = x + 10;
+  x = y * 4;
+  return x;
+}
+\end{lstlisting}
+\end{minipage}
+\hspace{.05\linewidth}
+\begin{minipage}[t]{0.45\linewidth}
+\centering
+\begin{lstlisting}[caption={[Example LLVM IR program, post-SSA conversion.]The same simple program, converted to \gls{llvm} \gls{ir} in \gls{ssa} format.},
+      label=lst:llSSA,numbers=none,language=llvm]
+define i32 @foo(i32 %a) {
+entry:
+  %x.1 = add i32 %a, 2
+  %y.1 = add i32 %x.1, 10
+  %x.2 = mul i32 %y.1, 4
+  ret i32 %x.2
+}
+\end{lstlisting}
+\end{minipage}
+
+A simple C program, shown in \rlst{cSSA} is converted to the SSA format in \rlst{llSSA} via a simple renaming scheme.
+The first reference to a variable is suffixed with a one, and all future references increment the counter by one.
+This process continues for the entirety of a function body, regardless of any control flow.
+There are further complications in the construction algorithm in the presence of control flow but as this work presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
+This format is signficantly more conducive to analysis and optimization than the source language, allowing for a much easier data flow analysis.
+\bk{
+  I feel like I should expand here but I'm unsure which direction.
+  Should I explain more of why SSA is a good idea?
+  Should I explain more properties and the structore of LLVM IR?
+  More of SSA seems off topic and the structure of the IR takes a lot longer to describe than is reasonable.
+}
 
 \section{Contributions}
 This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC

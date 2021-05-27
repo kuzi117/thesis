@@ -9,6 +9,11 @@
 ]{asic}{ASIC}{Application-Specific Integrated Circuit}
 
 % B
+\longnewglossaryentry{basic block}{name={Basic Block}, text={basic block}}{
+  A straight-line code sequence where only the final statement is some sort of control flow and only the first statement may receive control flow.
+  Alternatively, an atomic block of statements where if the first statement is executed, all statements in the block must be executed.
+  Basic blocks form the nodes in a control flow graph.
+}
 \newacronym[
   description={
     A set of highly-optimised, low-level routines used as building blocks in many larger linear algebra operations.
@@ -92,7 +97,7 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 }
 \longnewglossaryentry{llvm}{name={LLVM},text={LLVM}}{
   The name of an umbrella project of compiler technologies including an \gls{ir}, debugger, a variety of machine backends, \etc
-  May also be used to refer specifically to the combination of optimiser and backend as part of the \gls{lowering} process.
+  May also be used to refer specifically to the combination of optimiser and backend as part of the \gls{lowering} process. See \rsec{llvm}.
 }
 \longnewglossaryentry{lowering}{name={Lowering},text={lowering}}{
   The process of transforming one representation of a program to another representation that encodes the same semantics but is closer to a final product.
@@ -119,7 +124,7 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 % O
 \longnewglossaryentry{object file}{name=Object File,text={object file}}{
   The result of compiling a \gls{translation unit} into a binary.
-  Compilers may skip this and directly generate an executable \bk{gls?} if a program consists of a single translation unit.
+  Compilers may skip this and directly generate an executable if a program consists of a single translation unit.
 }
 
 % P
@@ -134,6 +139,13 @@ The procedure involves combining all \glspl{object file} into a single binary, r
     An old name for the \gls{power} \gls{isa} which is still in use in some contexts as a shorthand.
   }
 ]{ppc}{PPC}{Power PC}
+\longnewglossaryentry{pure}{name={Pure},text={pure}}{
+  A pure function is one which:
+  \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+    \item has no side effects (e.g. writes to memory)
+    \item returns the same output given the same input
+  \end{enumerate*}
+}
 
 % R
 \newacronym[
@@ -148,12 +160,12 @@ The procedure involves combining all \glspl{object file} into a single binary, r
     Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.
   }
 ]{simd}{SIMD}{Single Instruction, Multiple Data}
-% \newacronym[
-%   description={
-%     An \gls{integrated circuit} which is composed of all or most components of a computer (\eg \gls{cpu}, memory, signal processors).
-%     This is in opposition to a motherboard-based architecture where components may be swapped and are connected via the interfacing motherboard.
-%   }
-% ]{soc}{SoC}{System on a chip}
+\newacronym[
+  description={
+    An \gls{integrated circuit} which is composed of all or most components of a computer (\eg \gls{cpu}, memory, signal processors).
+    This is in opposition to a motherboard-based architecture where components may be swapped and are connected via the interfacing motherboard.
+  }
+]{soc}{SoC}{System on a chip}
 \longnewglossaryentry{spill}{name={Spill},text={spill}}{
   The act of storing an in-use register to memory temporarily in order to free the register for another value.
 }
