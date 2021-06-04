@@ -146,6 +146,7 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
 \end{table}
 \footnotetext{Google's Brain floating point format~\autocite{wang2019bfloat16}.}
 
+\todo{Should word the explanation of rank-k updates better.}
 Assembly and disassembly delimit the lifetime of an accumulator, but the majority of its usage is found in matrix multiplication instructions.
 \rtab{mmaInsts} shows all seven of the datatypes usable with \gls{mma}.
 Instructions are given three arguments: an accumulator and two VSRs.
