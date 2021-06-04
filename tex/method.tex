@@ -64,10 +64,9 @@ The \code{llvm.smax.*} \gls{intrinsic} only has one generic type.
 \rlst{intrinsics} shows a declaration for a scalar 32-bit integer, typed and \glslink{mangle}{mangled} as \code{i32}, as well as for a length-four vector of 32-bit integers, typed as \code{<4 x i32>} and \glslink{mangle}{mangled} as \code{v4i32}.
 
 \begin{lstlisting}[caption={[Example Inrinsic Declarations]A set of basic intrinsic declarations~\autocite{llvmLangref}.},
-      label=lst:intrinsics,numbers=none,language=llvm,float]
+      label=lst:intrinsics,numbers=none,language=llvm,float,columns=flexible]
 declare i32 @llvm.smax.i32(i32 %a, i32 %b)
-declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a,
-  <4 x i32> %b)
+declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a, <4 x i32> %b)
 \end{lstlisting}
 
 \section{The \texorpdfstring{\code{llvm.matrix.multiply.*}}{llvm.matrix.multiply.*} Intrinsic}
@@ -87,7 +86,7 @@ This means that a user may not mix data orientations within their program.
 \rlst{matMulIntr} provides an example declaration and invocation of the intrinsic which computes \matmul{8}{5}{16}.
 
 \begin{lstlisting}[caption={[Example Declaration and Use of \code{llvm.matrix.multiply.*}]An example declaration and usage of the \code{llvm.matrix.multiply.*} intrinsic.},
-      label=lst:matMulIntr,language=llvm,basicstyle=\footnotesize,float]
+      label=lst:matMulIntr,language=llvm,float,columns=flexible]
 declare <128 x float>
   @llvm.matrix.multiply.v128f32.v40f32.v80f32(
     <40 x float>, <80 x float>, i32, i32, i32
@@ -299,38 +298,22 @@ The listing shows all operations starting from the initialisation of the accumul
 The matter of storing vectors to memory is easily addressed and so is left out for brevity.
 
 \begin{lstlisting}[caption={[Example Lowering of \code{llvm.matrix.multiply.*}.]An example lowering of the \code{llvm.matrix.multiply.*} intrinsic for a $8 \times 1 \times 16$ computation.},
-      label=lst:unrolled,language=llvm,basicstyle=\footnotesize,float,escapechar=|]
+      label=lst:unrolled,language=llvm,basicstyle=\footnotesize,float,escapechar=|,columns=flexible,breaklines=true,breakatwhitespace=true]
   %ACC = call <512 x i1> @llvm.ppc.mma.xxsetaccz()|\label{accz}|
-  %ATile.0_0 = shufflevector <8 x float> %ATile, <8 x float> undef,|\label{aShuffle1}|
-    <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %ATile.0_4 = shufflevector <8 x float> %ATile, <8 x float> undef,|\label{aShuffle2}|
-    <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %BTile.0_0 = shufflevector <16 x float> %BTile, <16 x float> undef,|\label{bShuffle1}|
-    <4 x i32> <i32 0, i32 1, i32 2, i32 3>
-  %BTile.0_4 = shufflevector <16 x float> %BTile, <16 x float> undef,
-    <4 x i32> <i32 4, i32 5, i32 6, i32 7>
-  %BTile.0_8 = shufflevector <16 x float> %BTile, <16 x float> undef,
-    <4 x i32> <i32 8, i32 9, i32 10, i32 11>
-  %BTile.0_12 = shufflevector <16 x float> %BTile, <16 x float> undef,
-    <4 x i32> <i32 12, i32 13, i32 14, i32 15>|\label{bShuffle2}|
-  %ACCProd.0_0.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(|\label{accsBegin}|
-    <512 x i1> %ACC, <4 x float> %ATile.0_0, <4 x float> %BTile.0_0)
-  %ACCProd.0_1.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(
-    <512 x i1> %ACC, <4 x float> %ATile.0_0, <4 x float> %BTile.0_4)
-  %ACCProd.0_2.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(
+  %ATile.0_0 = shufflevector <8 x float> %ATile, <8 x float> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>|\label{aShuffle1}|
+  %ATile.0_4 = shufflevector <8 x float> %ATile, <8 x float> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>|\label{aShuffle2}|
+  %BTile.0_0 = shufflevector <16 x float> %BTile, <16 x float> undef, <4 x i32> <i32 0, i32 1, i32 2, i32 3>|\label{bShuffle1}|
+  %BTile.0_4 = shufflevector <16 x float> %BTile, <16 x float> undef, <4 x i32> <i32 4, i32 5, i32 6, i32 7>
+  %BTile.0_8 = shufflevector <16 x float> %BTile, <16 x float> undef, <4 x i32> <i32 8, i32 9, i32 10, i32 11>
+  %BTile.0_12 = shufflevector <16 x float> %BTile, <16 x float> undef, <4 x i32> <i32 12, i32 13, i32 14, i32 15>|\label{bShuffle2}|
+  %ACCProd.0_0.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(<512 x i1> %ACC, <4 x float> %ATile.0_0, <4 x float> %BTile.0_0)|\label{accsBegin}|
+  %ACCProd.0_1.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(<512 x i1> %ACC, <4 x float> %ATile.0_0, <4 x float> %BTile.0_4)
   ...
-  %ACCProd.1_2.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(
-    <512 x i1> %ACC, <4 x float> %ATile.0_4, <4 x float> %BTile.0_8)
-  %ACCProd.1_3.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(
-    <512 x i1> %ACC, <4 x float> %ATile.0_4, <4 x float> %BTile.0_12)|\label{accsEnd}|
-  %ACCDis.0_0 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> }
-    @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.0_0.0)
-  %ACCDis.0_1 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> }
-    @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.0_1.0)|\label{dissStart}|
+  %ACCProd.1_3.0 = call <512 x i1> @llvm.ppc.mma.xvf32gerpp(<512 x i1> %ACC, <4 x float> %ATile.0_4, <4 x float> %BTile.0_12)|\label{accsEnd}|
+  %ACCDis.0_0 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> } @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.0_0.0)|\label{dissStart}|
+  %ACCDis.0_1 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> } @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.0_1.0)
   ...
-    @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.1_2.0)
-  %ACCDis.1_3 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> }
-    @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.1_3.0)|\label{dissEnd}|
+  %ACCDis.1_3 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> } @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.1_3.0)|\label{dissEnd}|
 \end{lstlisting}
 
 First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intrinsic} \code{xxsetaccz}\footnotemark.
