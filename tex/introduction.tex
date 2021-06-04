@@ -66,7 +66,7 @@ Matrix multiplication has long been intrinsic to scientific computation and it i
 Optimisation of this operation therefore has the potential to improve many tasks in both \gls{hpc} and business domains.
 
 The operation itself, in its most naive form, is quite simple:
-\begin{lstlisting}[caption={[Basic Matrix Multiplication]A basic matrix multiplication.},label=lst:basicmatmul]
+\begin{lstlisting}[caption={[Basic Matrix Multiplication]A basic matrix multiplication.},label=lst:basicmatmul,language=C++,columns=flexible,morekeywords=uint64_t]
 for (uint64_t i = 0; i < M; ++i)
   for (uint64_t j = 0; j < N; ++j)
       for (uint64_t k = 0; k < D; ++k)
@@ -131,7 +131,8 @@ int foo(int a) {
 }
 \end{lstlisting}
 \end{minipage}
-\hspace{.05\linewidth}
+\hspace{.025\linewidth}
+\noindent
 \begin{minipage}[t]{0.45\linewidth}
 \centering
 \begin{lstlisting}[caption={[Example LLVM IR program, post-SSA conversion.]The same simple program, converted to \gls{llvm} \gls{ir} in \gls{ssa} format.},
