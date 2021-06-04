@@ -132,3 +132,300 @@ doi={10.1109/PCCC.1999.749469}
   title = {Fast Matrix Multiplication via Compiler-only Layered Data Reorganization and Intrinsic Lowering},
   note = {submitted}
 }
+
+@ARTICLE{eisen2007ibm,
+  author={Eisen, L. and Ward, J. W. and Tast, H.-W. and Mading, N. and Leenstra, J. and Mueller, S. M. and Jacobi, C. and Preiss, J. and Schwarz, E. M. and Carlough, S. R.},
+  journal={IBM Journal of Research and Development},
+  title={IBM POWER6 accelerators: VMX and DFU},
+  year={2007},
+  volume={51},
+  number={6},
+  pages={1-21},
+  doi={10.1147/rd.516.0663}
+}
+
+@MastersThesis{lattner2002llvm,
+  author  = {Chris Lattner},
+  title   = "{LLVM: An Infrastructure for Multi-Stage Optimization}",
+  school  = "{Computer Science Dept., University of Illinois at Urbana-Champaign}",
+  year    = {2002},
+  address = {Urbana, IL},
+  month   = {Dec},
+  note    = {{\em See {\tt http://llvm.cs.uiuc.edu}.}}
+}
+
+@INPROCEEDINGS{lattner2004llvm,
+  author={Lattner, C. and Adve, V.},
+  booktitle={International Symposium on Code Generation and Optimization, 2004. CGO 2004.},
+  title={LLVM: a compilation framework for lifelong program analysis transformation},
+  year={2004},
+  volume={},
+  number={},
+  pages={75-86},
+  doi={10.1109/CGO.2004.1281665}
+}
+
+@inproceedings{grosser2011polly,
+  title={Polly-Polyhedral optimization in LLVM},
+  author={Grosser, Tobias and Zheng, Hongbin and Aloor, Raghesh and Simb{\"u}rger, Andreas and Gr{\"o}{\ss}linger, Armin and Pouchet, Louis-No{\"e}l},
+  booktitle={Proceedings of the First International Workshop on Polyhedral Compilation Techniques (IMPACT)},
+  volume={2011},
+  pages={1},
+  year={2011}
+}
+
+@inproceedings{10.1145/2814270.2814285,
+author = {Alves, P\'{e}ricles and Gruber, Fabian and Doerfert, Johannes and Lamprineas, Alexandros and Grosser, Tobias and Rastello, Fabrice and Pereira, Fernando Magno Quint\~{a}o},
+title = {Runtime Pointer Disambiguation},
+year = {2015},
+isbn = {9781450336895},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2814270.2814285},
+doi = {10.1145/2814270.2814285},
+abstract = { To optimize code effectively, compilers must deal with memory dependencies. However, the state-of-the-art heuristics available in the literature to track memory dependencies are inherently imprecise and computationally expensive. Consequently, the most advanced code transformations that compilers have today are ineffective when applied on real-world programs. The goal of this paper is to solve this conundrum through dynamic disambiguation of pointers. We provide different ways to determine at runtime when two memory locations can overlap. We then produce two versions of a code region: one that is aliasing-free - hence, easy to optimize - and another that is not. Our checks let us safely branch to the optimizable region. We have applied these ideas on Polly-LLVM, a loop optimizer built on top of the LLVM compilation infrastructure. Our experiments indicate that our method is precise, effective and useful: we can disambiguate every pair of pointer in the loop intensive Polybench benchmark suite. The result of this precision is code quality: the binaries we generate are 10% faster than those that Polly-LLVM produces without our optimization, at the -O3 optimization level of LLVM. },
+booktitle = {Proceedings of the 2015 ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications},
+pages = {589–606},
+numpages = {18},
+keywords = {optimization, dynamic guards, Alias analysis},
+location = {Pittsburgh, PA, USA},
+series = {OOPSLA 2015}
+}
+
+@article{alves2015runtime,
+author = {Alves, P\'{e}ricles and Gruber, Fabian and Doerfert, Johannes and Lamprineas, Alexandros and Grosser, Tobias and Rastello, Fabrice and Pereira, Fernando Magno Quint\~{a}o},
+title = {Runtime Pointer Disambiguation},
+year = {2015},
+issue_date = {October 2015},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {50},
+number = {10},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/2858965.2814285},
+doi = {10.1145/2858965.2814285},
+journal = {SIGPLAN Not.},
+month = oct,
+pages = {589–606},
+numpages = {18},
+keywords = {Alias analysis, dynamic guards, optimization}
+}
+
+@inproceedings{sui2016interprocedural,
+author = {Sui, Yulei and Xue, Jingling},
+title = {SVF: Interprocedural Static Value-Flow Analysis in LLVM},
+year = {2016},
+isbn = {9781450342414},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/2892208.2892235},
+doi = {10.1145/2892208.2892235},
+booktitle = {Proceedings of the 25th International Conference on Compiler Construction},
+pages = {265–266},
+numpages = {2},
+keywords = {Pointer Analysis, Value-Flow, SVF},
+location = {Barcelona, Spain},
+series = {CC 2016}
+}
+
+@inproceedings{hardekopf2009semi,
+author = {Hardekopf, Ben and Lin, Calvin},
+title = {Semi-Sparse Flow-Sensitive Pointer Analysis},
+year = {2009},
+isbn = {9781605583792},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1480881.1480911},
+doi = {10.1145/1480881.1480911},
+booktitle = {Proceedings of the 36th Annual ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages},
+pages = {226–238},
+numpages = {13},
+keywords = {pointer analysis, alias analysis},
+location = {Savannah, GA, USA},
+series = {POPL '09}
+}
+
+@article{lozano2019combinatorial,
+author = {Lozano, Roberto Casta\~{n}eda and Carlsson, Mats and Blindell, Gabriel Hjort and Schulte, Christian},
+title = {Combinatorial Register Allocation and Instruction Scheduling},
+year = {2019},
+issue_date = {July 2019},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {41},
+number = {3},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/3332373},
+doi = {10.1145/3332373},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = jul,
+articleno = {17},
+numpages = {53},
+keywords = {register allocation, instruction scheduling, Combinatorial optimization}
+}
+
+@inproceedings{10.1145/1375581.1375609,
+author = {Quint\~{a}o Pereira, Fernando Magno and Palsberg, Jens},
+title = {Register Allocation by Puzzle Solving},
+year = {2008},
+isbn = {9781595938602},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1375581.1375609},
+doi = {10.1145/1375581.1375609},
+abstract = {We show that register allocation can be viewed as solving a collection of puzzles. We model the register file as a puzzle board and the program variables as puzzle pieces; pre-coloring and register aliasing fit in naturally. For architectures such as PowerPC, x86, and StrongARM, we can solve the puzzles in polynomial time, and we have augmented the puzzle solver with a simple heuristic for spilling. For SPEC CPU2000, the compilation time of our implementation is as fast as that of the extended version of linear scan used by LLVM, which is the JIT compiler in the openGL stack of Mac OS 10.5. Our implementation produces x86 code that is of similar quality to the code produced by the slower, state-of-the-art iterated register coalescing of George and Appel with the extensions proposed by Smith, Ramsey, and Holloway in 2004.},
+booktitle = {Proceedings of the 29th ACM SIGPLAN Conference on Programming Language Design and Implementation},
+pages = {216–226},
+numpages = {11},
+keywords = {puzzle solving, register allocation, register aliasing},
+location = {Tucson, AZ, USA},
+series = {PLDI '08}
+}
+
+@article{pereira2008register,
+author = {Quint\~{a}o Pereira, Fernando Magno and Palsberg, Jens},
+title = {Register Allocation by Puzzle Solving},
+year = {2008},
+issue_date = {June 2008},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {43},
+number = {6},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/1379022.1375609},
+doi = {10.1145/1379022.1375609},
+abstract = {We show that register allocation can be viewed as solving a collection of puzzles. We model the register file as a puzzle board and the program variables as puzzle pieces; pre-coloring and register aliasing fit in naturally. For architectures such as PowerPC, x86, and StrongARM, we can solve the puzzles in polynomial time, and we have augmented the puzzle solver with a simple heuristic for spilling. For SPEC CPU2000, the compilation time of our implementation is as fast as that of the extended version of linear scan used by LLVM, which is the JIT compiler in the openGL stack of Mac OS 10.5. Our implementation produces x86 code that is of similar quality to the code produced by the slower, state-of-the-art iterated register coalescing of George and Appel with the extensions proposed by Smith, Ramsey, and Holloway in 2004.},
+journal = {SIGPLAN Not.},
+month = jun,
+pages = {216–226},
+numpages = {11},
+keywords = {register allocation, puzzle solving, register aliasing}
+}
+
+@inproceedings{cytron1989efficient,
+  title={An efficient method of computing static single assignment form},
+  author={Cytron, Ron and Ferrante, Jeanne and Rosen, Barry K and Wegman, Mark N and Zadeck, F Kenneth},
+  booktitle={Proceedings of the 16th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  pages={25--35},
+  year={1989}
+}
+
+@inproceedings{rosen1988global,
+  title={Global value numbers and redundant computations},
+  author={Rosen, Barry K and Wegman, Mark N and Zadeck, F Kenneth},
+  booktitle={Proceedings of the 15th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  pages={12--27},
+  year={1988}
+}
+
+@inproceedings{alpern1988detecting,
+  title={Detecting equality of variables in programs},
+  author={Alpern, Bowen and Wegman, Mark N and Zadeck, F Kenneth},
+  booktitle={Proceedings of the 15th ACM SIGPLAN-SIGACT symposium on Principles of programming languages},
+  pages={1--11},
+  year={1988}
+}
+
+@article{cytron1991efficiently,
+author = {Cytron, Ron and Ferrante, Jeanne and Rosen, Barry K. and Wegman, Mark N. and Zadeck, F. Kenneth},
+title = {Efficiently Computing Static Single Assignment Form and the Control Dependence Graph},
+year = {1991},
+issue_date = {Oct. 1991},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {13},
+number = {4},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/115372.115320},
+doi = {10.1145/115372.115320},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = oct,
+pages = {451–490},
+numpages = {40},
+keywords = {optimizing compilers, def-use chain, dominator, control dependence, control flow graph}
+}
+
+@article{brandis1994single,
+author = {Brandis, Marc M. and M\"{o}ssenb\"{o}ck, Hanspeter},
+title = {Single-Pass Generation of Static Single-Assignment Form for Structured Languages},
+year = {1994},
+issue_date = {Nov. 1994},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {16},
+number = {6},
+issn = {0164-0925},
+url = {https://doi.org/10.1145/197320.197331},
+doi = {10.1145/197320.197331},
+journal = {ACM Trans. Program. Lang. Syst.},
+month = nov,
+pages = {1684–1698},
+numpages = {15},
+keywords = {static single-assignment form, structured languages, dominator tree}
+}
+
+@inproceedings{10.1145/800028.808480,
+author = {Cocke, John},
+title = {Global Common Subexpression Elimination},
+year = {1970},
+isbn = {9781450373869},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/800028.808480},
+doi = {10.1145/800028.808480},
+abstract = {When considering compiler optimization, there are two questions that immediately come to mind; one, why and to what extent is optimization necessary and two, to what extent is it possible.When considering the second question, one might immediately become discouraged since it is well known that the program equivalency problem is recursively unsolvable. It is, of course, clear from this that there will never be techniques for generating a completely optimum program. These unsolvability results, however, do not preclude the possibility of ad hoc techniques for program improvement or even a partial theory which produces a class of equivalent programs optimized in varying degrees.The reasons why optimization is required seem to me to fall in two major categories. The first I will call “local” and the second “global”.},
+booktitle = {Proceedings of a Symposium on Compiler Optimization},
+pages = {20–24},
+numpages = {5},
+location = {Urbana-Champaign, Illinois}
+}
+
+@article{cocke1970global,
+author = {Cocke, John},
+title = {Global Common Subexpression Elimination},
+year = {1970},
+issue_date = {July 1970},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {5},
+number = {7},
+issn = {0362-1340},
+url = {https://doi.org/10.1145/390013.808480},
+doi = {10.1145/390013.808480},
+journal = {SIGPLAN Not.},
+month = jul,
+pages = {20–24},
+numpages = {5}
+}
+
+@article{domke2020matrix,
+  author    = {Jens Domke and
+               Emil Vatai and
+               Aleksandr Drozd and
+               Peng Chen and
+               Yosuke Oyama and
+               Lingqi Zhang and
+               Shweta Salaria and
+               Daichi Mukunoki and
+               Artur Podobas and
+               Mohamed Wahib and
+               Satoshi Matsuoka},
+  title     = {Matrix Engines for High Performance Computing: {A} Paragon of Performance
+               or Grasping at Straws?},
+  journal   = {CoRR},
+  volume    = {abs/2010.14373},
+  year      = {2020},
+  url       = {https://arxiv.org/abs/2010.14373},
+  archivePrefix = {arXiv},
+  eprint    = {2010.14373},
+  timestamp = {Mon, 02 Nov 2020 18:17:09 +0100},
+  biburl    = {https://dblp.org/rec/journals/corr/abs-2010-14373.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{wang2019bfloat16,
+  title={Bfloat16: the secret to high performance on cloud tpus},
+  author={Wang, Shibo and Kanwar, Pankaj},
+  journal={Google Cloud Blog},
+  year={2019}
+}
