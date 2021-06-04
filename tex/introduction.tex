@@ -3,11 +3,26 @@
 % See https://tex.stackexchange.com/questions/153312/subfiles-inside-a-subfile-using-relative-paths
 \providecommand{\main}{..}
 \documentclass[\main/thesis.tex]{subfiles}
+%SetFonts
+% mathpazo
+\usepackage[noBBpl,sc,osf]{mathpazo} % math & rm
+\linespread{1.05} % Palatino needs more leading (space between lines)
+\usepackage[scaled]{helvet} % ss
+\usepackage{zlmtt} % tt
+\usepackage[T1]{fontenc}
+\usepackage{textcomp}
+\normalfont
+\usepackage{amssymb}
+%SetFonts
 
 \begin{document}
 
 \chapter{Introduction}
 \label{cha:intro}
+
+\nelson{Everything that you have in this chapter should move to the background chapter. The introduction should explain the problem that you are solving. Re-read the introductions to the KernelFarer paper and to the PACT paper to get your mind into what an introduction should say. You can either talk about the same ideas and white your own, or you can reuse some of that text if you have a paragraph saying that the text appears in those multi-author manuscripts.}
+
+\nelson{The introduction should contain a clear problem statement or thesis statement. Someone reading only the introduction should be able to clearly state the contribution of a thesis.}
 
 \begin{itemize}
   \item Introduction to \gls{power}/\gls{power10}.
@@ -19,24 +34,26 @@
 First introduced as part of the ILLIAC IV~\autocite{barnes1968illiac}, processors capable of \gls{simd} computation were a crucial advancement in high-performance computing history.
 \bk{Join better.}
 Flynn characterised a \gls{simd} processor as having the ability to apply a single ``master'' instruction over a vector of related operands~\autocite{flynn1972some}.
-Such an architecture is desirable for its ability to increase the throughput of repeated operations through data level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
+Such an architecture is desirable for its ability to increase the throughput of repeated operations through data-level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
 This process of increasing the throughput of loops, through what is essentially a reduction in the number of instructions executed, has developed into what is now the well-known and well-studied process of ``\gls{vectorisation}''.
 
-\section{IBM Power}
+\section{The IBM Power Architecture}
 \Gls{ibm} has decades of history in computing, tracing their roots back to the 1880s; first incorporated as the Computing-Tabulating-Recording Company in 1911, it was eventually renamed to \gls{ibm} in 1924~\autocite{ibmarchive}.
 Throughout this history, \gls{ibm} has made a point of innovating and pioneering numerous technologies in hardware, software, and the intermingling of the two.
 One such innovation was the \gls{power} \gls{isa}.
 
-The \gls{power} \gls{isa} was first announced in 1990 along with its primary instantiatiaion in the \gls{ibm} System/6000~\autocite{montoye1990design}.
+The \gls{power} \gls{isa} was first announced in 1990 along with its primary instantiation in the \gls{ibm} System/6000~\autocite{montoye1990design}.
+\nelson{The structure of the next sentence needs work.}
 The System/6000, a \gls{risc}, implemented new features such as register renaming and out-of-order execution via the Tomasulo algorithm~\autocite{tomasulo1967efficient}  for the first time in a microprocessor when it was previously available only in the \gls{ibm} System/360 mainframe.
 
 Years later, in August 2020, \gls{ibm} remains competitive in its technology offerings with the announcement of the tenth generation of the \gls{power} \gls{isa}, aptly named \gls{power10}.
 
 \subsection{SIMD History in IBM Power}
 Initially, the \gls{power} architecture implemented its \gls{simd} capabilities through a common standard named \gls{altivec}.
-\Gls{altivec} was designed through a collaboration between \gls{ibm}, Apple, and Motorola and described a \gls{simd} instruction set for floating point and integer values.
+\Gls{altivec} was designed through a collaboration between \gls{ibm}, Apple, and Motorola and described a \gls{simd} instruction set for floating-point and integer values.
 This implementation, presented under the name \gls{vmx}, was first instantiated by IBM as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007~\autocite{eisen2007ibm} despite the standard being presented in 1999~\autocite{tyler1999altivec}.
 \bk{Both Apple and Motorola used AltiVec in the mean time. I can't tell if it's necessary to mention this or if I should just focus on IBM.}
+\nelson{You already mentioned above that it was a collaboration with them, thus there is no need to go into their usage of it.}
 
 Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
 \bk{Expand.}
@@ -44,22 +61,26 @@ Both continue to exist to this day in the most recent version of the \gls{isa} (
 
 \subsection{Matrix Math Assist}
 \label{sec:mmaintro}
+\nelson{Substitute the passive voice for an active one. For example "\gls{power10} introduced a new facility, dubbed \gls{mma}, into the \gls{isa}..."  In general, whenever you see a passive voice in the text, see if there is a way to say the same thing using an active voice. Now and then the best is to keep the passive voice for some variety.}
 As part of the new \gls{power10}'s offerings, a new facility, dubbed \gls{mma}, was implemented into the \gls{isa}, continuing \gls{ibm}'s commitment to providing cutting edge hardware for the software needs of the current era.
 \gls{mma} is an addition to \gls{power}'s preexisting \gls{vmx} and \gls{vsx} \gls{simd} facilities.
 It provides a high-throughput and low-latency method for calculating matrix multiplications.
 
-The state of the art for hardware which performs matrix multiplication falls into two categories:
+The state of the art for hardware that performs matrix multiplication falls into two categories:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item via external component (\eg \gls{gpu}, \gls{fpga}, or \gls{asic} such as Google's \gls{tpu})
   \item via \gls{cpu} \gls{isa} extensions (\eg Intel's MMX or ARM's matrix extension\bk{Is there a better name for ARM's extension?})
 \end{enumerate*}
+\nelson{In technical writing, avoid using "as" where the meaning is "because". The only meaning of "because" is causal, while "as" also has a temporal meaning that can often lead to an alternative meaning for the same sentence. Technical writing must strive to be as precise as possible.}
 \Gls{mma} belongs to the second category as the facility is built directly into the \gls{cpu}.
+\nelson{Replace "This means that" with "Thus, " and replace "the facility" with "MMA" to make it more specific and thus more precise. Is the overhead really "prohibitive", until not long ago GPUs were the best thing since sliced bread for DNNs.}
 This means that the facility is amenable to tasks that would normally incur prohibitive overhead, for example, while sending data to an external component such as a \gls{gpu}.
 See \rcha{mma} for further discussion.
 
 \section{Matrix Multiplication}
-Matrix multiplication has long been intrinsic to scientific computation and it is well known that many neural network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
-Optimisation of the operation therefore has the potential to improve many \gls{hpc} tasks in both the research and business domains.
+Matrix multiplication has long been intrinsic to scientific computation and it is well known that many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
+\nelson{How about "high-performance computing" instead of "research"?}
+Optimization of this operation therefore has the potential to improve many \gls{hpc} tasks in both research and business domains.
 
 The operation itself, in its most naive form, is quite simple:
 \begin{lstlisting}[caption={[Basic Matrix Multiplication]A basic matrix multiplication.},label=lst:basicmatmul]
@@ -68,25 +89,29 @@ for (uint64_t i = 0; i < M; ++i)
       for (uint64_t k = 0; k < D; ++k)
         C[i][j] += A[i][k] * B[k][j];
 \end{lstlisting}
-\bk{The above listing and description seem out of place and potentially useless. The listing may be pertinent but the explaning paragraph needs to be improved.}
+\bk{The above listing and description seem out of place and potentially useless. The listing may be pertinent but the explaining paragraph needs to be improved.}
 The \code{i} loop iterates the rows of \code{A}, also choosing a row in \code{C}, while the \code{j} loop iterates the columns of \code{B}, also choosing a cell in the chosen row of \code{C}.
 The final \code{k} loop iterates through the elements of the chosen row of \code{A} and column of \code{B}, reducing each of the pair-wise products into the chosen cell of \code{C}.
 
 Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
+\nelson{When a paper has only two authors, we do not say "et al." which means "and others" in Latin. In this case it should be "Goto and van~de~Geijn".}
 Seminal research such as that by Goto \etal~\autocite{goto2008anatomy} have resulted in high performance software implementations, \eg EIGEN\todo{cite} and BLAS\todo{cite}.
-These implementations often outperform the naive version by hundreds or thousands of times, turning hours of serial work into seconds or less.
-This is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop switching.
+These implementations often outperform naive implementations of matrix multiplication by hundreds or thousands of times, turning hours of serial work into seconds or less.
+\nelson{"This" what?}
+This is possible through the use of hardware features, such as \gls{simd}, and software optimizations, such as loop switching.
 
-However, when one looks more closely, it is hard to classify any optimisation here as hardware or software only.
-\Gls{simd}, though it is a hardware feature, enables software to execute less instructions and loop switching is actually optimising data reuse in the hardware cache.
-It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimisation of this operation.
+\nelson{I do not know what "here" refers to.}
+However, when one looks more closely, it is hard to classify any optimization here as hardware or software only.
+\Gls{simd}, though it is a hardware feature, enables software to execute less instructions and loop switching is actually optimizing data reuse in the hardware cache.
+It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimization of this operation.
 
 \section{LLVM}
 \label{sec:llvm}
-\Gls{llvm}, originally an initialism for Low Level Virtual Machine, is as a compilation framework devised by Chris Lattner~\autocite{lattner2002llvm,lattner2004llvm}.
-Lattner originally positions \gls{llvm} as a ``unique multi-stage optimization system'' which aims to ``support extensive interprocedural and profile-driven optimizations, while being efficient enough for use in commercial compiler systems''~\autocite{lattner2002llvm}.
-\Gls{llvm}, now a mononym, has evolved into a project covering a wide range of compilation-related tools including frontends for many languages, an optimiser, backends for many platforms, a \glslink{linking}{linker}, debugger, and several other projects.
+\Gls{llvm}, originally an initialism for Low-Level Virtual Machine, is a compilation framework devised by Chris Lattner~\autocite{lattner2002llvm,lattner2004llvm}.
+Lattner originally positions \gls{llvm} as a ``unique multi-stage optimization system'' that aims to ``support extensive inter-procedural and profile-driven optimizations, while being efficient enough for use in commercial compiler systems''~\autocite{lattner2002llvm}.
+\Gls{llvm}, now a mononym, has evolved into a project covering a wide range of compilation-related tools including frontends for many languages, an optimizer, backends for many platforms, a \glslink{linking}{linker}, debugger, and several other projects.
 
+\nelson{I think that optimization and optimizer should be typeset with a "z", I will stop fixing it. You check. I do not know if this is a Canadian vs American English language variation.}
 Frontends exist for a multitude of languages including C/C++ (\code{clang}), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
 Backends also exist for a wide variety of platforms, such as X86, ARM, PowerPC, and WebAssembly.
 The \gls{llvm} optimiser, named \code{opt}, is a popular target compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
@@ -99,7 +124,7 @@ These include \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
 
 \subsection{LLVM's Intermediate Representation}
 \label{sec:ir}
-The main pillar upon which \gls{llvm}'s compilation pipeline is built is its \gls{ir}.
+The main pillar upon which the \gls{llvm}'s compilation pipeline is built is its \gls{ir}.
 An \gls{ir} is a programming language in its own right, though its intended use is a frontend-language-agnostic and backend-target-agnostic intermediary language.
 In this way, all frontends may target their \gls{lowering} toward producing a single shared language and all backends may consume a single shared language to produce their platform specific assembly.
 Given this shared middle point, it is easy to create an optimiser which both consumes and produces the single intermediate language.
@@ -111,7 +136,7 @@ A critical feature of the \gls{ir} is that it is in \gls{ssa} form.
 
 \Gls{ssa} was formalised by Cytron \etal~\autocite{cytron1989efficient} though its use was seen as a side effect in previous works~\autocite{rosen1988global,alpern1988detecting}.
 Efficient methods for its construction followed shortly after~\autocite{cytron1991efficiently,brandis1994single}.
-Intuitively, a program in \gls{ssa} form's main property is that each variable in the program text (static) is assigned to exactly once (single assignment); this property does not preclude executing an assignment multiple times at runtime, potentially with different values.
+Intuitively, the main property of a program in \gls{ssa} form is that each variable in the program text (static) is assigned to exactly once (single assignment); this property does not preclude executing an assignment multiple times at runtime, potentially with different values.
 
 \noindent
 \begin{minipage}[t]{0.45\linewidth}
@@ -145,11 +170,11 @@ A simple C program, shown in \rlst{cSSA} is converted to the SSA format in \rlst
 The first reference to a variable is suffixed with a one, and all future references increment the counter by one.
 This process continues for the entirety of a function body, regardless of any control flow.
 There are further complications in the construction algorithm in the presence of control flow but as this work presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
-This format is signficantly more conducive to analysis and optimization than the source language, allowing for a much easier data flow analysis.
+This format is significantly more conducive to analysis and optimization than the source language, allowing for a much easier data flow analysis.
 \bk{
   I feel like I should expand here but I'm unsure which direction.
   Should I explain more of why SSA is a good idea?
-  Should I explain more properties and the structore of LLVM IR?
+  Should I explain more properties and the structure of LLVM IR?
   More of SSA seems off topic and the structure of the IR takes a lot longer to describe than is reasonable.
 }
 

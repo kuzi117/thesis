@@ -8,8 +8,10 @@
 
 \chapter{Method}
 \label{cha:method}
+\nelson{avoid passive voice}
+\nelson{replace "which makes use of" with "that uses" --- read on which hunting: https://wordpress.com/dailypost/2011/10/27/going-on-a-which-hunt/  There is a difference between the use of which in American vs British English. We tend to use American English.}
 This chapter discusses the contributed implementation of a high-performance and library-free matrix-matrix multiplication algorithm which makes use of \gls{mma}.
-Due to its implementation in the LLVM compiler framework, the method has immediate performance enhancing potential on the \gls{power10} platform.
+Due to its implementation in the LLVM compiler framework, the method has immediate performance-enhancing potential on the \gls{power10} platform.
 
 \section{Intrinsics in LLVM}
 \todo{add text here?}
@@ -33,6 +35,7 @@ A \gls{builtin} is a function available to be called in a high-level language bu
 These exist in order to hide the complexity of low-level operations which are not supported natively by the user's language of choice.
 A common example is operations which are necessarily implemented in assembly (\eg \gls{simd} operations, accessing a processor's special registers).
 Other platform-agnostic \glspl{builtin} provide common functionality extended with useful semantics or from a specific standard to avoid duplication or incorrect implementation.
+\nelson{"These" what? It should be "These functionalities" -- Do a global search for "This" and "These" and check that you used a word about the pronoun to make it specific. In technical writing we should avoid using "This" to refer to the entire content of the previous sentence.}
 These include things like \gls{clang}'s checked arithmetic builtins~\autocite{llvmCheckArith} or GCC's provision of ISO C functions~\autocite{gccOtherBuiltins}.
 
 An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available to an end user.
@@ -40,19 +43,21 @@ These functions' most important role is to symbolise the concept of a common ope
 They are therefore not platform-specific but their lowering may be if the semantics necessitate it or if the maintainer wants to provide a more efficient version.
 For example, the \gls{llvm} \gls{intrinsic} \code{llvm.vector.reduce.add.*} may be generically lowered to a series of vector operations at the \gls{ir} level, or, if the \gls{isa} provides a reduction instruction, it could be lowered more efficiently by the backend.
 
-Many compilers use \gls{builtin} as explained above, while others (\eg MSVC, ICC \bk{Do I need to add these to the list of acronyms?}) use \gls{intrinsic} in their documentation to refer to the same concept.
+Many compilers use \gls{builtin} as explained above, while others (\eg MSVC, ICC \bk{Do I need to add these to the list of acronyms?} \nelson{yes}) use \gls{intrinsic} in their documentation to refer to the same concept.
+\nelson{"This use" ??}
 This can, in some cases, be explained as part of the lowering process.
 What starts out as a call to a \gls{builtin}, a function declared in a header but without a definition, is \glslink{lowering}{lowered} by the frontend to a call to an intrinsic.
 For instance, \gls{llvm} provides \gls{mma} \glspl{builtin} for use at the source level, such as the \gls{mma} floating-point matrix-multiply intrinsic: \code{__builtin_mma_xvfger32pp}.
+\nelson{"This builtin"? Also, use the present tense instead of "will be"}
 This will be \glslink{lowering}{lowered} to the \gls{llvm} \gls{intrinsic} \code{llvm.ppc.mma.xvf32gerpp}.
 This \gls{lowering} allows the compiler to maintain a single optimised and canonical lowering without a library, thus enabling inlining of code without \gls{lto}, resulting in better scheduling.
 Optimisation passes can also then transparently generate calls to the intrinsic without loss of performance.
 
 \subsubsection{Intrinsic Format}
 Within \gls{llvm} \gls{ir}, \glspl{intrinsic} appear simply as external function declarations whose names are prefixed with ``\code{llvm.}''.
-Names within \gls{llvm} are permitted to contain periods, a feature which \glspl{intrinsic} make use of often to \gls{mangle} what are called ``families'' of \glspl{intrinsic}.
+Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} uses to \gls{mangle}  families of \glspl{intrinsic}.
 Families arise from the need to provide generic \glspl{intrinsic} to a strongly typed language where overloading is not allowed.
-Take for example the \code{llvm.smax.*} \gls{intrinsic} which takes two signed integers of the same type and returns the largest.
+For instance, consider the \code{llvm.smax.*} \gls{intrinsic} which takes two signed integers of the same type and returns the largest.
 The \gls{llvm} documentation uses the ``\code{.*}'' suffix to represent the \glslink{mangle}{mangled} portion of the name.
 An actual definition will replace the asterisk with a type name; if the function is generic in multiple places (return value, arguments) then the other type names will be appended and separated with more periods.
 The \code{llvm.smax.*} \gls{intrinsic} only has one generic type.
@@ -69,13 +74,15 @@ declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a,
 \label{sec:matMulInt}
 \bk{Discuss the input vectors already being loaded.}
 The \code{llvm.matrix.multiply.*} \gls{intrinsic} existed prior to this work and warrants a brief explanation to provide context~\autocite{llvmLangref}.
-The \gls{intrinsic} has three generic types: the return and the two input matrices.
+The \gls{intrinsic} has three generic types: the return-value type and the type of the two input matrices.
 Each of the three matrices is typed as flattened vectors and therefore the signature requires three extra arguments to describe the dimensions as in \matmul{m}{d}{n}.
 
-The original implementers require that input dimensions be statically known constants.
-As well, those familiar with the analogous \gls{blas} routines may notice that arguments describing data access order are conspicuously absent.
-The original interface assumes that all matrices are collectively column-major.
-Users may include a specific flag in their compiler invocation to change this setting to row-major.
+The original implementers required that input dimensions be statically known constants.
+As well, those familiar with the analogous \gls{blas} routines may notice that arguments describing data-access order are conspicuously absent.
+\nelson{Is column-major order referring to  the storage order or to the access order in this sentence?}
+The original interface assumes that all matrices are column-major order.
+Users may include a specific flag in their compiler invocation to change this setting to row-major order.
+\nelson{"This"}
 This means that a user may not mix data orientations within their program.
 \rlst{matMulIntr} provides an example declaration and invocation of the intrinsic which computes \matmul{8}{5}{16}.
 
@@ -96,17 +103,19 @@ define void @foo() {
 }
 \end{lstlisting}
 
-During lowering, the \code{call} statement will be replaced with a series of \gls{llvm} \gls{ir} vector operations by the \code{LowerMatrixIntrinsics} pass.
+During lowering, the \code{call} statement is replaced with a series of \gls{llvm} \gls{ir} vector operations by the \code{LowerMatrixIntrinsics} pass.
 This version of the lowering is what we refer to as the default ``vectorisation'' method.
 Because the dimensions of the operation are known statically, the computation is completely unrolled: no loops will be generated.
 Such a lowering is ideal because it removes the need for loop analysis and allows later passes to further vectorise or pipeline the operation.
 This property makes it ideal for creating small and efficient kernels focused on efficient computation.
 \bk{I'm not sure I need to expand on the vectorisation lowering. It's laid out very simply here, but more info may help contrast more.}
 
+\nelson{kernels cannot be used with kernels....}
 These kernels, because fully unrolling them creates a large amount of code, cannot be used with large kernels.
-As an example, unrolling a kernel for \matmul{128}{128}{128} takes several minutes of compilation time and results in an \gls{ir} file slightly large than a gigabyte with over 12 million lines.
+For example, unrolling a kernel for \matmul{128}{128}{128} takes several minutes of compilation time and results in an \gls{ir} file slightly larger than a gigabyte with over 12 million lines.
+\nelson{"this"}
 Producing a binary from this has never been accomplished due to the inordinate compilation time.
-Therefore, wrapping the kernel in an outer kernel which breaks down the operation while efficiently handling memory movement is a necessity.
+Therefore, wrapping the kernel in an outer kernel, which breaks down the operation while efficiently handling memory movement, is a necessity.
 For further discussion see \bk{PACT paper or section N}.
 
 \section{An Alternate Lowering Using MMA}
@@ -117,6 +126,7 @@ Content in \rsec{baseCase}, \rsec{dataTypes}, and \rsec{arbitraryDims} is derive
   I'm not sure this is enough context for the upcoming section; it's not apparent why the output is $8 \times 16$.
   I am, however, writing this before having finished the explanation of MMA which should be in a previous chapter.
 }
+\nelson{Preceding what?}
 This preceding work focused on a lowering for floating point values when computing \matmul{8}{5}{16}.
 The $8 \times 16$ output size is exactly the output dimensions produced when fully utilising the architecture's available accumulators.
 This property made it the ideal size for the intrinsic's role as a tight inner kernel.
