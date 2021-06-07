@@ -9,19 +9,62 @@
 \chapter{Introduction}
 \label{cha:intro}
 
-\nelson{Everything that you have in this chapter should move to the background chapter. The introduction should explain the problem that you are solving. Re-read the introductions to the KernelFarer paper and to the PACT paper to get your mind into what an introduction should say. You can either talk about the same ideas and white your own, or you can reuse some of that text if you have a paragraph saying that the text appears in those multi-author manuscripts.}
+\nelson{
+  Everything that you have in this chapter should move to the background chapter.
+  The introduction should explain the problem that you are solving.
+  Re-read the introductions to the KernelFarer paper and to the PACT paper to get your mind into what an introduction should say.
+  You can either talk about the same ideas and white your own, or you can reuse some of that text if you have a paragraph saying that the text appears in those multi-author manuscripts.
+}
+\nelson{
+  The introduction should contain a clear problem statement or thesis statement.
+  Someone reading only the introduction should be able to clearly state the contribution of a thesis.
+}
 
-\nelson{The introduction should contain a clear problem statement or thesis statement. Someone reading only the introduction should be able to clearly state the contribution of a thesis.}
-
-
-\section{Contributions}
-This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC
-This work addresses multiple questions of interest when considering MMA.
-\begin{enumerate}
+\begin{itemize}
   \item
-    Does an \gls{mma} kernel perform better than the vectorised equivalent?
+    Set up issues: matrix multiply is in high demand as HPC and AI tasks grow in size and importance.
   \item
-    Does \gls{mma} offer greater benefits when using different datatypes?
-\end{enumerate}
+    Present matrix engines as the ``next generation'' solution.
+    They don't require extra hardware, specialised (TPU, etc.) or not (GPU, FPGA).
+  \item
+    Set up problem: code generation requires
+    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+      \item ease of access to users to facilitate adoption
+      \item understanding of hardware (memory heirarchy, ME facility properties)
+    \end{enumerate*}
+  \item
+    Referencing adoption: discuss how libraries
+    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+      \item are the default high performance implementation
+      \item require installation and maintenance
+      \item promote bad development habits (kernel written in assembly, specialised to hardware versions)
+    \end{enumerate*}
+  \item
+    Referencing understanding of hardware: discuss how initial SIMD hardware and algorithms parallel the needs of matrix engines.
+    \bk{
+      This idea comes from a discussion on the PACT 2021 paper where we wanted to relate say ``codegen for new hardware'' is an important contribution.
+      I'm not sure if there's a better hardware example or a better way to go about relating this to codegen.
+    }
+  \item
+    Present first contribution as a lowering algorithm that addresses the above problems by
+    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+      \item implementing in a production compiler (LLVM) and implementing a generic lowering under and easy to use intrinsic.
+      \item carefully considering memory and hardware constraints to produce high performance code.
+    \end{enumerate*}
+  \item
+    Second contribution is the evaluation of the implementation.
+  \item
+    Expand slightly and point to sections.
+\end{itemize}
+
+% \section{Contributions}
+% This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC
+% This work addresses multiple questions of interest when considering MMA.
+% \begin{enumerate}
+%   \item
+%     Does an \gls{mma} kernel perform better than the vectorised equivalent?
+%   \item
+%     Does \gls{mma} offer greater benefits when using different datatypes?
+% \end{enumerate}
 
 \end{document}
