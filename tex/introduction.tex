@@ -18,49 +18,62 @@ While multithreading reduces these functions' contribution to overall runtime si
   I'm trying to avoid explaining BLAS until I talk about libraries.
   Is this an acceptable summarisation?
 }
+\nelson{Yes}
 
 At the center of our capability to handle these expanding workloads is the \gls{matrix engine}.
-\Glspl{matrix engine} are a new accelerator facility found in the most recent generation of \glspl{cpu} which focuses on accelerating matrix multiplication.
-Currently, acceleration is done via external hardware or vector extensions to an \gls{isa}.
-External hardware may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}) or not (\eg \glspl{gpu}, \glspl{fpga}).
-Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used and produced simultaneously (see \rsec{simd}).
+\Glspl{matrix engine} are a new accelerator facility, found in the most recent generation of \glspl{cpu}, that focuses on accelerating matrix multiplication.
+Currently, acceleration is done via external-hardware accelerators or via vector extensions to an \gls{isa}.
+External-hardware accelerators may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a (\eg \glspl{gpu}, or an \glspl{fpga}).
+\nelson{Chenged "and" to "or" because a piece of data cannot be used and produced simultaneously.}
+Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used or produced simultaneously (see \rsec{simd}).
 \bk{These next two sentences might be a tangent and might be better off deleted or moved.}
-These vector extensions have a specific advantage over external hardware for small matrices given that data must be sent to the external hardware via the slower PCIe connection.
-For vector extensions, these small matrices can be brought entirely into cache allowing them to remove much of the data transfer overhead.
+\nelson{I am rephrasing it.}
+%These vector extensions have a specific advantage over external hardware for small matrices given that data must be sent to the external hardware via the slower PCIe connection.
+%For vector extensions, these small matrices can be brought entirely into cache allowing them to remove much of the data transfer overhead.
+An advantage of vector extensions in relation to external-hardware accelerators is that a vector extension can access data through the same memory hierarchy used by the CPU while most external accelerators require data transfer over the slower PCIe connection.
 
+\nelson{"variety of implementing" sounds odd}
 The current state of the art when working with matrix operations is the \gls{blas} interface and any of a variety of implementing libraries (\eg OpenBLAS~\autocite{2012xianyi}, IBM's ESSL, Nvidia's cuBLAS).
 \bk{
   Do I need to explain BLAS more or is the glossary sufficient?
   I reference it only several times throughout the current text and only as a passing tangent.
 }
 \bk{Do I need more examples library implementations and do I need citations for each?}
+\nelson{You should include at least MKL. Citation for each one would be good.}
 These libraries can provide incredible speedups and, in parallel architectures, automatic parallelisation: a very attractive feature for large workloads.
 It has been a natural extension of these libraries to include the usage of matrix engines when targeting \glspl{cpu}.
+\nelson{This is a case where there is much more in your mind than in the text or what your reader can know. Be specific on what you mean by "poor habits" and "extra requirements".}
 However, these libraries induce poor habits in development and extra requirements on systems.
 
-All high performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
+All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
 \bk{Should I emphasise or add more to this next argument?}
-Nevertheless, each of these kernels must be produced and handtuned for each new architecture the library wants to support.
+Nevertheless, each of these kernels must be produced and hand tuned for each new architecture that the library needs to support.
 \bk{
   How compelling is this next argument, really?
   Will it strike a chord with the reader or is it weak?
 }
-Moreover, libraries must be available and updated in the destination machine for the program to use: a sometimes difficult request to fulfill on tightly guarded supercomputers.
+\nelson{"on tightly guarded supercomputers" places you as an outsider. Usually the team that is targeting a machine has access to it. Similar for users of these supercomputers. I do not understand the issue with accessibility here. There are three arguments that you can make to motivate the compiler-only code path: (1) adding a new machine target to a library implementation requires developers that are proficient in assembly for that machine. Maintaining that code is also more difficult; and (2) in some machine installation a specific library may not be installed; (3) for small matrices, the overhead of invoking a library is too high in comparison to the execution time of the matrix multiplication.  }
+Moreover, libraries must be available and updated in the target machine for the program to use: a sometimes difficult request to fulfill on tightly guarded supercomputers.
 
 Therefore, as a counterpoint, a method of transparently accelerating matrix multiplication via a compiler-only path is a crucial step forwards in portability and maintainability.
+\nelson{What "now" refers to in this paragraph? There is a temporal relation in your mind that did not make it to the text.}
 Matrix multiplication kernels, while still architecture \emph{sensitive}\footnotemark, need not be written in assembly and are now immediately available for additional automatic optimisation by the compiler framework's current and future optimisations.
 \bk{The footnote feels like the correct choice, but maybe it would make sense to be part of the text.}
+\nelson{The footnote should be part of the text. And perhaps you need a paragraph before this one where you explain your distinction between architecture-sensitive kernels and architecture-specific kernels. The footnote needs rephrasing.}
 \footnotetext{
   Not architecture \emph{specific}, \eg a kernel may be written in terms of an \gls{isa}'s vector extension, but duplication as part of loop unrolling, which is typically subject to specific architecture features (\eg register count and length, functional units), can be handled automatically by the compiler.
 }
+\nelson{"These" what?}
 These include optimisations such as loop switching, blocking, and unrolling which are known to have significant effects on matrix multiplication speed\todo{citation?}.
 \bk{
   Technically loop switching would be possible only at the outer kernel level given that the intrinsic is completely unrolled
 }
 As well, the kernel is now subject to any future improvements in the compiler's backends, encompassing improvements such as register allocation and instruction reordering, all transparent to the user.
 
+\nelson{What is "the current paradigm"? Do you mean "when using libraries"? Be more specific. Sounds like you have two ways of implementing matrix multiplication in your mind but you have not been explicit about these two ways in the text.}
 Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm.
 Mathematically, consecutive matrix multiplications (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
+\nelson{"This" what?}
 This significantly reduces the memory movements required by removing the need to store and reload a temporary value that is likely to have been removed from cache if the matrices are large.
 
 \bk{Codegen requirments are next.}
