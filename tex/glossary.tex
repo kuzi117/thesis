@@ -21,7 +21,8 @@
 }
 \newacronym[
   description={
-    A set of highly-optimised, low-level routines used as building blocks in many larger linear algebra operations.
+    Originally a set of highly-optimised, low-level routines used as building blocks in many larger linear algebra operations~\autocite{lawson1979basic}.
+    It has since developed into a standard interface for higher (matrix-matrix) and lower level (scalar/vector, vector/vector) linear algebra operations with many open source and proprietary implemenations.
   }
 ]{blas}{BLAS}{Basic Linear Algebra Subprograms}
 \longnewglossaryentry{builtin}{name={Builtin}, text={builtin}}{
@@ -56,6 +57,11 @@
 ]{fpga}{FPGA}{Field-Programmable Gate Array}
 
 % G
+\newacronym[
+  description={
+    A more general form of matrix multiplication with a scaling factor for accumulation and multiplication, \ie $C' = \alpha AB + \beta C$ where $C'$ is the new value of $C$ after accumulation.
+  }
+]{gemm}{GEMM}{General Matrix-Matrix Multiplication}
 \newacronym[
   description={
     Originally designed to accelerate image creation for display devices, it was soon repurposed into a general purpose, high performance compute device.
@@ -118,6 +124,9 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 % M
 \longnewglossaryentry{mangle}{name=Mangle,text={mangle}}{
   The act of encoding extra information into a string such that the result is unique and the information recoverable.
+}
+\longnewglossaryentry{matrix engine}{name=Matrix ,text={matrix engine}}{
+  A general term describing a set of new facilities on the most recent generation of \glspl{cpu} which focuses on matrix operations.
 }
 \newacronym[
   description={
@@ -190,7 +199,7 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 % T
 \newacronym[
   description={
-    An external \gls{asic} for accelerating AI designed by Google.
+    An external \gls{asic} for accelerating AI designed by Google~\autocite{abadi2016tensorflow}.
   }
 ]{tpu}{TPU}{Tensor Processing Unit}
 \longnewglossaryentry{translation unit}{name={Translation Unit},text={translation unit}}{

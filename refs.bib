@@ -429,3 +429,150 @@ numpages = {5}
   journal={Google Cloud Blog},
   year={2019}
 }
+
+@article{nakasato2011fast,
+author = {Nakasato, Naohito},
+title = {A Fast GEMM Implementation on the Cypress GPU},
+year = {2011},
+issue_date = {March 2011},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {38},
+number = {4},
+issn = {0163-5999},
+url = {https://doi.org/10.1145/1964218.1964227},
+doi = {10.1145/1964218.1964227},
+journal = {SIGMETRICS Perform. Eval. Rev.},
+month = mar,
+pages = {50–55},
+numpages = {6}
+}
+
+@InProceedings{yu2020toward,
+author="Yu, Tan
+and Cai, Yunfeng
+and Li, Ping",
+editor="Vedaldi, Andrea
+and Bischof, Horst
+and Brox, Thomas
+and Frahm, Jan-Michael",
+title="Toward Faster and Simpler Matrix Normalization via Rank-1 Update",
+booktitle="Computer Vision -- ECCV 2020",
+year="2020",
+publisher="Springer International Publishing",
+address="Cham",
+pages="203--219",
+isbn="978-3-030-58529-7"
+}
+
+@INPROCEEDINGS{pal2018outerspace,
+author={Pal, Subhankar and Beaumont, Jonathan and Park, Dong-Hyeon and Amarnath, Aporva and Feng, Siying and Chakrabarti, Chaitali and Kim, Hun-Seok and Blaauw, David and Mudge, Trevor and Dreslinski, Ronald},
+booktitle={2018 IEEE International Symposium on High Performance Computer Architecture (HPCA)},
+title={OuterSPACE: An Outer Product Based Sparse Matrix Multiplication Accelerator},
+year={2018},
+volume={},
+number={},
+pages={724-736},
+doi={10.1109/HPCA.2018.00067}
+}
+
+@INPROCEEDINGS{srivastava2020matraptor,
+author={Srivastava, Nitish and Jin, Hanchen and Liu, Jie and Albonesi, David and Zhang, Zhiru},
+booktitle={2020 53rd Annual IEEE/ACM International Symposium on Microarchitecture (MICRO)},
+title={MatRaptor: A Sparse-Sparse Matrix Multiplication Accelerator Based on Row-Wise Product},
+year={2020},
+volume={},
+number={},
+pages={766-780},
+doi={10.1109/MICRO50266.2020.00068}
+}
+
+@article{wu2016achieving,
+author = {Wu, Jing and Jaja, Joseph},
+title = {Achieving Native GPU Performance for Out-of-Card Large Dense Matrix Multiplication},
+journal = {Parallel Processing Letters},
+volume = {26},
+number = {02},
+pages = {1650007},
+year = {2016},
+doi = {10.1142/S0129626416500079},
+URL = {https://doi.org/10.1142/S0129626416500079},
+eprint = {https://doi.org/10.1142/S0129626416500079}
+}
+
+@InProceedings{waugh2020use,
+author="Waugh, Harry
+and McIntosh-Smith, Simon",
+editor="Nichols, Jeffrey
+and Verastegui, Becky
+and Maccabe, Arthur `Barney'
+and Hernandez, Oscar
+and Parete-Koon, Suzanne
+and Ahearn, Theresa",
+title="On the Use of BLAS Libraries in Modern Scientific Codes at Scale",
+booktitle="Driving Scientific and Engineering Discoveries Through the Convergence of HPC, Big Data and AI",
+year="2020",
+publisher="Springer International Publishing",
+address="Cham",
+pages="67--79",
+abstract="As we approach the Exascale era, computer architectures are evolving ever-greater vector and matrix acceleration units---NVIDIA's Ampere Tensor Cores, Intel's AMX, and Arm's SVE vector instruction set developments are just three recent examples [1, 2, 10]. To exploit these, it is expected that optimised math libraries such as those for dense and sparse linear algebra, will play an increasing role in achieving optimal performance. It is therefore useful to understand which of these functions dominate an application's runtime, and in particular how this changes with increasing scale. This work aims to provide a contemporary dataset regarding how much dense linear algebra (BLAS) is used in HPC codes at scale. We have analysed several science codes widely used on the UK HPC service, ARCHER (https://www.archer.ac.uk), including CASTEP, CP2K, QuantumESPRESSO, and Nektar++. To capture demands from the AI community, we have additionally traced the training stage of the Convolutional Neural Network (CNN), AlexNet [7]. HPLinpack is also included as a reference, as it exhibits a well-understood BLAS usage pattern. Results from across all the codes show that, unlike HPLinpack, BLAS usage is never more than 25{\%} of the total runtime, even when running at a modest scale (32 nodes of the Arm-based supercomputer, Isambard). This presents limited speedup opportunity when considering Amdahl's law, and suggests that application developers may need to adjust their algorithms to spend more time in optimised BLAS libraries to capitalise on new architectures and accelerators.",
+isbn="978-3-030-63393-6"
+}
+
+@inproceedings{abadi2016tensorflow,
+author = {Mart{\'\i}n Abadi and Paul Barham and Jianmin Chen and Zhifeng Chen and Andy Davis and Jeffrey Dean and Matthieu Devin and Sanjay Ghemawat and Geoffrey Irving and Michael Isard and Manjunath Kudlur and Josh Levenberg and Rajat Monga and Sherry Moore and Derek G. Murray and Benoit Steiner and Paul Tucker and Vijay Vasudevan and Pete Warden and Martin Wicke and Yuan Yu and Xiaoqiang Zheng},
+title = {TensorFlow: A System for Large-Scale Machine Learning},
+booktitle = {12th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} 16)},
+year = {2016},
+isbn = {978-1-931971-33-1},
+address = {Savannah, GA},
+pages = {265--283},
+url = {https://www.usenix.org/conference/osdi16/technical-sessions/presentation/abadi},
+publisher = {{USENIX} Association},
+month = nov,
+}
+
+@article{lawson1979basic,
+  title={Basic linear algebra subprograms for Fortran usage},
+  author={Lawson, Chuck L and Hanson, Richard J. and Kincaid, David R and Krogh, Fred T.},
+  journal={ACM Transactions on Mathematical Software (TOMS)},
+  volume={5},
+  number={3},
+  pages={308--323},
+  year={1979},
+  publisher={ACM New York, NY, USA}
+}
+
+@INPROCEEDINGS{2012xianyi,
+author={Z. {Xianyi} and W. {Qian} and Z. {Yunquan}},
+booktitle={2012 IEEE 18th International Conference on Parallel and Distributed Systems},
+title={Model-driven Level 3 BLAS Performance Optimization on Loongson 3A Processor},
+year={2012},
+volume={},
+number={},
+pages={684-691},
+doi={10.1109/ICPADS.2012.97},
+ISSN={1521-9097},
+month={Dec}
+}
+
+
+@article{zee2016blis,
+author = {Zee, Field G. Van and Smith, Tyler M. and Marker, Bryan and Low, Tze Meng and Geijn, Robert A. Van De and Igual, Francisco D. and Smelyanskiy, Mikhail and Zhang, Xianyi and Kistler, Michael and Austel, Vernon and Gunnels, John A. and Killough, Lee},
+title = {The BLIS Framework: Experiments in Portability},
+year = {2016},
+issue_date = {June 2016},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {42},
+number = {2},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/2755561},
+doi = {10.1145/2755561},
+abstract = {BLIS is a new software framework for instantiating high-performance BLAS-like dense linear algebra libraries. We demonstrate how BLIS acts as a productivity multiplier by using it to implement the level-3 BLAS on a variety of current architectures. The systems for which we demonstrate the framework include state-of-the-art general-purpose, low-power, and many-core architectures. We show, with very little effort, how the BLIS framework yields sequential and parallel implementations that are competitive with the performance of ATLAS, OpenBLAS (an effort to maintain and extend the GotoBLAS), and commercial vendor implementations such as AMD’s ACML, IBM’s ESSL, and Intel’s MKL libraries. Although most of this article focuses on single-core implementation, we also provide compelling results that suggest the framework’s leverage extends to the multithreaded domain.},
+journal = {ACM Trans. Math. Softw.},
+month = jun,
+articleno = {12},
+numpages = {19},
+keywords = {Linear algebra, matrix, BLAS, multiplication, libraries, high performance}
+}
