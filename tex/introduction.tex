@@ -13,70 +13,113 @@ Matrix multiplication is a critical basic operation in many \gls{hpc} and AI wor
 Given the surge of popularity in AI and the growing scale of \gls{hpc} tasks and simulations, the optimisation of matrix multiplication can mean an essential reduction in computing time.
 Waugh and McIntosh-Smith demonstrate that for small thread counts, \gls{gemm} operations often dominate execution time in a set of benchmarks found to be representative of current workloads~\autocite{waugh2020use}.
 While multithreading reduces these functions' contribution to overall runtime significantly, they conclude that, in a soon-to-be-exascale future, applications will adapt to use more \gls{gemm} operations, expanding this portion considerably.
-\bk{
-  Technically they conclude there will be more BLAS usage, but they've also shown that the majority of time spent in BLAS is spent in some sort of GEMM (ZGEMM, DGEMM, SGEMM, etc.).
-  I'm trying to avoid explaining BLAS until I talk about libraries.
-  Is this an acceptable summarisation?
-}
-\nelson{Yes}
 
 At the center of our capability to handle these expanding workloads is the \gls{matrix engine}.
 \Glspl{matrix engine} are a new accelerator facility, found in the most recent generation of \glspl{cpu}, that focuses on accelerating matrix multiplication.
-Currently, acceleration is done via external-hardware accelerators or via vector extensions to an \gls{isa}.
-External-hardware accelerators may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a (\eg \glspl{gpu}, or an \glspl{fpga}).
-\nelson{Chenged "and" to "or" because a piece of data cannot be used and produced simultaneously.}
-Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used or produced simultaneously (see \rsec{simd}).
-\bk{These next two sentences might be a tangent and might be better off deleted or moved.}
-\nelson{I am rephrasing it.}
-%These vector extensions have a specific advantage over external hardware for small matrices given that data must be sent to the external hardware via the slower PCIe connection.
-%For vector extensions, these small matrices can be brought entirely into cache allowing them to remove much of the data transfer overhead.
-An advantage of vector extensions in relation to external-hardware accelerators is that a vector extension can access data through the same memory hierarchy used by the CPU while most external accelerators require data transfer over the slower PCIe connection.
+Currently, acceleration is done via external accelerators or via vector extensions to an \gls{isa}.
+An external accelerators may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a \glspl{gpu}, or an \glspl{fpga}.
+\nelson{Changed "and" to "or" because a piece of data cannot be used and produced simultaneously.}
+\bk{I changed it to say ``by a single instruction''.}
+Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used and produced by a single instruction (see \rsec{simd}).
+An advantage of vector extensions in relation to external accelerators is that a vector extension can access data through the same memory hierarchy used by the CPU while most external accelerators require data transfer over the slower PCIe connection.
 
-\nelson{"variety of implementing" sounds odd}
-The current state of the art when working with matrix operations is the \gls{blas} interface and any of a variety of implementing libraries (\eg OpenBLAS~\autocite{2012xianyi}, IBM's ESSL, Nvidia's cuBLAS).
+The current state of the art when working with matrix operations is to choose one of several libraries that implement the \gls{blas} interface (\eg OpenBLAS~\autocite{2012xianyi}, IBM's ESSL, Intel's MKL, Nvidia's cuBLAS).
 \bk{
   Do I need to explain BLAS more or is the glossary sufficient?
   I reference it only several times throughout the current text and only as a passing tangent.
 }
 \bk{Do I need more examples library implementations and do I need citations for each?}
 \nelson{You should include at least MKL. Citation for each one would be good.}
+\bk{
+  Should the citation just be to the place where you can get the library or should I be looking for some sort of presentation of the library in an academic work?
+  I looked for ESSL already and found only a work for Parallel ESSL, a work from the 95s where a second version of ESSL was implemented using MPI.
+}
 These libraries can provide incredible speedups and, in parallel architectures, automatic parallelisation: a very attractive feature for large workloads.
 It has been a natural extension of these libraries to include the usage of matrix engines when targeting \glspl{cpu}.
 \nelson{This is a case where there is much more in your mind than in the text or what your reader can know. Be specific on what you mean by "poor habits" and "extra requirements".}
+\bk{The poor habits (assembly programming with bad maintainability) and extra requirements (library availability on destination machines) are the next paragraph; do I need something else?}
 However, these libraries induce poor habits in development and extra requirements on systems.
 
 All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
-\bk{Should I emphasise or add more to this next argument?}
-Nevertheless, each of these kernels must be produced and hand tuned for each new architecture that the library needs to support.
+Nevertheless, each of these kernels must be produced and hand tuned for each new \gls{cpu} that the library needs to support.
+Creating these kernels requires engineers who are extremely knowledgeable about the \gls{isa} and the architectural details of a target \gls{cpu}.
+Thus, maintaining the code surrounding such a kernel as well as the kernel itself requires significant ongoing effort as developers try to obtain greater performance from the implementation.
+
 \bk{
-  How compelling is this next argument, really?
-  Will it strike a chord with the reader or is it weak?
+  I'm planning to produce results that show the cost of calling a function to compute GEMM and comparing with a na\"ive version.
 }
-\nelson{"on tightly guarded supercomputers" places you as an outsider. Usually the team that is targeting a machine has access to it. Similar for users of these supercomputers. I do not understand the issue with accessibility here. There are three arguments that you can make to motivate the compiler-only code path: (1) adding a new machine target to a library implementation requires developers that are proficient in assembly for that machine. Maintaining that code is also more difficult; and (2) in some machine installation a specific library may not be installed; (3) for small matrices, the overhead of invoking a library is too high in comparison to the execution time of the matrix multiplication.  }
-Moreover, libraries must be available and updated in the target machine for the program to use: a sometimes difficult request to fulfill on tightly guarded supercomputers.
+This work also shows that, for small matrices, it can be wrong to assume that a library will speed up your implementation.
+The overhead of invoking a function call along with the extra operations that are part of the library's prologue and epilogue can cause your program to slow down.
+\todo{
+  At what size is it better?
+  Is the na\"ive solution without MMA better?
+}
+
+Additionally, using a library means user code now has an external dependency.
+In applications where performance and correctness are critical and must be tightly controlled by the developer, using libraries may be an impossibility.
+Similarly, while finding a \gls{blas} implementation on major platforms is often quite easy, some target platforms may not have an available implementation with which this dependency can be fulfilled~\autocite{zee2016blis}.
+This is a direct product of the manual kernel porting difficulties described above.
 
 Therefore, as a counterpoint, a method of transparently accelerating matrix multiplication via a compiler-only path is a crucial step forwards in portability and maintainability.
-\nelson{What "now" refers to in this paragraph? There is a temporal relation in your mind that did not make it to the text.}
-Matrix multiplication kernels, while still architecture \emph{sensitive}\footnotemark, need not be written in assembly and are now immediately available for additional automatic optimisation by the compiler framework's current and future optimisations.
-\bk{The footnote feels like the correct choice, but maybe it would make sense to be part of the text.}
-\nelson{The footnote should be part of the text. And perhaps you need a paragraph before this one where you explain your distinction between architecture-sensitive kernels and architecture-specific kernels. The footnote needs rephrasing.}
-\footnotetext{
-  Not architecture \emph{specific}, \eg a kernel may be written in terms of an \gls{isa}'s vector extension, but duplication as part of loop unrolling, which is typically subject to specific architecture features (\eg register count and length, functional units), can be handled automatically by the compiler.
-}
-\nelson{"These" what?}
-These include optimisations such as loop switching, blocking, and unrolling which are known to have significant effects on matrix multiplication speed\todo{citation?}.
+When a matrix multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
+Relaxing this requirement means kernels are similarly relaxed to an \emph{architectural sensitivity} rather than a \emph{\gls{cpu} dependency}.
+For example, a kernel, to obtain best performance, will still need to be written in terms of an \gls{isa}'s vector extension, tying it to the architecture.
+However, optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
+This automation means that an appropriately written and parameterised kernel will also still be optimal in future hardware iterations.
 \bk{
-  Technically loop switching would be possible only at the outer kernel level given that the intrinsic is completely unrolled
+  Note for the conclusion: tie this sentence back.
+  Future MMA versions can make use of the same kernel, tuning acc layout, etc.
 }
-As well, the kernel is now subject to any future improvements in the compiler's backends, encompassing improvements such as register allocation and instruction reordering, all transparent to the user.
 
-\nelson{What is "the current paradigm"? Do you mean "when using libraries"? Be more specific. Sounds like you have two ways of implementing matrix multiplication in your mind but you have not been explicit about these two ways in the text.}
-Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm.
+Kernels written as part of a compiler are also implicitly subject to all of the optimisations available in the compiler, now and in the future.
+Currently, these include optimisations such as loop switching, blocking, and unrolling which are known to have significant effects on matrix multiplication speed\todo{citation?}.
+In the backend, improvements to processes such as register allocation and instruction scheduling (reordering/pipelining) will be retroactively available to these kernels as well, completely transparently to the user.
+
+Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm of library function calls.
 Mathematically, consecutive matrix multiplications (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
-\nelson{"This" what?}
-This significantly reduces the memory movements required by removing the need to store and reload a temporary value that is likely to have been removed from cache if the matrices are large.
+Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload a temporary value that is likely to have been removed from cache if the matrices are large.
+Compilers have the foresight and tools to fuse these operations and then further optimise the resulting code.
 
-\bk{Codegen requirments are next.}
+\bk{I worry that the above paragraph about developers requiring extensive knowledge being a downside combined with this paragraph saying knowledge is required... is sort of self-defeating.}
+A compiler-only solution for matrix multiplication, while benefitting from preexisting features of a compiler, nevertheless requires
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label={}, afterlabel={}, after={.}]
+  \item knowledge of the compiler framework, target operation, and the target architecture
+  \item forethought based on the constraints derived from this knowledge
+  \item an actionable design built from this forethought
+\end{enumerate*}
+This includes understanding the matrix engine and vector extensions of the target architecture as well as how they interact with each other and the memory hierarchy.
+\bk{
+  I feel like more could be said here, but I'm drawing a blank.
+  I'll return eventually.
+}
+
+The planning of an implementation is crucial, though it is all for naught if it is never adopted nor used for its intended purprose.
+Libraries are the currently preferred method of acceleration and therefore any replacement method should aim to require less effort if it hopes to be adopted.
+Library download and installation is oftentimes a simple barrier to overcome for the average user whereas the majority of users are loath to find and benchmark combinations of compiler flags in an effort to optimise their program.
+They would prefer instead to assume that the preset, curated optimisation levels (\ie \code{-O1}, \code{-O2}, \code{-O3}) are sufficient.
+Therefore, a compiler only solution should strive to be as transparent as possible when it comes to enabling easy adoption.
+
+\bk{
+  Some possible theses:
+}
+\begin{itemize}
+  \item
+    \bk{A question as a statement..?}
+    This manuscript seeks to answer the question of whether or not a compiler-only method of matrix-multiplication acceleration using matrix engines can be implemented in an easy-to-adopt and transparent way.
+  \item
+    \bk{Contribution presentation.}
+    This manuscript presents an easy-to-adopt, transparent method of accelerating matrix-multiplication code using matrix engines.
+\end{itemize}
+
+\bk{This paragraph follows the thesis statement and may have to be rewritten a bit to match it, but the content is probably mostly the same.}
+This is shown through an implementation in the \gls{llvm} compiler framework (\rsec{llvm}) using \acrshort{ibm} \gls{power10}'s \acrshort{mma} matrix engine facility (\rcha{mma}).
+Hardware and algorithmic constraints are clearly considered as part of this implementation.
+Adoption concerns are also addressed by attaching the implementation to a preexisting matrix-multiplication-specific compilation process within \gls{llvm} (\rcha{method}).
+A thorough evaluation of both the hardware and the implementation accompany the contributed implementation.
+\bk{
+  This ending seems a bit terse.
+  I'm not sure what else I can add.
+}
 
 % \nelson{
 %   Everything that you have in this chapter should move to the background chapter.
@@ -89,45 +132,45 @@ This significantly reduces the memory movements required by removing the need to
 %   Someone reading only the introduction should be able to clearly state the contribution of a thesis.
 % }
 
-\begin{itemize}
-  \item
-    Set up issues: matrix multiply is in high demand as HPC and AI tasks grow in size and importance.
-  \item
-    Present matrix engines as the ``next generation'' solution.
-    They don't require extra hardware, specialised (TPU, etc.) or not (GPU, FPGA).
-  \item
-    Motivate the problem: We need automated code generation, in a compiler, to support these new matrix engines.
-    Automated generation of efficient code is more versatile and productive than assembly-level code writing for each new matrix-engine architecture.
-  \item
-    Set up problem: code generation requires
-    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
-      \item ease of access to users to facilitate adoption
-      \item understanding of hardware (memory heirarchy, ME facility properties)
-    \end{enumerate*}
-  \item
-    Referencing adoption: discuss how libraries
-    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
-      \item are the default high performance implementation
-      \item require installation and maintenance
-      \item promote bad development habits (kernel written in assembly, specialised to hardware versions)
-    \end{enumerate*}
-  \item
-    Referencing understanding of hardware: discuss how initial SIMD hardware and algorithms parallel the needs of matrix engines.
-    \bk{
-      This idea comes from a discussion on the PACT 2021 paper where we wanted to relate say ``codegen for new hardware'' is an important contribution.
-      I'm not sure if there's a better hardware example or a better way to go about relating this to codegen.
-    }
-  \item
-    Present first contribution as a lowering algorithm that addresses the above problems by
-    \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
-      \item implementing in a production compiler (LLVM) and implementing a generic lowering under and easy to use intrinsic.
-      \item carefully considering memory and hardware constraints to produce high performance code.
-    \end{enumerate*}
-  \item
-    Second contribution is the evaluation of the implementation.
-  \item
-    Expand slightly and point to sections.
-\end{itemize}
+% \begin{itemize}
+%   \item
+%     Set up issues: matrix multiply is in high demand as HPC and AI tasks grow in size and importance.
+%   \item
+%     Present matrix engines as the ``next generation'' solution.
+%     They don't require extra hardware, specialised (TPU, etc.) or not (GPU, FPGA).
+%   \item
+%     Motivate the problem: We need automated code generation, in a compiler, to support these new matrix engines.
+%     Automated generation of efficient code is more versatile and productive than assembly-level code writing for each new matrix-engine architecture.
+%   \item
+%     Set up problem: code generation requires
+%     \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+%       \item ease of access to users to facilitate adoption
+%       \item understanding of hardware (memory heirarchy, ME facility properties)
+%     \end{enumerate*}
+%   \item
+%     Referencing adoption: discuss how libraries
+%     \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+%       \item are the default high performance implementation
+%       \item require installation and maintenance
+%       \item promote bad development habits (kernel written in assembly, specialised to hardware versions)
+%     \end{enumerate*}
+%   \item
+%     Referencing understanding of hardware: discuss how initial SIMD hardware and algorithms parallel the needs of matrix engines.
+%     \bk{
+%       This idea comes from a discussion on the PACT 2021 paper where we wanted to relate say ``codegen for new hardware'' is an important contribution.
+%       I'm not sure if there's a better hardware example or a better way to go about relating this to codegen.
+%     }
+%   \item
+%     Present first contribution as a lowering algorithm that addresses the above problems by
+%     \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+%       \item implementing in a production compiler (LLVM) and implementing a generic lowering under and easy to use intrinsic.
+%       \item carefully considering memory and hardware constraints to produce high performance code.
+%     \end{enumerate*}
+%   \item
+%     Second contribution is the evaluation of the implementation.
+%   \item
+%     Expand slightly and point to sections.
+% \end{itemize}
 
 % \section{Contributions}
 % This work focuses on how \gls{mma} can improve matrix multiplication on PowerPC
