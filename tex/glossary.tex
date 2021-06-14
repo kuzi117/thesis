@@ -39,6 +39,11 @@
 \longnewglossaryentry{clang}{name={Clang}, text={Clang}}{
   The C/C++ frontend available as part of the \gls{llvm} project.
 }
+\newacronym[
+  description={
+    An optimisation which searches for identical expressions and potentially replaces them with a single variable~\autocite{cocke1970global,rosen1988global}.
+  }
+]{cse}{CSE}{Common Subexpression Elimination}
 \longnewglossaryentry{compilation unit}{name={Compilation Unit}, text={compilation unit}}{
   See \gls{translation unit}.
 }
@@ -153,13 +158,6 @@ The procedure involves combining all \glspl{object file} into a single binary, r
     An old name for the \gls{power} \gls{isa} which is still in use in some contexts as a shorthand.
   }
 ]{ppc}{PPC}{Power PC}
-\longnewglossaryentry{pure}{name={Pure},text={pure}}{
-  A pure function is one which:
-  \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
-    \item has no side effects (e.g. writes to memory)
-    \item returns the same output given the same input
-  \end{enumerate*}
-}
 
 % R
 \newacronym[

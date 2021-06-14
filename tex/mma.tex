@@ -89,7 +89,7 @@ In summation, the dot product requires twice the accesses to the slower, more ex
 On the micro scale, the dot-product approach also makes poor use of \gls{simd} capabilities.
 Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the lanes of a vector register into a single scalar element.
 Computing a partial result in this manner reduces the effectiveness of \gls{simd} by creating a scalar value.
-\Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible..
+\Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows all values to be accumulated in-place within the destination vector register or, in the case of \gls{mma}, the destination accumulator register.
 
 It is for these reasons that \gls{hpc} libraries implement matrix-matrix multiplication by emulating the outer product where only inner product operations are available.

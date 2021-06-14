@@ -322,12 +322,13 @@ First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intri
   The \code{xxsetaccz} remains in this listing to connect with \ralg{intrinsic}.
 }
 Only a single assembly is required in the \gls{ir} because the \gls{ir} is in \gls{ssa} form.
-Because the intrinsic takes no arguments and is functionally \gls{pure} within the \gls{ir}, the result of multiple repeated calls are seen by the optimiser as identical and will be removed by a common subexpression elimination pass\footnotemark.
-\footnotetext{An optimisation which searches for identical expressions and potentially replaces them with a single variable~\autocite{cocke1970global}.}
-\bk{
-  Should ``pure'' become a footnote instead of a glossary entry?
-  I don't expect it to be reused anywhere else.
-  Conversely, should CSE become a glossary instead?
+Because the intrinsic takes no arguments and is functionally pure\footnotemark within the \gls{ir}, the result of multiple repeated calls are seen by the optimiser as identical and will be removed by a \gls{cse} pass.
+\footnotetext{
+A pure function is one which:
+  \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+    \item has no side effects (e.g. writes to memory)
+    \item returns the same output given the same input
+  \end{enumerate*}
 }
 Therefore, it is up to the register allocation pass to later recognise the need for and to provide multiple simultaneous accumulators.
 Thus, all operations begin from the ``same'' zeroed out accumulator, at least within the \gls{ir}.
@@ -352,7 +353,7 @@ The next four elements are extracted on line~\ref{aShuffle2} for the second oper
 All four operand vectors are extracted from \code{BTile} in a similar process on lines~\ref{bShuffle1}-\ref{bShuffle2}.
 
 Outer products and accumulations begin on line~\ref{accsBegin} and end on line~\ref{accsEnd}.
-Each operation takesan accumulator as the first argument and multiplies the two extracted operands found in the second and third arguments.
+Each operation takes an accumulator as the first argument and multiplies the two extracted operands found in the second and third arguments.
 The \code{xvf32gerpp} intrinsic returns a value with type \code{<512 x i1>}, the accumulator type.
 This represents the inputted accumulator with the operation accumulated on top.
 In this first iteration, the zeroed out accumulator will be duplicated for each operation.
