@@ -141,7 +141,7 @@ entry:
 A simple C program, shown in \rlst{cSSA} is converted to the SSA format in \rlst{llSSA} via a simple renaming scheme.
 The first reference to a variable is suffixed with a one, and all future references increment the counter by one.
 This process continues for the entirety of a function body, regardless of any control flow.
-There are further complications in the construction algorithm in the presence of control flow but as this work presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
+There are further complications in the construction algorithm in the presence of control flow but because the process presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
 This format is significantly more conducive to analysis and optimisation than the source language, allowing for a much easier data flow analysis.
 \bk{
   I feel like I should expand here but I'm unsure which direction.

@@ -236,7 +236,7 @@ The produced code and its complications are discussed in \rsec{unrolled}.
 The compile-time constants \code{V} and \code{H} (used on lines~\ref{VextractLoop}, \ref{HextractLoop}, \ref{computeLoop1}, \ref{computeLoop2}) specify the layout of the accumulators for the computation.
 Given constraint \fbox{1}, the largest amount of data reuse can be obtained when \code{V = 2} and \code{H = 4} or vice versa (see \rfig{intrinsic}).
 The only other configuration with full accumulator usage (\code{V = 1}, \code{H = 8}) uses more operand registers for a single accumulation -- nine instead of six -- and demonstrates reuse along only a single axis.
-These constants in the compiler generalize the lowering and make it applicable to future architectures where the ideal arrangement to increase data reuse may be different from the $2 \times 4$ arrangement in the \gls{power10} processor.
+These constants in the compiler generalise the lowering and make it applicable to future architectures where the ideal arrangement to increase data reuse may be different from the $2 \times 4$ arrangement in the \gls{power10} processor.
 
 \begin{algorithm}[t]
   \caption[Algorithm for lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with \gls{mma}.}
@@ -372,7 +372,7 @@ The presentation so far has assumed 32-bit data types where each operand VSR con
 Halving the data-type size doubles the number of elements in each VSR and doubles the rank of the update.
 For example, for a 16-bit data type, MMA computes a rank 2 update while an 8-bit data type computes a rank 4 update.
 The packing of more elements into a single VSR and the accumulation of multiple outer products by a single MMA instruction requires changes \ralg{intrinsic}.
-Let $p$ be the number of outer products performed by an MMA instruction --- i.e. the rank of the update.
+Let $p$ be the number of outer products performed by an MMA instruction --- \ie the rank of the update.
 Now the step size of the loop on line~\ref{unrollLoopStart} must be $p$ because, in \rfig{intrinsic}, $p$ rows of a vertical section of \code{BTile} and $p$ columns of horizontal section of \code{ATile} are packed into each VSR.
 The extraction of operands in lines~\ref{aOps} and \ref{bOps} is now a strided access.
 For instance, for $p=2$ (16-bit data types), four consecutive elements are extracted from row $k$ and four consecutive elements are extracted from row $k+1$ to form the 128-bit VSR.
@@ -381,7 +381,7 @@ The effect is that more partial-product accumulations can be computed per micro-
 
 For the double-precision floating-point data type, an accumulator contains $4 \times 2$ 64-bit elements.
 The operand extracted from \code{ATile} is placed into a combination of two VSRs that each contain two elements, collectively four, while the operand extracted from \code{BTile}, now only two elements, is placed into a single 128-bit VSR.
-Therefore, for double-precion floats, the value of $N$ should be reduced by half to reflect the number of VSRs available.
+Therefore, for double-precision floats, the value of $N$ should be reduced by half to reflect the number of VSRs available.
 With this reduction, an \code{ATile} tile occupies 16 VSRs and a \code{BTile} tile also occupies 16 VSRs.
 The extraction of operands into vector registers in lines~\ref{aOps} and~\ref{bOps} of \ralg{intrinsic} must be changed accordingly.
 
