@@ -318,7 +318,7 @@ The matter of storing vectors to memory is easily addressed and so is left out f
 
 First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intrinsic} \code{xxsetaccz}\footnotemark.
 \footnotetext{
-  The latest version of the algorithm begins from a non-accumulating outer-product intrinsic which assembles an accumulator as a side effect which is then overwritten instead of accumulated.
+  The latest version of the algorithm begins from a non-accumulating outer-product instruction (\rsec{matMulMMA}) instead of a \code{xxmtacc} or \code{xxsetaccz} (\rsec{assDis}).
   The \code{xxsetaccz} remains in this listing to connect with \ralg{intrinsic}.
 }
 Only a single assembly is required in the \gls{ir} because the \gls{ir} is in \gls{ssa} form.
