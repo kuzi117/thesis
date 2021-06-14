@@ -1,0 +1,21 @@
+# Tex.
+*.aux
+*.bbl
+thesis-blx.bib
+*.bcf
+*.blg
+*.lof
+*.loa
+*.lol
+*.log
+*.lot
+*.out
+*.dvi
+*.pdf
+*.synctex.gz
+*.toc
+*.xml
+img/
+
+# Python
+__pycache__/
