@@ -38,7 +38,8 @@ These libraries can provide incredible speedups and, in parallel architectures, 
 It has been a natural extension of these libraries to include the usage of matrix engines when targeting \glspl{cpu}.
 \nelson{This is a case where there is much more in your mind than in the text or what your reader can know. Be specific on what you mean by "poor habits" and "extra requirements".}
 \bk{The poor habits (assembly programming with bad maintainability) and extra requirements (library availability on destination machines) are the next paragraph; do I need something else?}
-However, these libraries induce poor habits in development and extra requirements on systems.
+\nelson{I rewrote the sentence to make it more specific.}
+However, the development of most of these libraries rely on difficult-to-maintain assembly programs and their usage imposes  extra requirements on systems.
 
 All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
 Nevertheless, each of these kernels must be produced and hand tuned for each new \gls{cpu} that the library needs to support.
@@ -48,20 +49,22 @@ Thus, maintaining the code surrounding such a kernel as well as the kernel itsel
 \bk{
   I'm planning to produce results that show the cost of calling a function to compute GEMM and comparing with a na\"ive version.
 }
-This work also shows that, for small matrices, it can be wrong to assume that a library will speed up your implementation.
-The overhead of invoking a function call along with the extra operations that are part of the library's prologue and epilogue can cause your program to slow down.
+This work also shows that, for small matrices, 
+%it can be wrong to assume that a library will speed up your implementation.
+the overhead of invoking a function call along with the extra operations that are part of the library's prologue and epilogue can lead to slow down.
 \todo{
   At what size is it better?
   Is the na\"ive solution without MMA better?
 }
 
-Additionally, using a library means user code now has an external dependency.
+Additionally, using a library means that user code now has an external dependency.
 In applications where performance and correctness are critical and must be tightly controlled by the developer, using libraries may be an impossibility.
 Similarly, while finding a \gls{blas} implementation on major platforms is often quite easy, some target platforms may not have an available implementation with which this dependency can be fulfilled~\autocite{zee2016blis}.
 This is a direct product of the manual kernel porting difficulties described above.
 
-Therefore, as a counterpoint, a method of transparently accelerating matrix multiplication via a compiler-only path is a crucial step forwards in portability and maintainability.
-When a matrix multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
+Therefore, as a counterpoint, a method of transparently accelerating matrix multiplication via a compiler-only path is important for portability and maintainability.
+When a matrix-multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
+\nelson{What is your definition of \emph{architectural sensitivity} ? And how is it different from \emph{\gls{cpu} dependency}?}
 Relaxing this requirement means kernels are similarly relaxed to an \emph{architectural sensitivity} rather than a \emph{\gls{cpu} dependency}.
 For example, a kernel, to obtain best performance, will still need to be written in terms of an \gls{isa}'s vector extension, tying it to the architecture.
 However, optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
@@ -77,35 +80,45 @@ In the backend, improvements to processes such as register allocation and instru
 
 Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm of library function calls.
 Mathematically, consecutive matrix multiplications (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
-Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload a temporary value that is likely to have been removed from cache if the matrices are large.
+Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload the whole-matrix temporary value. That temporary matrix is likely to have been removed from cache if the matrices are large.
+\nelson{I like to avoid anthropomorphising computer programs such as compilers.}
 Compilers have the foresight and tools to fuse these operations and then further optimise the resulting code.
 
 \bk{I worry that the above paragraph about developers requiring extensive knowledge being a downside combined with this paragraph saying knowledge is required... is sort of self-defeating.}
+\nelson{The point that you need to make is that a compiler kernel-generation code is written in a higher level than an assembly kernel. Thus it leads to higher productive, more portability, and easier maintenance.}
 A compiler-only solution for matrix multiplication, while benefitting from preexisting features of a compiler, nevertheless requires
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label={}, afterlabel={}, after={.}]
   \item knowledge of the compiler framework, target operation, and the target architecture
   \item forethought based on the constraints derived from this knowledge
   \item an actionable design built from this forethought
 \end{enumerate*}
-This includes understanding the matrix engine and vector extensions of the target architecture as well as how they interact with each other and the memory hierarchy.
+\nelson{This what?}
+This includes understanding the matrix engine and vector extensions of the target architecture as well as how they interact with each other and with the memory hierarchy.
 \bk{
   I feel like more could be said here, but I'm drawing a blank.
   I'll return eventually.
 }
 
-The planning of an implementation is crucial, though it is all for naught if it is never adopted nor used for its intended purprose.
+\nelson{The topic sentence of the paragraph is too generic --- it could appear in any advertising pamphlet for snake oil ;-).}
+The planning of an implementation is crucial, though it is all for naught if it is never adopted nor used for its intended purpose.
 Libraries are the currently preferred method of acceleration and therefore any replacement method should aim to require less effort if it hopes to be adopted.
 Library download and installation is oftentimes a simple barrier to overcome for the average user whereas the majority of users are loath to find and benchmark combinations of compiler flags in an effort to optimise their program.
 They would prefer instead to assume that the preset, curated optimisation levels (\ie \code{-O1}, \code{-O2}, \code{-O3}) are sufficient.
-Therefore, a compiler only solution should strive to be as transparent as possible when it comes to enabling easy adoption.
+Therefore, a compiler-only solution should strive to be as transparent as possible when it comes to enabling easy adoption.
 
 \bk{
   Some possible theses:
 }
+
+\nelson{Here are alternative statement: \\
+This thesis presents a compiler-only path for the code generation for the general matrix multiplication operation that leverages hardware-supported matrix-multiplication engines. An evaluation of this new compiler-only path indicates that it produces code that is .... in comparison with tailored library implementations. \\
+This thesis addresses the following questions: Is it possible to implement a compiler-only code generation path for  the generation of code for the general matrix multiplication operation that leverages hardware-supported matrix-multiplication engines? How efficient is the code generated by this compiler-only path in comparison with tailored library implementations? Is the compiler-only path for code generation portable to multiple architectures? (not sure if the data provides evidence to support claims about the third question here).}
+
 \begin{itemize}
   \item
     \bk{A question as a statement..?}
-    This manuscript seeks to answer the question of whether or not a compiler-only method of matrix-multiplication acceleration using matrix engines can be implemented in an easy-to-adopt and transparent way.
+    \nelson{Are these two properties, easy-to-adopt and transparent, sufficient? Do users care about performance? I think that both easy-to-adoptness and transparency are quite difficult to measure or to estimate. Thus, the thesis would be posing a question that is very difficult to answer.}
+    This thesis addressed the question of whether or not a compiler-only method of matrix-multiplication acceleration using matrix engines can be implemented in an easy-to-adopt and transparent way.
   \item
     \bk{Contribution presentation.}
     This manuscript presents an easy-to-adopt, transparent method of accelerating matrix-multiplication code using matrix engines.
