@@ -14,7 +14,7 @@ Matrix multiplication, as a critical operation in many applications, has been th
 Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally, via optimisations such as loop switching and loop unrolling.
 Contemporary libraries and their overall frameworks are derived from Goto and van de Geijn's seminal work ``Anatomy of High-Performance Matrix Multiplication''~\autocite{goto2008anatomy}.
 More recent works~\autocite{vanzee2015blis,zee2016blis}\todo{More citations, not just BLIS works.} have improved upon that of Goto and van de Geijn, but the overall structure remains the same.
-\ik{The main direction of contributions is to make these frameworks easier to port to target architectures by providing a modular approach for the microkernel. Low et al.~\autocitelow{low2016analytical} showed that the parameters of the microkernels in BLIS can be determined analytically.}
+\ik{The main direction of contributions is to make these frameworks easier to port to target architectures by providing a modular approach for the microkernel. Low et al.~\autocite{low2016analytical} showed that the parameters of the microkernels in BLIS can be determined analytically.}
 
 Goto and van de Geijn's work concludes that matrix multiplication should be implemented in a \emph{layered approach}.
 Each of these ``layers'' is typically one or more loops that perform some function before executing the enclosed layer.
