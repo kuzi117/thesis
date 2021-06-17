@@ -368,6 +368,7 @@ This process continues with each accumulation, creating a chain of return values
 
 \subsection{Other Data Types}
 \label{sec:dataTypes}
+\bk{Do I need to cut some of this out now that it's explained in \rsec{matMulMMA}?}
 The presentation so far has assumed 32-bit data types where each operand VSR contains 4 elements and an MMA instruction computes a rank 1 update, computing and accumulating a single outer product.
 Halving the data-type size doubles the number of elements in each VSR and doubles the rank of the update.
 For example, for a 16-bit data type, MMA computes a rank 2 update while an 8-bit data type computes a rank 4 update.

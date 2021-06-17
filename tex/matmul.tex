@@ -9,14 +9,98 @@
 \chapter{Matrix Multiplication}
 \label{cha:matmul}
 
-\begin{itemize}
-  \item
-    Discussion of matrix multiplication in depth:
-    \begin{itemize}
-      \item Packing.
-      \item Storage orders.
-      \item Inner/outer product pros/cons.
-    \end{itemize}
-\end{itemize}
+Matrix multiplication, as a critical operation in many applications, has been the focus of optimisation research for decades.
+\bk{Can I just leave it at that or do I need to provide some random citations proving my point?}
+Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally, via optimisations such as loop switching and loop unrolling.
+Contemporary libraries and their overall frameworks are derived from Goto and van de Geijn's seminal work ``Anatomy of High-Performance Matrix Multiplication''~\autocite{goto2008anatomy}.
+More recent works~\autocite{vanzee2015blis,zee2016blis}\todo{More citations, not just BLIS works.} have improved upon that of Goto and van de Geijn, but the overall structure remains the same.
+
+Goto and van de Geijn's work concludes that matrix multiplication should be implemented in a \emph{layered approach}.
+Each of these ``layers'' is typically one or more loops that perform some function before executing the enclosed layer.
+It can be convenient to think of each of the upper layers as a function with a nested function call within it.
+The innermost layer in this view performs the most basic computation on which the entire operation is built, essentially a small and fast matrix multiplication.
+The surrounding layers are concerned with the optimisation of data movement and layout.
+
+Typically, the layered approach consists of two layers:
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=\textbf{(\arabic*)}, after={.}]
+  \item the blocking strategy responsible for breaking up the computation combined with the packing strategy responsible for optimising data movement between memory and cache as well as data layout within the cache (the \emph{outer kernel} or \emph{macro kernel})
+  \item the computation strategy responsible for data movement between cache and register as well as producing the actual result (the \emph{inner kernel} or \emph{micro kernel})
+\end{enumerate*}
+Because this work focuses on building a modular innermost layer, the outer layer is explained only briefly for completeness.
+
+\section{The Outer Kernel}
+The outer kernel is a delicate dance between blocking and packing.
+Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
+Packing takes the operands of an operation and duplicates data into a smaller buffer where elements are more likely to fit in cache simultaneously, allowing faster access times.
+\bk{
+  Is this enough explanation of what blocking and packing are?
+  It seems orthogonal to the rest of the thesis so I'd like to avoid going too in depth if possible.
+}
+If the blocking factor is too large (\ie many, small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
+However, when the blocking is too small (\ie few, large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
+
+Goto and van de Geijn address blocking, caching and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
+\bk{Can TLB remain a glossary entry or is further explanation required here.}
+When blocking, each new blocking loop breaks up a single dimension of the multiplication.
+Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
+Further dividing a panel produces a a section with two short dimensions called a block.
+Only two of the three dimensions ($M$, $K$, $N$) are blocked while the third is the inner most loop's iteration variable.
+This produces three different innermost loops (${}^{3}C_{2}=3$).
+Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
+
+\subsection{Blocking and Packing for Cache}
+\bk{
+  I kind of don't like the rest of this section.
+  It just seems like a summary of the Goto paper while also lacking the completeness of their work.
+  I think it's important for the summary of \code{GEPDOT}, but I'm unsure if the rest of it is truly important.
+  Maybe it's fine because it's not the focus of the paper, as stated above.
+}
+The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
+When dimensions $M$ and $N$ are blocked, the inner most loop multiplies a panel by another panel, producing a block.
+This breakdown is called \code{GEPDOT} because it computes the dot product of two panels.
+According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
+Unfortunately, because \gls{gemm} is an accumulating operation (\eg \code{C += AB}), $C$ must be read from cache and then written back.
+When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, L2 cache is only read from.
+In essence, this means that the \code{GEPDOT} method is less bandwidth efficient because it requires both a read and a write.
+\bk{I need to rewrite the section in \rcha{mma} now that this is written.}
+
+The remaining two methods (blocking $M$, $K$ or $K$, $N$) can be selected between, without loss of generality, based on the storage order of $C$.
+Within one of these methods, the order in which $K$ and the second dimension are blocked further divides the method.
+Given that one argument matrix is already packed in L2 cache, the first option, which blocks the second dimension then $K$,
+\begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+  \item streams $C$ to and from memory
+  \item packs the second argument matrix in L1 cache
+\end{enumerate*}
+Given again that one argument matrix is packed in L2 cache, the second option, which blocks $K$ followed by the other dimension,
+\begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+  \item streams the second argument matrix from memory
+  \item computes $C$ in a temporary in L1 cache which is eventually unpacked and merged with $C$ in memory
+\end{enumerate*}
+The operations labeled \textbf{(1)} in each option can be assumed to have negligible impact because they can be pipelined with computation.
+However, the operations labeled \textbf{(2)} are effectively overhead.
+By virtue of the unpacking and merging of $C$ being a more complex operation, it is concluded that the first option for either blocking method is superior.
+
+\subsubsection{Blocking and Packing for Registers}
+Because it is likely that the dimensions chosen to maximise cache usage are too large for the registers to handle, a further set of loops can be added to block for registers.
+These loops only block the pre-packed buffers in memory and do not perform any packing themselves.
+Instead, when the order in which data is packed for cache is modified.
+Rather than packing in the same order relative to the original data, data is organised such that these sub-matrix register arguments are contiguous.
+This results in only a single data copy and allows reads to register for calculation to be contiguous in memory.
+
+\subsubsection{Practicality}
+In the simplest implementation of matrix multiplication (\ie \rlst{basicmatmul}), there is no blocking nor packing.
+For small matrices, this can be the correct choice.
+The overhead of data reorganisation can be be entirely superfluous because the data fits entirely in cache or even registers.
+For large matrices, this can be utterly devestating for cache performance with every piece of data already being removed from cache before its next use.
+While a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple data management strategies.
+
+\section{The Inner Kernel}
+\bk{
+  Discuss inner kernel considerations.
+  Maybe move discussion of inner/outer product here.
+}
+
+\section{Usage cases}
+Should there be a section on usages/applications?
 
 \end{document}
