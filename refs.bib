@@ -576,3 +576,23 @@ articleno = {12},
 numpages = {19},
 keywords = {Linear algebra, matrix, BLAS, multiplication, libraries, high performance}
 }
+
+@article{vanzee2015blis,
+author = {Van Zee, Field G. and van de Geijn, Robert A.},
+title = {BLIS: A Framework for Rapidly Instantiating BLAS Functionality},
+year = {2015},
+issue_date = {June 2015},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {41},
+number = {3},
+issn = {0098-3500},
+url = {https://doi.org/10.1145/2764454},
+doi = {10.1145/2764454},
+abstract = {The BLAS-like Library Instantiation Software (BLIS) framework is a new infrastructure for rapidly instantiating Basic Linear Algebra Subprograms (BLAS) functionality. Its fundamental innovation is that virtually all computation within level-2 (matrix-vector) and level-3 (matrix-matrix) BLAS operations can be expressed and optimized in terms of very simple kernels. While others have had similar insights, BLIS reduces the necessary kernels to what we believe is the simplest set that still supports the high performance that the computational science community demands. Higher-level framework code is generalized and implemented in ISO C99 so that it can be reused and/or reparameterized for different operations (and different architectures) with little to no modification. Inserting high-performance kernels into the framework facilitates the immediate optimization of any BLAS-like operations which are cast in terms of these kernels, and thus the framework acts as a productivity multiplier. Users of BLAS-dependent applications are given a choice of using the traditional Fortran-77 BLAS interface, a generalized C interface, or any other higher level interface that builds upon this latter API. Preliminary performance of level-2 and level-3 operations is observed to be competitive with two mature open source libraries (OpenBLAS and ATLAS) as well as an established commercial product (Intel MKL).},
+journal = {ACM Trans. Math. Softw.},
+month = jun,
+articleno = {14},
+numpages = {33},
+keywords = {libraries, BLAS, matrix, Linear algebra, high-performance}
+}
