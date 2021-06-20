@@ -328,11 +328,13 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
   If you don't understand it, tell me so I can improve the explanation.
 }
 
+\na{I think that this section could benefit from a short opening paragraph where you sign post that you will first discuss the traditional inner-product view of the implementation of the inner kernel and will then present the more suitable outer-product implementation strategy.}
+
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
 As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, it is implemented using the multiplication of a combination of a block and a panel.
 \footnotetext{For example, the DPPS or DPPD instructions in x86 SSE 4.1 since 2008.}
-While the outer kernel may consider a short dimension to optimally be several hundred elements wide and a long dimension to be the full extent of one of the matrix dimensions, the inner kernel must function in terms of registers.
-Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector.
+While for the outer kernel a short dimension is optimally several hundred elements wide and a long dimension is the full extent of one of the matrix dimensions, the inner kernel must operate with registers.
+Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
 \rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
 
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
@@ -397,9 +399,12 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
   \label{fig:extGoto}
 \end{figure}
 
+\nelson{What is "this"?}
 To improve this, the current operation must be reexamined.
 In choosing this method, the implementer is performing a \matmul{1}{1}{n} or \matmul{n}{1}{1} matrix multiplication.
+\nelson{What "it" refers to?}
 While it is tempting to fall back to a traditional view of matrix multiplication and regard this as a simple inner product, a different point of view can be more beneficial.
+\nelson{What does "this" refer to?}
 Instead, we can choose to recognize this as a degenerate case of an outer product where one operand vector's length is one.
 With this understanding, the direction for improvement becomes apparent.
 The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
