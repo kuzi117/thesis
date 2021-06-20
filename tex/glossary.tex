@@ -29,6 +29,9 @@
   A function callable from a higher-level language (\eg C/C++) which encapsulates a well-known functionality with well-defined semantics.
   Such a function may be implemented in header files, as language-specific keywords, or conditionally available functions.
 }
+\longnewglossaryentry{broadcast}{name={Broadcast}, text={broadcast}}{
+  The act of duplicating a scalar value to all lanes in a vector register.
+}
 
 % C
 \newacronym[
@@ -60,6 +63,12 @@
     An \gls{integrated circuit} which is configurable post-production via reconfigurable interconnects between logic blocks which perform operations.
   }
 ]{fpga}{FPGA}{Field-Programmable Gate Array}
+\newacronym[
+  description={
+    An instruction which performs the operation $w = x \times y + z$ often used to perform accumulation operations as in $w \mathrel{+}= x \times y$.
+    \gls{simd} equivalents exist, performing the same operation per element of the operand vectors.
+  }
+]{fma}{FMA}{Fused Multiply-Add}
 
 % G
 \newacronym[
@@ -107,6 +116,10 @@
 ]{isa}{ISA}{Instruction Set Architecture}
 
 % L
+\longnewglossaryentry{lane}{name={Lane},text={lane}}{
+  A way to refer to an element of a vector register or operation derived from the way circuit pathways leave and enter vector functional units in groups corresponding to an element, like the lanes of a roadway.
+  The number of lanes in a vector register, which has constant width, changes based on element width, \ie a 128 bit register with 32 bit elements has four lanes, with 64 bit elements it has two lanes.
+}
 \longnewglossaryentry{linking}{name={Linking},text={linking}}{
 Achieved through a program called a ``Linker'', this is typically the final step in the compilation process.
 The procedure involves combining all \glspl{object file} into a single binary, resolving symbols, as well as several more involved processes.

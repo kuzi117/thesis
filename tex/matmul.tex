@@ -60,6 +60,7 @@ This produces three different innermost loops \nelson{I do not understand this n
 Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
 
 \subsection{Blocking and Packing for Cache}
+\label{sec:blockPack}
 \bk{
   I kind of don't like the rest of this section.
   It just seems like a summary of the Goto paper while also lacking the completeness of their work.
@@ -123,12 +124,315 @@ For large matrices, this can be utterly devestating for cache performance with e
 While a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple data management strategies.
 
 \section{The Inner Kernel}
+The inner kernel is focused on maximising performance.
+Whether the computation itself has small dimensions or a larger computation has been blocked and packed by an outer kernel, the inner kernel is meant to be as tight and efficient as possible.
+This means considering optimisations such as loop unrolling and instruction rescheduling to improve operation pipelining.
+Hardware-wise, the instruction cache, instruction issue rate, register pressure, and functional unit availability must also be taken into account.
+
+Unrolling the kernel to a larger degree allows for greater opportunities in instruction rescheduling.
+Computations can be moved closer to loads to enable pipelining as well as interleaved to hide stalls due to occupied functional units.
+Future iterations that would load the same data can also be moved such that the values are still in register and can be reused, reducing register pressure and stores.
+However, unrolling too much can degrade instruction cache performance and bloat executable size.
+\bk{I feel like there's more discussion to be had here, I just need to return with a clear mind.}
+
+\subsection{Inner Product}
+\bk{Content to be moved here.}
+
+\subsection{Outer Product}
+\bk{Content to be moved here.}
+
+\subsection{Inner Product vs Outer Product}
+\label{sec:products}
+\begin{figure}[t]
+ \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \draw[step=1, shift={(0, 3)}] (0, 0) grid +(4, 1);
+      \node at (4.75, 2) {$\times$};
+      \draw[step=1, shift={(5.5, 0)}] (0, 0) grid +(1, 4);
+      \node at (7.25, 2) {$=$};
+      \draw[step=1, shift={(8, 3)}] (0, 0) grid +(1, 1);
+      \node at (2, 5) {$A$};
+      \node at (6, 5) {$B$};
+      \node at (8.5, 5) {$C$};
+    \end{tikzpicture}
+    \caption{Inner product.}
+    \label{fig:innerProduct}
+  \end{subfigure}
+ \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \draw[step=1, shift={(0, 0)}] (0, 0) grid +(1, 4);
+      \node at (1.75, 2) {$\times$};
+      \draw[step=1, shift={(2.5, 3)}] (0, 0) grid +(4, 1);
+      \node at (7.25, 2) {$=$};
+      \draw[step=1, shift={(8, 0)}] (0, 0) grid +(4, 4);
+      \node at (.5, 5) {$A$};
+      \node at (4.5, 5) {$B$};
+      \node at (10, 5) {$C$};
+    \end{tikzpicture}
+  \caption{Outer-product (rank-$1$ update) operation.}
+    \label{fig:outerProduct}
+  \end{subfigure}
+  \hfill
+  \caption{Example matrix-matrix multiplication computation styles.}
+  \label{fig:product}
+  \vspace{-0.15cm}
+\end{figure}
+
+Matrix multiplication's inner kernel is implementable through two operations: inner product and outer product.
+Both operations arrive at the same destination albeit via different processes.
+Consider \rfig{product}.
+\rfig{innerProduct} illustrates the inner product: an element-wise multiplication between a row of matrix $A$ and a column of matrix $B$ followed by the summation of the products (\ie the dot product).
+In short, two vectors produce a single, fully-computed output element.
+This is the operation which usually first comes to mind when discussing matrix multiplication.
+Computing the outer product, shown in \rfig{outerProduct}, results in a column of matrix $A$ and a row of matrix $B$ producing a \emph{partial} output matrix.
+That is, a matrix whose elements are the result of a single product.
+One such matrix is produced per combination of $A$ column and $B$ row; these matrices must be summed to produce the output $C$.
+
+At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
+As well, in a machine with unlimited resources, including vector registers of unlimited length, they will have performed the same number of stores and loads.
+In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
+However, in a practical machine, it is impossible to load the entirety of a long row or of a long column into vector registers in order to fully compute a portion of the matrix.
+
+Long dimension lengths make tiling a necessity.
+Tiling, as discussed in \rsec{blockPack}, breaks the operation into smaller, more manageable operations.
+As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice.
+
+When considering the micro scale, the dot-product approach also makes poor use of \gls{simd} capabilities.
+Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
+Computing a partial result in this manner reduces the effectiveness of \gls{simd} by creating a scalar value.
+\Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
+The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
+
+\subsection{Goto and van de Geijn in the Inner Kernel}
+\bk{This title could be shortened or tailored more.}
+\begin{figure}[t]
+  \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \node[above=.75] at (2, 1) {$C$};
+      \draw[shift={(0,0)}] (0,0) grid +(4,1);
+      \node at (4.8,.5) {$\mathrel{+}=$};
+      \node[above=.75] at (6.2, 1) {$A$};
+      \draw[shift={(5.7,0)}] (0,0) grid +(1,1);
+      \node at (7.2,.5) {$\times$};
+      \node[above=.75] at (9.7, 1) {$B$};
+      \draw[shift={(7.7,0)}] (0,0) grid +(4,1);
+    \end{tikzpicture}
+    \caption{Block times panel mathematically.}
+    \label{fig:gebpMath}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \draw[step=0.8cm,shift={(0,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(0,0)}]
+      {
+        $c_{0,0}$\\
+        $c_{0,1}$\\
+        $c_{0,2}$\\
+        $c_{0,3}$\\
+      };
+      \node at (1.175cm, 1.6cm) {$\mathrel{+}=$};
+      \draw[step=0.8cm,shift={(1.6cm,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(1.6cm,0)}]
+      {
+        $a_{0,0}$\\
+        $a_{0,0}$\\
+        $a_{0,0}$\\
+        $a_{0,0}$\\
+      };
+      \node at (2.75, 1.6cm) {$\times$};
+      \draw[step=0.8cm,shift={(3.1cm,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(3.1cm,0)}]
+      {
+        $b_{0,0}$\\
+        $b_{0,1}$\\
+        $b_{0,2}$\\
+        $b_{0,3}$\\
+      };
+    \end{tikzpicture}
+    \caption{Block times panel in register using \gls{simd} \acrshort{fma}.}
+    \label{fig:gebpSimd}
+  \end{subfigure}
+  \hfill
+  \caption[Block and panel kernel mathematically and in register]{Block times panel computation both mathematically and as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.\bk{Better caption?}}
+  \label{fig:gebp}
+\end{figure}
+
+\begin{figure}[t]
+  \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \node[above=.75] at (.5, 4) {$C$};
+      \draw[shift={(0,0)}] (0,0) grid +(1,4);
+      \node at (1.8,2) {$\mathrel{+}=$};
+      \node[above=.75] at (3.1, 4) {$A$};
+      \draw[shift={(2.6,0)}] (0,0) grid +(1,4);
+      \node at (4.1,2) {$\times$};
+      \node[above=.75] at (5.1, 4) {$B$};
+      \draw[shift={(4.6,3)}] (0,0) grid +(1,1);
+    \end{tikzpicture}
+    \caption{Panel times block mathematically.}
+    \label{fig:gepbMath}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}
+      \draw[step=0.8cm,shift={(0,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(0,0)}]
+      {
+        $c_{0,0}$\\
+        $c_{1,0}$\\
+        $c_{2,0}$\\
+        $c_{3,0}$\\
+      };
+      \node at (1.175cm, 1.6cm) {$\mathrel{+}=$};
+      \draw[step=0.8cm,shift={(1.6cm,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(1.6cm,0)}]
+      {
+        $a_{0,0}$\\
+        $a_{1,0}$\\
+        $a_{2,0}$\\
+        $a_{3,0}$\\
+      };
+      \node at (2.75, 1.6cm) {$\times$};
+      \draw[step=0.8cm,shift={(3.1cm,0)}] (0,0) grid +(.8cm,3.2cm);
+      \matrix[matrix of nodes,matrix anchor=south west,inner sep=0pt,minimum height=.8cm,text width=.8cm,align=center,shift={(3.1cm,0)}]
+      {
+        $b_{0,0}$\\
+        $b_{0,0}$\\
+        $b_{0,0}$\\
+        $b_{0,0}$\\
+      };
+    \end{tikzpicture}
+    \caption{Panel times block in register using \gls{simd} \acrshort{fma}.}
+    \label{fig:gepbSimd}
+  \end{subfigure}
+  \hfill
+  \caption[Panel and block kernel mathematically and in register]{Panel times block computation both mathematically and as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.\bk{Better caption?}}
+  \label{fig:gepb}
+  \vspace{-0.15cm}
+\end{figure}
+
 \bk{
-  Discuss inner kernel considerations.
-  Maybe move discussion of inner/outer product here.
+  I rewrote this section after having a sort of epiphany.
+  Before, Jo\~ao had told me that many libraries implemented their inner kernels in terms of outer product but no one seemed to state this (we found one paper that mentioned it only off-hand for a specific experiment).
+  I realised they had actually extended Goto's block * panel design to the inner kernel but on the scale of registers.
+  I'll let the section explain the connection.
+  If you don't understand it, tell me so I can improve the explanation.
 }
 
+Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
+As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, it is implemented using the multiplication of a combination of a block and a panel.
+\footnotetext{For example, the DPPS or DPPD instructions in x86 SSE 4.1 since 2008.}
+While the outer kernel may consider a short dimension to optimally be several hundred elements wide and a long dimension to be the full extent of one of the matrix dimensions, the inner kernel must function in terms of registers.
+Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector.
+\rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
+
+\rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
+First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
+The elements of the panel are then loaded into a different vector register.
+Once both registers are ready, \ifglsused{fma}{an}{a} \gls{fma} instruction multiplies the two vector registers together and accumulates the result into a third vector register representing a panel in $C$.
+This process is more effective than using the dot product because multiple output values are accumulated at the same time in each \gls{lane} of the vector.
+However, in a kernel that is supposed to be as tight as possible, cycles are lost to duplicating values.
+Furthermore, the kernel should also use resources as effectively as possible, however, the duplicated values use all \glspl{lane} of a vector, effectively reducing a vector registers back to a single scalar, nullifying the benefits of \gls{simd}.
+
+\begin{figure}[t]
+  \hfill
+  \begin{subfigure}{.40\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=5/12]
+      \node[above=.75] at (2, 5.75) {$C$};
+      \draw[shift={(-.25,0)}] (0,0) grid +(4,1);
+      \draw[shift={(-.25,1.5)}] (0,0) grid +(4,1);
+      \draw[shift={(-.25,3)}] (0,0) grid +(4,1);
+      \draw[shift={(-.25,4.5)}] (0,0) grid +(4,1);
+      \draw[shift={(-.5,-.25)},color=blue] (0, 0) -- +(4.5, 0) -- +(4.5, 6) -- +(0, 6) -- cycle;
+      \node at (4.975,2.75) {$\mathrel{+}=$};
+      \node[above=.75] at (6.65, 5.75) {$A$};
+      \draw[shift={(6.2,0)}] (0,0) grid +(1,1);
+      \draw[shift={(6.2,1.5)}] (0,0) grid +(1,1);
+      \draw[shift={(6.2,3)}] (0,0) grid +(1,1);
+      \draw[shift={(6.2,4.5)}] (0,0) grid +(1,1);
+      \draw[shift={(5.95,-.25)},color=red] (0, 0) -- +(1.5, 0) -- +(1.5, 6) -- +(0, 6) -- cycle;
+      \node at (7.9,2.75) {$\times$};
+      \node[above=.75] at (10.4, 5.5) {$B$};
+      \draw[shift={(8.4,4.5)}] (0,0) grid +(4,1);
+    \end{tikzpicture}
+    \caption{Extending block times panel.}
+    \label{fig:extGebp}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{.5\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=5/12]
+      \node[above=.75] at (2.75, 4) {$C$};
+      \draw[shift={(-.25,0)}] (0,0) grid +(1,4);
+      \draw[shift={(1.25,0)}] (0,0) grid +(1,4);
+      \draw[shift={(2.74,0)}] (0,0) grid +(1,4);
+      \draw[shift={(4.25,0)}] (0,0) grid +(1,4);
+      \draw[shift={(-.5,-.25)},color=blue] (0, 0) -- +(6, 0) -- +(6, 4.5) -- +(0, 4.5) -- cycle;
+      \node at (6.4,2) {$\mathrel{+}=$};
+      \node[above=.75] at (7.9, 4) {$A$};
+      \draw[shift={(7.4,0)}] (0,0) grid +(1,4);
+      \node at (8.9,2) {$\times$};
+      \node[above=.75] at (12.35, 4.25) {$B$};
+      \draw[shift={(9.6,3)}] (0,0) grid +(1,1);
+      \draw[shift={(11.1,3)}] (0,0) grid +(1,1);
+      \draw[shift={(12.6,3)}] (0,0) grid +(1,1);
+      \draw[shift={(14.1,3)}] (0,0) grid +(1,1);
+      \draw[shift={(9.35,2.75)},color=red] (0, 0) -- +(6, 0) -- +(6, 1.5) -- +(0, 1.5) -- cycle;
+    \end{tikzpicture}
+    \caption{Extending panel times block.}
+    \label{fig:extGepb}
+  \end{subfigure}
+  \hfill
+  \caption[Extending inner kernels to outer product]{Extending Goto and van de Geijn's inner kernel techniques to outer product.}
+  \label{fig:extGoto}
+\end{figure}
+
+To improve this, the current operation must be reexamined.
+In choosing this method, the implementer is performing a \matmul{1}{1}{n} or \matmul{n}{1}{1} matrix multiplication.
+While it is tempting to fall back to a traditional view of matrix multiplication and regard this as a simple inner product, a different point of view can be more beneficial.
+Instead, we can choose to recognize this as a degenerate case of an outer product where one operand vector's length is one.
+With this understanding, the direction for improvement becomes apparent.
+The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
+Doing so stacks more of these operations, as shown in \rfig{extGoto}.
+A red box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
+Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed.
+\rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
+
+\subsection{Implementation}
+\bk{
+  This section certainly repeats some previously discussed material.
+  My hope is that in discussing it a second time, slightly more in depth, that it reinforces ideas instead of just being redundant.
+  If you think it's redundant, please let me know.
+}
+As discussed previously, libraries often have kernels handwritten in assembly.
+Kernel writers must implement all of these optimisations by hand.
+In doing so, they must review \gls{cpu} properties as well as consider the design of their outer kernel to determine to what degree an optimisation will affect the hardware.
+Historically, with great effort, this process has produced excellent results.
+
+However, all of these optimisations and more are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
+\bk{
+  There's an example here that the default vectorisation lowering actually outputs a scalar version of matmul (simpler and easier to reason about/write) that's automatically vectorised by the compiler.
+  However, I don't know that I can easily include it because it's based on intrinsics, lowerings, etc. that aren't explained until the method chapter.
+}
+Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same or better performance.
+\bk{Section unfinished, got distracted by writing the previous section.}
+
 \section{Usage cases}
-Should there be a section on usages/applications?
+\bk{
+  Section to be removed per suggestion by Jo\~ao to link usage/motivation earlier.
+  Leaving it as a reminder to do so.
+}
 
 \end{document}

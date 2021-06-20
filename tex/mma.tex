@@ -18,45 +18,7 @@ While this work focuses on \gls{mma}, a discussion of the differences in these a
 
 \section{Computation Style}
 \label{sec:compuationStyle}
-
-\begin{figure}[t]
- \begin{subfigure}{.45\linewidth}
-   \centering
-   \begin{tikzpicture}[scale=1/2]
-     \draw[step=1, shift={(0, 3)}] (0, 0) grid +(4, 1);
-     \node at (4.75, 2) {$\times$};
-     \draw[step=1, shift={(5.5, 0)}] (0, 0) grid +(1, 4);
-     \node at (7.25, 2) {$=$};
-     \draw[step=1, shift={(8, 3)}] (0, 0) grid +(1, 1);
-     \node at (2, 5) {$A$};
-     \node at (6, 5) {$B$};
-     \node at (8.5, 5) {$C$};
-   \end{tikzpicture}
-   \caption{Inner product.}
-   \label{fig:innerProduct}
- \end{subfigure}
- \hfill
-  \begin{subfigure}{.45\linewidth}
-    \centering
-    \begin{tikzpicture}[scale=1/2]
-      \draw[step=1, shift={(0, 0)}] (0, 0) grid +(1, 4);
-      \node at (1.75, 2) {$\times$};
-      \draw[step=1, shift={(2.5, 3)}] (0, 0) grid +(4, 1);
-      \node at (7.25, 2) {$=$};
-      \draw[step=1, shift={(8, 0)}] (0, 0) grid +(4, 4);
-      \node at (.5, 5) {$A$};
-      \node at (4.5, 5) {$B$};
-      \node at (10, 5) {$C$};
-    \end{tikzpicture}
-  \caption{Outer-product (rank-$1$ update) operation.}
-    \label{fig:outerProduct}
-  \end{subfigure}
-  \hfill
-  \caption{Example matrix-matrix computation styles.}
-  \label{fig:product}
-  \vspace{-0.15cm}
-\end{figure}
-
+\bk{Rewrite this section now that it's been moved.}
 \Gls{mma}'s design is built around the choice to compute the \emph{outer product} instead of the inner product, the operation that usually first comes to mind when discussing matrix multiplication.
 Both operations arrive at the same destination albeit via different processes.
 Consider \rfig{product}.
