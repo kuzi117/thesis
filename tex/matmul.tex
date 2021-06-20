@@ -56,7 +56,8 @@ When blocking, each new blocking loop breaks up a single dimension of the multip
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
 Further dividing a panel produces a section with two short dimensions called a block.
 Only two of the three dimensions ($M$, $K$, $N$) are blocked while the third is the inner most loop's iteration variable.
-This produces three different innermost loops \nelson{I do not understand this notation:} (${}^{3}C_{2}=3$).
+This produces ${3 \choose 2}=3$ different innermost loops\footnotemark.
+\footnotetext{``Three choose two''.}
 Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
 
 \subsection{Blocking and Packing for Cache}
@@ -71,8 +72,7 @@ The primary concern when blocking and packing for cache is optimising L2 cache b
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
 This breakdown is called \code{GEPDOT} because it computes the dot product of two panels.
 According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
-\nelson{Be consistent on the typesetting that you choose for A, B, and C.}
-Unfortunately, because \gls{gemm} is an accumulating operation (\eg \code{C += AB}), $C$ must be read from cache and then written back.
+Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, L2 cache is only read from.
 In essence, this means that the \code{GEPDOT} method is less bandwidth efficient because it requires both a read and a write.
 \bk{I need to rewrite the section in \rcha{mma} now that this is written.}
@@ -87,41 +87,39 @@ In essence, this means that the \code{GEPDOT} method is less bandwidth efficient
 }
 \ik{Just a note: even if it was matmul, not gemm, both GEPDOT and GEBP accumulate.}
 
-\nelson{Next sentence is not grammatically correct.}
-The remaining two methods (blocking $M$, $K$ or $K$, $N$) can be selected between, without loss of generality, based on the storage order of $C$.
-\nelson{"divides"?}
-Within one of these methods, the order in which $K$ and the second dimension are blocked further divides the method.
-Given that one argument matrix is already packed in L2 cache, the first option, which blocks the second dimension then $K$,
+Without loss of generality, an implementer can choose between the remaining two methods (blocking $M$ and $K$ or blocking $K$ and $N$) based on the storage order of $C$.
+Within one of these methods, the order in which $K$ and the second dimension are blocked creates two options.
+Given that one argument matrix is already packed in L2 cache, the first option, which blocks $M$ or $N$ then $K$,
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item streams $C$ to and from memory
   \item packs the second argument matrix in L1 cache
 \end{enumerate*}
-Given again that one argument matrix is packed in L2 cache, the second option, which blocks $K$ followed by the other dimension,
+Given again that one argument matrix is packed in L2 cache, the second option, which blocks $K$ followed by $M$ or $N$,
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item streams the second argument matrix from memory
   \item computes $C$ in a temporary in L1 cache which is eventually unpacked and merged with $C$ in memory
 \end{enumerate*}
 The operations labeled \textbf{(1)} in each option can be assumed to have negligible impact because they can be pipelined with computation.
 However, the operations labeled \textbf{(2)} are effectively overhead.
-\nelson{Do not hide the subject behind the passive voice.}
-By virtue of the unpacking and merging of $C$ being a more complex operation, it is concluded that the first option for either blocking method is superior.
+By virtue of the unpacking and merging of $C$ being a more complex operation, the first option for either blocking method is concluded to be superior.
 
 \subsubsection{Blocking and Packing for Registers}
 The dimensions chosen to maximise cache usage are likely to be too large for the registers to handle, thus a further set of loops can be added to block for registers.
 These loops only block the pre-packed buffers in memory and do not perform any packing themselves.
-\nelson{Next sentence is not grammatically correct.}
-Instead, when the order in which data is packed for cache is modified.
+Instead, when packing for the cache, the order in which data is packed is modified.
 Rather than packing in the same order relative to the original data, data is organised such that these sub-matrix register arguments are contiguous.
-\nelson{"This"}
-This results in only a single data copy and allows reads to register for calculation to be contiguous in memory.
+Packing in this way results in only a single data copy and allows reads to register for calculation to be contiguous in memory.
 
 \subsubsection{Practicality}
-\nelson{Language in this paragraph is very informal. Please re-read and re-write in a more academic fashion.}
-In the simplest implementation of matrix multiplication (\ie \rlst{basicmatmul}), there is no blocking nor packing.
-For small matrices, this can be the correct choice.
-The overhead of data reorganisation can be be entirely superfluous because the data fits entirely in cache or even registers.
-For large matrices, this can be utterly devestating for cache performance with every piece of data already being removed from cache before its next use.
-While a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple data management strategies.
+Na\"ive matrix multiplication (\ie \rlst{basicmatmul}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
+Given small matrices as operands, this is often the correct choice.
+The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speed up gained from improved cache performance.
+When input and output data begin small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
+
+However, given large matrices, lacking a blocking and packing layer is disastrous for performance.
+With sufficiently large matrices, every load will result in a cache miss because the requested data will have been expelled from the cache by a more recent load simply by the pigeonhole principle.
+In the worst case, these issues are compounded with \gls{tlb} misses as well.
+Therefore, while a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple outer-kernel data-management strategies.
 
 \section{The Inner Kernel}
 The inner kernel is focused on maximising performance.
