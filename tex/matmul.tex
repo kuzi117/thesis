@@ -192,13 +192,13 @@ That is, a matrix whose elements are the result of a single product.
 One such matrix is produced per combination of $A$ column and $B$ row; these matrices must be summed to produce the output $C$.
 
 At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
-As well, in a machine with unlimited resources, including vector registers of unlimited length, they will have performed the same number of stores and loads.
+In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would performed the same number of stores and loads.
 In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
 However, in a practical machine, it is impossible to load the entirety of a long row or of a long column into vector registers in order to fully compute a portion of the matrix.
 
 Long dimension lengths make tiling a necessity.
-Tiling, as discussed in \rsec{blockPack}, breaks the operation into smaller, more manageable operations.
-As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice.
+Tiling, as discussed in \rsec{blockPack}, breaks the whole-matrix multiplication into smaller, more manageable computations.
+As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the inner kernel.
 
 When considering the micro scale, the dot-product approach also makes poor use of \gls{simd} capabilities.
 Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
@@ -217,24 +217,9 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
   If you don't understand it, tell me so I can improve the explanation.
 }
 
-\nelson{
-  I think that this section could benefit from a short opening paragraph where you sign post that you will first discuss the traditional inner-product view of the implementation of the inner kernel and will then present the more suitable outer-product implementation strategy.
-}
-\bk{
-  I've added this paragraph, though I think it sounds a bit strange since no other section has this ``landing pad'' paragraph.
-  I've added section breaks for the different pieces that the new paragraph references with the hope that it makes it more reasonable to have an exposition paragraph.
-  If the paragraph needs modification or the subsections should go, let me know.
-}
 
-\bk{
-  I just want to clear up that they don't view this as inner product since that would be implemented in terms of the dot product which they definitely avoid.
-  Instead, they just think of it in terms of \code{gepb} or \code{gebp} (block * panel or vice versa), each of which is conveniently a small outer-product though they never acknowledge it.
-  It makes for a convenient link to MMA though.
-}
 
-This section carries forward the ideas discussed in \rsec{outerKernel}, linking the blocking strategy in the outer kernel with that of the inner kernel.
-Discussed next is the typical library's implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product.
-Following this is a presentation of a method of resolving these flaws through an improved version of the outer product.
+
 
 \subsubsection{Connections to the Outer Kernel}
 \begin{figure}[t]
@@ -364,7 +349,10 @@ While for the outer kernel a short dimension is optimally several hundred elemen
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
 \rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
 
-\subsubsection{Implementation in Libraries}
+Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product.
+Following this is a presentation of a method of resolving these flaws through an improved version of the outer product.
+
+\subsubsection{Emulating Outer-Product with \gls{simd} instructions in Libraries}
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
 The elements of the panel are then loaded into a different vector register.
@@ -429,13 +417,15 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
 \end{figure}
 
 To improve upon this design, it must first be reexamined.
+\nelson{It is not conventional to use the notation A x B = C. The conventional notation is C = A x B.}
 In choosing this method, the implementer is performing a \matmul{1}{1}{n} or \matmul{n}{1}{1} matrix multiplication.
-While viewing this operation as a traditional inner-product is tempting, a different point of view can be more beneficial.
-Instead, we can choose to recognize the multiplication as a degenerate case of an outer product where one operand vector's length is one.
+While it is tempting to view this operation as a traditional inner-product, a different point of view can be more beneficial.
+Instead, this multiplication can be viewed as a degenerate case of an outer product where one of the operand vector's length is one.
 With this understanding, the direction for improvement becomes apparent.
 The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
 A red box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
+\nelson{Does computational throughput capture what you mean by computational density?}
 Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed and the computational density of the operation quadrupled.
 \bk{
   Is ``computational density'' a known idea?
@@ -455,12 +445,12 @@ Kernel writers must implement all of these optimisations by hand.
 In doing so, they must review \gls{cpu} properties as well as consider the design of their outer kernel to determine to what degree an optimisation will affect the hardware.
 Historically, with great effort, this process has produced excellent results.
 
-However, all of these optimisations and more are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
+However, all of these optimisations, and others, are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
 \bk{
   There's an example here that the default vectorisation lowering actually outputs a scalar version of matmul (simpler and easier to reason about/write) that's automatically vectorised by the compiler.
   However, I don't know that I can easily include it because it's based on intrinsics, lowerings, etc. that aren't explained until the method chapter.
 }
-Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same or better performance.
+Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
 \bk{Section unfinished, got distracted by writing the previous section.}
 
 \section{Usage cases}
