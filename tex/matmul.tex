@@ -192,36 +192,22 @@ That is, a matrix whose elements are the result of a single product.
 One such matrix is produced per combination of $A$ column and $B$ row; these matrices must be summed to produce the output $C$.
 
 At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
-In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would performed the same number of stores and loads.
+In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would perform the same number of stores and loads.
 In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
 However, in a practical machine, it is impossible to load the entirety of a long row or of a long column into vector registers in order to fully compute a portion of the matrix.
 
 Long dimension lengths make tiling a necessity.
-Tiling, as discussed in \rsec{blockPack}, breaks the whole-matrix multiplication into smaller, more manageable computations.
-As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the inner kernel.
+Tiling, as discussed in \rsec{blockPack}, breaks the overall multiplication into smaller, more manageable computations.
+As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the outer kernel.
 
-When considering the micro scale, the dot-product approach also makes poor use of \gls{simd} capabilities.
+When considering the inner kernel, the dot-product approach also makes poor use of \gls{simd} capabilities.
 Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
 Computing a partial result in this manner reduces the effectiveness of \gls{simd} by creating a scalar value.
 \Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
 
 \subsection{Goto and van de Geijn in the Inner Kernel}
-\bk{This title could be shortened or tailored more.}
 
-\bk{
-  I rewrote this section after having a sort of epiphany.
-  Before, Jo\~ao had told me that many libraries implemented their inner kernels in terms of outer product but no one seemed to state this (we found one paper that mentioned it only off-hand for a specific experiment).
-  I realised they had actually extended Goto's block * panel design to the inner kernel but on the scale of registers.
-  I'll let the section explain the connection.
-  If you don't understand it, tell me so I can improve the explanation.
-}
-
-
-
-
-
-\subsubsection{Connections to the Outer Kernel}
 \begin{figure}[t]
   \hfill
   \begin{subfigure}{.45\linewidth}
@@ -417,21 +403,14 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
 \end{figure}
 
 To improve upon this design, it must first be reexamined.
-\nelson{It is not conventional to use the notation A x B = C. The conventional notation is C = A x B.}
 In choosing this method, the implementer is performing a \matmul{1}{1}{n} or \matmul{n}{1}{1} matrix multiplication.
 While it is tempting to view this operation as a traditional inner-product, a different point of view can be more beneficial.
-Instead, this multiplication can be viewed as a degenerate case of an outer product where one of the operand vector's length is one.
+Instead, this multiplication can be regarded as a degenerate case of an outer product where one of the operand vector's length is one.
 With this understanding, the direction for improvement becomes apparent.
 The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
 A red box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
-\nelson{Does computational throughput capture what you mean by computational density?}
-Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed and the computational density of the operation quadrupled.
-\bk{
-  Is ``computational density'' a known idea?
-  We used it in our paper for PACT.
-  Would it be better to say that output data is quadrupled or some other way of stating that idea?
-}
+Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed and the computational throughput of the operation quadrupled.
 \rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
