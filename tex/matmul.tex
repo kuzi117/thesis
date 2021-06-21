@@ -30,6 +30,7 @@ Typically, the layered approach consists of two layers:
 This work focuses on building a modular innermost layer and therefore the outer layer is explained only briefly for completeness.
 
 \section{The Outer Kernel}
+\label{sec:outerKernel}
 The outer kernel is a delicate dance between blocking and packing.
 Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
 Packing takes the operands of an operation and duplicates data into a smaller buffer where elements are more likely to fit in cache simultaneously, allowing faster access times.
@@ -171,7 +172,7 @@ However, unrolling too much can degrade instruction cache performance and bloat 
       \node at (4.5, 5) {$B$};
       \node at (10, 5) {$C$};
     \end{tikzpicture}
-  \caption{Outer-product (rank-$1$ update) operation.}
+  \caption{Outer product (rank-$1$ update).}
     \label{fig:outerProduct}
   \end{subfigure}
   \hfill
@@ -207,6 +208,35 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
 
 \subsection{Goto and van de Geijn in the Inner Kernel}
 \bk{This title could be shortened or tailored more.}
+
+\bk{
+  I rewrote this section after having a sort of epiphany.
+  Before, Jo\~ao had told me that many libraries implemented their inner kernels in terms of outer product but no one seemed to state this (we found one paper that mentioned it only off-hand for a specific experiment).
+  I realised they had actually extended Goto's block * panel design to the inner kernel but on the scale of registers.
+  I'll let the section explain the connection.
+  If you don't understand it, tell me so I can improve the explanation.
+}
+
+\nelson{
+  I think that this section could benefit from a short opening paragraph where you sign post that you will first discuss the traditional inner-product view of the implementation of the inner kernel and will then present the more suitable outer-product implementation strategy.
+}
+\bk{
+  I've added this paragraph, though I think it sounds a bit strange since no other section has this ``landing pad'' paragraph.
+  I've added section breaks for the different pieces that the new paragraph references with the hope that it makes it more reasonable to have an exposition paragraph.
+  If the paragraph needs modification or the subsections should go, let me know.
+}
+
+\bk{
+  I just want to clear up that they don't view this as inner product since that would be implemented in terms of the dot product which they definitely avoid.
+  Instead, they just think of it in terms of \code{gepb} or \code{gebp} (block * panel or vice versa), each of which is conveniently a small outer-product though they never acknowledge it.
+  It makes for a convenient link to MMA though.
+}
+
+This section carries forward the ideas discussed in \rsec{outerKernel}, linking the blocking strategy in the outer kernel with that of the inner kernel.
+Discussed next is the typical library's implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product.
+Following this is a presentation of a method of resolving these flaws through an improved version of the outer product.
+
+\subsubsection{Connections to the Outer Kernel}
 \begin{figure}[t]
   \hfill
   \begin{subfigure}{.45\linewidth}
@@ -321,14 +351,11 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
 \end{figure}
 
 \bk{
-  I rewrote this section after having a sort of epiphany.
-  Before, Jo\~ao had told me that many libraries implemented their inner kernels in terms of outer product but no one seemed to state this (we found one paper that mentioned it only off-hand for a specific experiment).
-  I realised they had actually extended Goto's block * panel design to the inner kernel but on the scale of registers.
-  I'll let the section explain the connection.
-  If you don't understand it, tell me so I can improve the explanation.
+  I'm considering reordering the figures such that \rfig{gebpMath} and \rfig{gepbMath} are together since they're both referenced in one subsection.
+  Likewise, \rfig{gebpSimd} and \rfig{gepbSimd} would be together because they're referenced in the next subsection.
+  At the same time though, seeing the SIMD implementation with elements is easier if it's grouped with its mathematical representation.
+  Thoughts?
 }
-
-\na{I think that this section could benefit from a short opening paragraph where you sign post that you will first discuss the traditional inner-product view of the implementation of the inner kernel and will then present the more suitable outer-product implementation strategy.}
 
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
 As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, it is implemented using the multiplication of a combination of a block and a panel.
@@ -337,6 +364,7 @@ While for the outer kernel a short dimension is optimally several hundred elemen
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
 \rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
 
+\subsubsection{Implementation in Libraries}
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
 The elements of the panel are then loaded into a different vector register.
@@ -345,6 +373,7 @@ This process is more effective than using the dot product because multiple outpu
 However, in a kernel that is supposed to be as tight as possible, cycles are lost to duplicating values.
 Furthermore, the kernel should also use resources as effectively as possible, however, the duplicated values use all \glspl{lane} of a vector, effectively reducing a vector registers back to a single scalar, nullifying the benefits of \gls{simd}.
 
+\subsubsection{Improving the Design}
 \begin{figure}[t]
   \hfill
   \begin{subfigure}{.40\linewidth}
@@ -399,18 +428,20 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
   \label{fig:extGoto}
 \end{figure}
 
-\nelson{What is "this"?}
-To improve this, the current operation must be reexamined.
+To improve upon this design, it must first be reexamined.
 In choosing this method, the implementer is performing a \matmul{1}{1}{n} or \matmul{n}{1}{1} matrix multiplication.
-\nelson{What "it" refers to?}
-While it is tempting to fall back to a traditional view of matrix multiplication and regard this as a simple inner product, a different point of view can be more beneficial.
-\nelson{What does "this" refer to?}
-Instead, we can choose to recognize this as a degenerate case of an outer product where one operand vector's length is one.
+While viewing this operation as a traditional inner-product is tempting, a different point of view can be more beneficial.
+Instead, we can choose to recognize the multiplication as a degenerate case of an outer product where one operand vector's length is one.
 With this understanding, the direction for improvement becomes apparent.
 The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
 A red box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
-Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed.
+Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed and the computational density of the operation quadrupled.
+\bk{
+  Is ``computational density'' a known idea?
+  We used it in our paper for PACT.
+  Would it be better to say that output data is quadrupled or some other way of stating that idea?
+}
 \rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
