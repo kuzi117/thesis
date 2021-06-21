@@ -12,6 +12,7 @@ pdf: $(PREFIX).pdf
 	$(LATEX)	$(PREFIX)
 	$(BIBTEX)	$(PREFIX)
 	$(LATEX)	$(PREFIX)
+	$(BIBTEX)	$(PREFIX)
 	$(LATEX)	$(PREFIX)
 
 clean:
