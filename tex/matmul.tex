@@ -13,8 +13,9 @@ Matrix multiplication, as a critical operation in many applications, has been th
 \bk{Can I just leave it at that or do I need to provide some random citations proving my point?}
 Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally, via optimisations such as loop switching and loop unrolling.
 Contemporary libraries and their overall frameworks are derived from seminal work by Goto and van de Geijn~\autocite{goto2008anatomy}.
-More recent work~\autocite{vanzee2015blis,zee2016blis}\todo{More citations, not just BLIS works.} have improved upon that seminal work, but the overall structure remains the same.
-\ik{The main direction of contributions is to make these frameworks easier to port to target architectures by providing a modular approach for the microkernel. Low et al.~\autocite{low2016analytical} showed that the parameters of the microkernels in BLIS can be determined analytically.}
+More recent work~\autocite{vanzee2015blis,zee2016blis} have improved upon that seminal work, but the overall structure remains the same.
+Each of these works aim to improve the portability to new architectures by providing a more modular approach for the micro kernel.
+This includes a work by Low \etal which shows that the tuning parameters of the kernels for each architecture can be derived analytically from the architecture specification.
 
 Goto and van de Geijn's work concludes that matrix multiplication should be implemented in a \emph{layered approach}.
 Each of these ``layers'' is typically one or more loops that perform some function before executing the enclosed layer.
@@ -27,32 +28,29 @@ Typically, the layered approach consists of two layers:
   \item the blocking strategy responsible for breaking up the computation combined with the packing strategy responsible for optimising data movement between memory and cache as well as data layout within the cache (the \emph{outer kernel} or \emph{macro kernel})
   \item the computation strategy responsible for data movement between cache and register as well as for producing the actual result (the \emph{inner kernel} or \emph{micro kernel})
 \end{enumerate*}
+\bk{
+  Need to discuss terminology.
+  BLIS has three layers: an outer layer, a macro kernel, then a micro kernel.
+  BLAS calls the macro kernel the inner kernel and doesn't separate the micro kernel but has an outer layer that manages memory, if memory serves correctly.
+  I might be making poor use of terminology.
+}
 This work focuses on building a modular innermost layer and therefore the outer layer is explained only briefly for completeness.
 
 \section{The Outer Kernel}
 \label{sec:outerKernel}
-The outer kernel is a delicate dance between blocking and packing.
+There are two operations which are critical to the function of the outer kernel: blocking and packing.
 Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
-Packing takes the operands of an operation and duplicates data into a smaller buffer where elements are more likely to fit in cache simultaneously, allowing faster access times.
-\bk{
-  Is this enough explanation of what blocking and packing are?
-  It seems orthogonal to the rest of the thesis so I'd like to avoid going too in depth if possible.
-}
+Division is necessary because matrix sizes found in applications are often much larger than what a cache can fit.
+Even with this division, the distance between elements within in different rows or columns can cause cache conflicts or \gls{tlb} misses.
+To counter this, packing takes the operands of an operation and duplicates data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
+Packing can also improve the data access pattern for a more efficient inner kernel, as discussed later in \rsec{blockPack}.
+
+The outer kernel is a delicate dance between blocking and packing.
 If the blocking factor is too large (\ie many, small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
 However, when the blocking is too small (\ie few, large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
-
-\ik{The outer kernel consists of three nested loops (one for each computation dimension) and packing function calls.
-As the matrix sizes typically found in application are much bigger than what data cache can fit, the three loops serve to divide the task into smaller portions (blocks).
-The sizes of the blocks are determined by the sizes of L1, L2 and L3 caches so to maximize cache utilization.
-However, accesses to these smaller portions would put stress on the TLB as data in the blocks lies with the original stride, which is large.
-Packing (copying matrix to a buffer with specific storage layout) was introduced to use the minimum number of memory pages and to place matrix elements in the order they will be later accessed by the inner kernel to improve data locality.
-The work of Goto and Van de Geijn~\autocite{goto2008anatomy} outlines several possibilities to pack the input matrices but identifies one that is most promising.
-For that case, matrices A and B are copied to two other memory buffers (blocks) so that elements in these blocks lie contiguously.
-}
+The dimensions of the blocking, and therefore the packing, are dependent on the sizes of all levels of the cache present on the target architecture (L1, L2, L3 on modern consumer machines, uncommonly L4).
 
 Goto and van de Geijn address blocking, caching and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
-\bk{Can TLB remain a glossary entry or is further explanation required here.}
-\ik{TLB should remain a glossary entry as Goto's paper introduces TLB and its relation to the whole process}
 When blocking, each new blocking loop breaks up a single dimension of the multiplication.
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
 Further dividing a panel produces a section with two short dimensions called a block.
@@ -63,12 +61,6 @@ Different combinations of blocking orders also induce different packing choices 
 
 \subsection{Blocking and Packing for Cache}
 \label{sec:blockPack}
-\bk{
-  I kind of don't like the rest of this section.
-  It just seems like a summary of the Goto paper while also lacking the completeness of their work.
-  I think it's important for the summary of \code{GEPDOT}, but I'm unsure if the rest of it is truly important.
-  Maybe it's fine because it's not the focus of the paper, as stated above.
-}
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
 This breakdown is called \code{GEPDOT} because it computes the dot product of two panels.
@@ -76,17 +68,6 @@ According to their proposed method, with this breakdown, $C$ will be packed in L
 Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, L2 cache is only read from.
 In essence, this means that the \code{GEPDOT} method is less bandwidth efficient because it requires both a read and a write.
-\bk{I need to rewrite the section in \rcha{mma} now that this is written.}
-
-\ik{
-  One of the key insights of the Goto and Van de Geijn's work~\autocite{goto2008anatomy} is that L2 utilization is the top priority for performance.
-  The blocking and packing of matrices can come in different combinations of loops orders and matrix packing choices, as briefly mentioned above.
-  Goto reasoned in~\autocite{goto2008anatomy} and devised that packing A, B in L2 and L3 caches is the best approach.
-  Other combinations are symmetric to this approach except for one, commonly known as~\code{GEPDOT}.
-  In that scenario, the matrix C is packed and loaded into L1 and L2 on each block iteration, while elements of A and B are streamed from memory.
-  As compared to the implementation where either A or B resides in L2,~\code{GEPDOT} reads \textbf{and then writes} a few elements of C from L2 which results in twice the L2 bandwidth usage.
-}
-\ik{Just a note: even if it was matmul, not gemm, both GEPDOT and GEBP accumulate.}
 
 Without loss of generality, an implementer can choose between the remaining two methods (blocking $M$ and $K$ or blocking $K$ and $N$) based on the storage order of $C$.
 Within one of these methods, the order in which $K$ and the second dimension are blocked creates two options.
