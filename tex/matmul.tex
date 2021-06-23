@@ -288,9 +288,31 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
       \node[above=.75] at (9.7, 1) {$B$};
       \draw[shift={(7.7,0)}] (0,0) grid +(4,1);
     \end{tikzpicture}
-    \caption{Block times panel mathematically.}
+    \caption{Block times panel.}
     \label{fig:gebpMath}
   \end{subfigure}
+  \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \node[above=.75] at (.5, 4) {$C$};
+      \draw[shift={(0,0)}] (0,0) grid +(1,4);
+      \node at (1.8,2) {$\mathrel{+}=$};
+      \node[above=.75] at (3.1, 4) {$A$};
+      \draw[shift={(2.6,0)}] (0,0) grid +(1,4);
+      \node at (4.1,2) {$\times$};
+      \node[above=.75] at (5.1, 4) {$B$};
+      \draw[shift={(4.6,3)}] (0,0) grid +(1,1);
+    \end{tikzpicture}
+    \caption{Panel times block.}
+    \label{fig:gepbMath}
+  \end{subfigure}
+  \hfill
+  \caption[Inner kernel impelmentations viewed mathematically]{The two possible implementations for the inner kernel viewed mathematically.}
+  \label{fig:gebp}
+\end{figure}
+
+\begin{figure}[t]
   \hfill
   \begin{subfigure}{.45\linewidth}
     \centering
@@ -322,30 +344,8 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
         $b_{0,3}$\\
       };
     \end{tikzpicture}
-    \caption{Block times panel in register using \gls{simd} \acrshort{fma}.}
+    \caption{Block times panel.}
     \label{fig:gebpSimd}
-  \end{subfigure}
-  \hfill
-  \caption[Block and panel kernel mathematically and in register]{Block times panel computation both mathematically and as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.\bk{Better caption?}}
-  \label{fig:gebp}
-\end{figure}
-
-\begin{figure}[t]
-  \hfill
-  \begin{subfigure}{.45\linewidth}
-    \centering
-    \begin{tikzpicture}[scale=1/2]
-      \node[above=.75] at (.5, 4) {$C$};
-      \draw[shift={(0,0)}] (0,0) grid +(1,4);
-      \node at (1.8,2) {$\mathrel{+}=$};
-      \node[above=.75] at (3.1, 4) {$A$};
-      \draw[shift={(2.6,0)}] (0,0) grid +(1,4);
-      \node at (4.1,2) {$\times$};
-      \node[above=.75] at (5.1, 4) {$B$};
-      \draw[shift={(4.6,3)}] (0,0) grid +(1,1);
-    \end{tikzpicture}
-    \caption{Panel times block mathematically.}
-    \label{fig:gepbMath}
   \end{subfigure}
   \hfill
   \begin{subfigure}{.45\linewidth}
@@ -378,11 +378,11 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
         $b_{0,0}$\\
       };
     \end{tikzpicture}
-    \caption{Panel times block in register using \gls{simd} \acrshort{fma}.}
+    \caption{Panel times block.}
     \label{fig:gepbSimd}
   \end{subfigure}
   \hfill
-  \caption[Panel and block kernel mathematically and in register]{Panel times block computation both mathematically and as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.\bk{Better caption?}}
+  \caption[Inner kernel impelmentations viewed in register]{The two possible implementations for the inner kernel as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.}
   \label{fig:gepb}
   \vspace{-0.15cm}
 \end{figure}
