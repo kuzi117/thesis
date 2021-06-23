@@ -386,7 +386,7 @@ Therefore, for double-precision floats, the value of $N$ should be reduced by ha
 With this reduction, an \code{ATile} tile occupies 16 VSRs and a \code{BTile} tile also occupies 16 VSRs.
 The extraction of operands into vector registers in lines~\ref{aOps} and~\ref{bOps} of \ralg{intrinsic} must be changed accordingly.
 
-\subsection{Arbitrary Values for $N$, $M$, $K$}
+\subsection{Arbitrary Values for \texorpdfstring{$M$}{M}, \texorpdfstring{$K$}{K}, \texorpdfstring{$N$}{N}}
 \label{sec:arbitraryDims}
 \bk{Coutput created before K makes a lot more sense with the arbitrary dimensions}
 % For simplicity, the presentation of the algorithms assumed that $N$ and $K$ are selected so that a tile of matrix \code{A} and a tile of matrix \code{B} have the exact dimensions needed for the accumulator arrangement shown in \rfig{intrinsic}.
