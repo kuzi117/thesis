@@ -424,14 +424,14 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
       \draw[shift={(-.25,1.5)}] (0,0) grid +(4,1);
       \draw[shift={(-.25,3)}] (0,0) grid +(4,1);
       \draw[shift={(-.25,4.5)}] (0,0) grid +(4,1);
-      \draw[shift={(-.5,-.25)},color=blue] (0, 0) -- +(4.5, 0) -- +(4.5, 6) -- +(0, 6) -- cycle;
+      \draw[shift={(-.5,-.25)},dashdotted] (0, 0) -- +(4.5, 0) -- +(4.5, 6) -- +(0, 6) -- cycle;
       \node at (4.975,2.75) {$\mathrel{+}=$};
       \node[above=.75] at (6.65, 5.75) {$A$};
       \draw[shift={(6.2,0)}] (0,0) grid +(1,1);
       \draw[shift={(6.2,1.5)}] (0,0) grid +(1,1);
       \draw[shift={(6.2,3)}] (0,0) grid +(1,1);
       \draw[shift={(6.2,4.5)}] (0,0) grid +(1,1);
-      \draw[shift={(5.95,-.25)},color=red] (0, 0) -- +(1.5, 0) -- +(1.5, 6) -- +(0, 6) -- cycle;
+      \draw[shift={(5.95,-.25)},dashed] (0, 0) -- +(1.5, 0) -- +(1.5, 6) -- +(0, 6) -- cycle;
       \node at (7.9,2.75) {$\times$};
       \node[above=.75] at (10.4, 5.5) {$B$};
       \draw[shift={(8.4,4.5)}] (0,0) grid +(4,1);
@@ -448,7 +448,7 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
       \draw[shift={(1.25,0)}] (0,0) grid +(1,4);
       \draw[shift={(2.74,0)}] (0,0) grid +(1,4);
       \draw[shift={(4.25,0)}] (0,0) grid +(1,4);
-      \draw[shift={(-.5,-.25)},color=blue] (0, 0) -- +(6, 0) -- +(6, 4.5) -- +(0, 4.5) -- cycle;
+      \draw[shift={(-.5,-.25)},dashdotted] (0, 0) -- +(6, 0) -- +(6, 4.5) -- +(0, 4.5) -- cycle;
       \node at (6.4,2) {$\mathrel{+}=$};
       \node[above=.75] at (7.9, 4) {$A$};
       \draw[shift={(7.4,0)}] (0,0) grid +(1,4);
@@ -458,7 +458,7 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
       \draw[shift={(11.1,3)}] (0,0) grid +(1,1);
       \draw[shift={(12.6,3)}] (0,0) grid +(1,1);
       \draw[shift={(14.1,3)}] (0,0) grid +(1,1);
-      \draw[shift={(9.35,2.75)},color=red] (0, 0) -- +(6, 0) -- +(6, 1.5) -- +(0, 1.5) -- cycle;
+      \draw[shift={(9.35,2.75)},dashed] (0, 0) -- +(6, 0) -- +(6, 1.5) -- +(0, 1.5) -- cycle;
     \end{tikzpicture}
     \caption{Extending panel times block.}
     \label{fig:extGepb}
@@ -475,8 +475,8 @@ Instead, this multiplication can be regarded as a degenerate case of an outer pr
 With this understanding, the direction for improvement becomes apparent.
 The duplication issue can be resolved by replacing the duplicated values with unique values, extending the outer product's shortened dimension, bringing it closer to \rfig{outerProduct}.
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
-A red box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
-Given a register that could contain the much larger output data in the blue boxes, the overhead of broadcasting can be completely removed and the computational throughput of the operation quadrupled.
+A dashed box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
+Given a register that could contain the much larger output data in the dot-dashed boxes, the overhead of broadcasting can be completely removed and the computational throughput of the operation quadrupled.
 \rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
