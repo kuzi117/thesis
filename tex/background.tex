@@ -53,30 +53,9 @@ Thus, the facility is amenable to tasks that would normally incur avoidable over
 See \rcha{mma} for further discussion.
 
 \section{Matrix Multiplication}
-\bk{I need to rewrite this section after writing the matrix multiplication section, I think.}
-Matrix multiplication has long been intrinsic to scientific computation and it is well known that many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
-Optimisation of this operation therefore has the potential to improve many tasks in both \gls{hpc} and business domains.
+\bk{This section needs some sort of platitudes about matrix multiplication but let most of the explanation happen in \rcha{matmul}.}
+% Optimisation of this operation therefore has the potential to improve many tasks in both \gls{hpc} and business domains.
 
-The operation itself, in its most naive form, is quite simple:
-\begin{lstlisting}[caption={[Basic Matrix Multiplication]A basic matrix multiplication.},label=lst:basicmatmul,language=C++,columns=flexible,morekeywords=uint64_t]
-for (uint64_t i = 0; i < M; ++i)
-  for (uint64_t j = 0; j < N; ++j)
-      for (uint64_t k = 0; k < D; ++k)
-        C[i][j] += A[i][k] * B[k][j];
-\end{lstlisting}
-\bk{The above listing and description seem out of place and potentially useless. The listing may be pertinent but the explaining paragraph needs to be improved.}
-The \code{i} loop iterates the rows of \code{A}, also choosing a row in \code{C}, while the \code{j} loop iterates the columns of \code{B}, also choosing a cell in the chosen row of \code{C}.
-The final \code{k} loop iterates through the elements of the chosen row of \code{A} and column of \code{B}, reducing each of the pair-wise products into the chosen cell of \code{C}.
-
-Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
-Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations, \eg EIGEN\todo{cite} and BLAS\todo{cite}.
-These implementations often outperform naive implementations of matrix multiplication by hundreds or thousands of times, turning hours of serial work into seconds or less.
-This speedup is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop switching.
-
-However, when one looks more closely, it is hard to classify any optimisation as hardware or software only.
-\Gls{simd}, though it is a hardware feature, enables software to execute less instructions while loop switching's true function is optimising data reuse in the hardware cache.
-It is for this reason that a new feature such as \gls{mma} can be so impactful on the optimisation of this operation.
-See \rcha{matmul} for further discussion.
 
 \section{LLVM}
 \label{sec:llvm}

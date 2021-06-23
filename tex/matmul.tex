@@ -8,7 +8,123 @@
 
 \chapter{Matrix Multiplication}
 \label{cha:matmul}
+Matrix multiplication has long been intrinsic to the \gls{hpc} communities, be it the general scientific community or within the computing scienceLj domain.
+Several fields within the physics~\autocite{krol2014matrix}, biology~\autocite{akutsu2000algorithms} and chemistry~\autocite{weber2015semiempirical} all benefit from matrix multiplication in some way.
+It is also possible to simulate quantum computing processes using matrix multiplication~\autocite{zulehner2019matrix}.
+Beyond this, it is well known that many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
 
+Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
+Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations, \eg EIGEN\todo{cite} and OpenBLAS\todo{cite}.
+These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of serial work into seconds or less.
+This speedup is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop blocking and data packing.
+Understanding matrix multiplication and how it is implemented is critical to unlocking these optimisations.
+
+\section{Inner and Outer Product}
+\label{sec:products}
+
+Computing matrix multiplication, as taught in an introductory math course, is performed using what is known as the \emph{inner product}.
+This is not to be confused with the \emph{dot product}, which is an operation between vectors and is used when computing the inner product, or \emph{outer product}, which is a different method of computing matrix multiplication like the inner product.
+Both the outer product and inner product compute the same output given the same input but, as \rsec{outerKernel} and \rsec{innerKernel} will discuss, the efficacy with which they arrive at the destination can vary greatly.
+
+\begin{figure}[t]
+ \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \draw[step=1, shift={(0, 3)}] (0, 0) grid +(4, 1);
+      \node at (4.75, 2) {$\times$};
+      \draw[step=1, shift={(5.5, 0)}] (0, 0) grid +(1, 4);
+      \node at (7.25, 2) {$=$};
+      \draw[step=1, shift={(8, 3)}] (0, 0) grid +(1, 1);
+      \node at (2, 5) {$A$};
+      \node at (6, 5) {$B$};
+      \node at (8.5, 5) {$C$};
+    \end{tikzpicture}
+    \caption{Inner product.}
+    \label{fig:innerProduct}
+  \end{subfigure}
+ \hfill
+  \begin{subfigure}{.45\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      \draw[step=1, shift={(0, 0)}] (0, 0) grid +(1, 4);
+      \node at (1.75, 2) {$\times$};
+      \draw[step=1, shift={(2.5, 3)}] (0, 0) grid +(4, 1);
+      \node at (7.25, 2) {$=$};
+      \draw[step=1, shift={(8, 0)}] (0, 0) grid +(4, 4);
+      \node at (.5, 5) {$A$};
+      \node at (4.5, 5) {$B$};
+      \node at (10, 5) {$C$};
+    \end{tikzpicture}
+  \caption{Outer product (rank-$1$ update).}
+    \label{fig:outerProduct}
+  \end{subfigure}
+  \hfill
+  \caption{Example matrix-matrix multiplication computation styles.}
+  \label{fig:product}
+  \vspace{-0.15cm}
+\end{figure}
+
+\subsection{The Inner Product}
+Given the computation \matmul{M}{D}{N}, the inner product is computed by taking the dot product of the $i$th row of $A$ and the $j$th column of $B$ to produce the cell $c_{i,j}$ (\rfig{innerProduct}).
+The dot product is defined as the summation of the pair-wise products of the two vectors (\eg $a_{i,1}b_{1,j} \times a_{i,2}b_{2,j} \times \ldots \times a_{i,D}b_{D,j}$).
+Therefore, in its most naive form, matrix multiplication can be computed like so:
+\begin{lstlisting}[caption={[Basic inner product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t]
+for (uint64_t i = 0; i < M; ++i)
+  for (uint64_t j = 0; j < N; ++j)
+      for (uint64_t k = 0; k < D; ++k)
+        C[i][j] += A[i][k] * B[k][j];
+\end{lstlisting}
+The \code{i} loop iterates the rows of $A$, also choosing a row in $C$, while the \code{j} loop iterates the columns of $B$, also choosing a cell in the chosen row of $C$.
+The final \code{k} loop iterates through the elements of the chosen row of $A$ and column of $B$, computing the dot product by accumulating (reducing) each of the pair-wise products into the chosen cell of $C$.
+
+\subsection{The Outer Product}
+The outer product, when seen in mathematics, is typically seen only when $D=1$ as in \matmul{M}{1}{N}, mimicking the diagram in \rfig{outerProduct}.
+Mathematicians prefer to view \matmul{M}{D}{N} with $D > 1$ as an inner product for simplicity, using the outer product only when $D=1$.
+
+Given the same computation, \matmul{M}{D}{N}, the outer product is computed by multiplying a column of $A$ with a row of $B$ as in \rfig{outerProduct}, producing an output matrix.
+Where, given a vector from $A$ and $B$, the inner product fully computes a single cell, the outer product partially computes every cell of the output $C$.
+In its most na\"ive form, it appears as in \rlst{basicInner} but with the $k$ loop switched to be the outermost loop:
+\begin{lstlisting}[caption={[Basic outer product]A basic matrix multiplication via outer product.},label=lst:basicOuter,language=C++,columns=flexible,morekeywords=uint64_t]
+for (uint64_t k = 0; k < D; ++k)
+  for (uint64_t i = 0; i < M; ++i)
+    for (uint64_t j = 0; j < N; ++j)
+        C[i][j] += A[i][k] * B[k][j];
+\end{lstlisting}
+Now, the $k$ loop chooses a pair of column from $A$ and row from $B$ that are iterated by the $i$ and $j$ loops respectively.
+Rather than focusing on a single cell of $C$, every element of $C$ will be updated once before returning to the first cell with a new column and row combination.
+
+\subsubsection{Rank-\texorpdfstring{$r$}{r} Updates}
+Some mathematical operations, such as lower-upper factorization, depend on a changing data set, updating a model as new data points are added~\autocite{strange2007efficient}.
+This update process is performed by taking a matrix derived from the model and updating it with the outer product of two vectors.
+\bk{
+  I say ``a matrix derived from the model'' because it's probably very out of the scope of this paper (and my knowledge at this point) on where this matrix comes from.
+  I know enough to only make this next point about rank-1 update.
+}
+Because the result of the outer product of two vectors, a matrix, will always be of rank one\footnotemark, this is called a \emph{rank-one update}.
+\footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
+Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), evenutally arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
+With this model, the outer product matrix multiplication in \rlst{basicOuter} is rewritten as such:
+\begin{lstlisting}[caption={[Matrix multiplication via rank-one update]Matrix multiplication using rank-one update.},label=lst:rankOne,language=C++,columns=flexible,morekeywords=uint64_t]
+for (uint64_t k = 0; k < D; ++k)
+  rankOneUpdate(C, column(A, k), row(B, k));
+\end{lstlisting}
+
+It is not necessary for a complicated model to update itself one data point at a time.
+Should, for example, two data points become simultaneously available, two rank-one updates can be performed at the same time.
+Updating with two rank-one updates means summing two rank-one matrices; by definition, the summation of two rank-one matrices creates a rank two matrix\footnotemark.
+\footnotetext{Given matrices $M_1, M_2 \in \mathcal{R}^{m \times n}$, each rank one, then each matrix has $v_i$, its only basis vector. If $v_1 \ne v_2$, then $M_1+M_2$ has two basis vectors $v_1, v_2$, implying $M_1+M_2$ has rank two.}
+Therefore, this can now be described as a rank-two update.
+This same logic extends to creating updates with greater ranks, giving rise to the rank-$r$ update\footnotemark.
+\footnotetext{Common notation is rank-$k$ update; it is changed to rank-$r$ update in this work so as to avoid confusion with $k$ in other uses.}
+Revisiting the process in \rlst{rankOne}, this repeated rank-one update process is apparent.
+The loop simply performs $D$ rank-one updates, implying this can be once again reinterpreted in the form of one rank-$D$ update like so:
+\begin{lstlisting}[caption={[Matrix multiplication via rank-$r$ update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
+// Assumption: A, B are arrays of D vectors
+rankRUpdate(C, A, B, /*rank*/ D);
+\end{lstlisting}
+
+\section{State of the Art}
 Matrix multiplication, as a critical operation in many applications, has been the focus of optimisation research for decades.
 \bk{Can I just leave it at that or do I need to provide some random citations proving my point?}
 Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally, via optimisations such as loop switching and loop unrolling.
@@ -115,53 +231,8 @@ Future iterations that would load the same data can also be moved such that the 
 However, unrolling too much can degrade instruction cache performance and bloat executable size.
 \bk{I feel like there's more discussion to be had here, I just need to return with a clear mind.}
 
-\subsection{Inner Product}
-\bk{Content to be moved here.}
-
-\subsection{Outer Product}
-\bk{Content to be moved here.}
-
 \subsection{Inner Product vs Outer Product}
-\label{sec:products}
-\begin{figure}[t]
- \hfill
-  \begin{subfigure}{.45\linewidth}
-    \centering
-    \begin{tikzpicture}[scale=1/2]
-      \draw[step=1, shift={(0, 3)}] (0, 0) grid +(4, 1);
-      \node at (4.75, 2) {$\times$};
-      \draw[step=1, shift={(5.5, 0)}] (0, 0) grid +(1, 4);
-      \node at (7.25, 2) {$=$};
-      \draw[step=1, shift={(8, 3)}] (0, 0) grid +(1, 1);
-      \node at (2, 5) {$A$};
-      \node at (6, 5) {$B$};
-      \node at (8.5, 5) {$C$};
-    \end{tikzpicture}
-    \caption{Inner product.}
-    \label{fig:innerProduct}
-  \end{subfigure}
- \hfill
-  \begin{subfigure}{.45\linewidth}
-    \centering
-    \begin{tikzpicture}[scale=1/2]
-      \draw[step=1, shift={(0, 0)}] (0, 0) grid +(1, 4);
-      \node at (1.75, 2) {$\times$};
-      \draw[step=1, shift={(2.5, 3)}] (0, 0) grid +(4, 1);
-      \node at (7.25, 2) {$=$};
-      \draw[step=1, shift={(8, 0)}] (0, 0) grid +(4, 4);
-      \node at (.5, 5) {$A$};
-      \node at (4.5, 5) {$B$};
-      \node at (10, 5) {$C$};
-    \end{tikzpicture}
-  \caption{Outer product (rank-$1$ update).}
-    \label{fig:outerProduct}
-  \end{subfigure}
-  \hfill
-  \caption{Example matrix-matrix multiplication computation styles.}
-  \label{fig:product}
-  \vspace{-0.15cm}
-\end{figure}
-
+\label{sec:productsVs}
 Matrix multiplication's inner kernel is implementable through two operations: inner product and outer product.
 Both operations arrive at the same destination albeit via different processes.
 Consider \rfig{product}.
