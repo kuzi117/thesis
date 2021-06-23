@@ -8,13 +8,13 @@
 
 \chapter{Matrix Multiplication}
 \label{cha:matmul}
-Matrix multiplication has long been intrinsic to the \gls{hpc} communities, be it the general scientific community or within the computing scienceLj domain.
-Several fields within the physics~\autocite{krol2014matrix}, biology~\autocite{akutsu2000algorithms} and chemistry~\autocite{weber2015semiempirical} all benefit from matrix multiplication in some way.
+Matrix multiplication has long been intrinsic to the \gls{hpc} communities, be it the general scientific community or within the computing science domain.
+Several fields within physics~\autocite{krol2014matrix}, biology~\autocite{akutsu2000algorithms} and chemistry~\autocite{weber2015semiempirical} all benefit from matrix multiplication in some way.
 It is also possible to simulate quantum computing processes using matrix multiplication~\autocite{zulehner2019matrix}.
 Beyond this, it is well known that many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
 
 Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
-Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations, \eg EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
+Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations like EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
 These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of serial work into seconds or less.
 This speedup is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop blocking and data packing.
 Understanding matrix multiplication and how it is implemented is critical to unlocking these optimisations.
@@ -131,12 +131,11 @@ rankRUpdate(C, A, B, /*rank*/ D);
 
 \section{State of the Art}
 Matrix multiplication, as a critical operation in many applications, has been the focus of optimisation research for decades.
-\bk{Can I just leave it at that or do I need to provide some random citations proving my point?}
-Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally, via optimisations such as loop switching and loop unrolling.
+Simple insights into matrix multiplication have enabled better data usage, both spatially and temporally.
 Contemporary libraries and their overall frameworks are derived from seminal work by Goto and van de Geijn~\autocite{goto2008anatomy}.
 More recent work~\autocite{vanzee2015blis,zee2016blis} have improved upon that seminal work, but the overall structure remains the same.
 Each of these works aim to improve the portability to new architectures by providing a more modular approach for the micro kernel.
-This includes a work by Low \etal which shows that the tuning parameters of the kernels for each architecture can be derived analytically from the architecture specification.
+This includes a work by Low \etal which shows that the tuning parameters of the kernels for each architecture can be derived analytically from the architecture specification~\autocite{low2016analytical}.
 
 Goto and van de Geijn's work concludes that matrix multiplication should be implemented in a \emph{layered approach}.
 Each of these ``layers'' is typically one or more loops that perform some function before executing the enclosed layer.
@@ -163,19 +162,19 @@ There are two operations which are critical to the function of the outer kernel:
 Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
 Division is necessary because matrix sizes found in applications are often much larger than what a cache can fit.
 Even with this division, the distance between elements within in different rows or columns can cause cache conflicts or \gls{tlb} misses.
-To counter this, packing takes the operands of an operation and duplicates data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
+To counter this, packing takes an operand matrix and duplicates a block of data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
 Packing can also improve the data access pattern for a more efficient inner kernel, as discussed later in \rsec{blockPack}.
 
 The outer kernel is a delicate dance between blocking and packing.
-If the blocking factor is too large (\ie many, small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
-However, when the blocking is too small (\ie few, large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
-The dimensions of the blocking, and therefore the packing, are dependent on the sizes of all levels of the cache present on the target architecture (L1, L2, L3 on modern consumer machines, uncommonly L4).
+If the blocking factor is too large (\ie many small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
+However, when the blocking is too small (\ie few large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
+The dimensions of the blocking, and therefore the packing, can be determined analytically~\autocite{low2016analytical} and are dependent on the sizes of all levels of the cache present on the target architecture (L1, L2, L3 on modern consumer machines, uncommonly L4).
 
-Goto and van de Geijn address blocking, caching and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
+Goto and van de Geijn address blocking, caching, and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
 When blocking, each new blocking loop breaks up a single dimension of the multiplication.
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
-Further dividing a panel produces a section with two short dimensions called a block.
-Only two of the three dimensions ($M$, $K$, $N$) are blocked while the third is the inner most loop's iteration variable.
+Further dividing a panel produces a section with two short dimensions called a \emph{block}.
+Only two of the three dimensions ($M$, $D$, $N$) are blocked while the third is the inner most loop's iteration variable.
 This produces $\binom{3}{2}=3$ different innermost loops\footnotemark.
 \footnotetext{``Three choose two''.}
 Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
@@ -184,40 +183,43 @@ Different combinations of blocking orders also induce different packing choices 
 \label{sec:blockPack}
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
-This breakdown is called \code{GEPDOT} because it computes the dot product of two panels.
+This breakdown is affiliated with the dot product because it multiplies two vector-like panels while producing a cell-like block.
 According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
-Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache and then written back.
+Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache, accumulated into, and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, L2 cache is only read from.
-In essence, this means that the \code{GEPDOT} method is less bandwidth efficient because it requires both a read and a write.
+In essence, this means that the dot product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
 
-Without loss of generality, an implementer can choose between the remaining two methods (blocking $M$ and $K$ or blocking $K$ and $N$) based on the storage order of $C$.
-Within one of these methods, the order in which $K$ and the second dimension are blocked creates two options.
-Given that one argument matrix is already packed in L2 cache, the first option, which blocks $M$ or $N$ then $K$,
+An implementer can choose between the remaining two methods (blocking $M$ and $D$ or blocking $D$ and $N$) based on the storage order of $C$.
+Within each of these methods, the order in which $D$ and the second dimension are blocked creates two options.
+One of these options is considerably better than the other; to demonstrate, without loss of generality, consider the method which blocks $M$ and $D$ and iterates $N$.
+
+Given that $A$ is already packed in L2 cache, the first option, which blocks $D$ then $M$,
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item streams $C$ to and from memory
-  \item packs the second argument matrix in L1 cache
+  \item packs $B$ in L1 cache
 \end{enumerate*}
-Given again that one argument matrix is packed in L2 cache, the second option, which blocks $K$ followed by $M$ or $N$,
+Given again that $A$ is packed in L2 cache, the second option, which blocks $M$ followed by $D$,
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
-  \item streams the second argument matrix from memory
+  \item streams $B$ from memory
   \item computes $C$ in a temporary in L1 cache which is eventually unpacked and merged with $C$ in memory
 \end{enumerate*}
 The operations labeled \textbf{(1)} in each option can be assumed to have negligible impact because they can be pipelined with computation.
 However, the operations labeled \textbf{(2)} are effectively overhead.
-By virtue of the unpacking and merging of $C$ being a more complex operation, the first option for either blocking method is concluded to be superior.
+By virtue of the unpacking and merging of $C$ being a more complex operation, the first option is concluded to be superior.
+The same logic can be applied to the method which blocks $D$ and $N$ by substituting $N$ for $M$ and swapping which of $A$ and $B$ are packed in L2 cache, arguing that packing $D$ then $N$ is superior.
 
 \subsubsection{Blocking and Packing for Registers}
 The dimensions chosen to maximise cache usage are likely to be too large for the registers to handle, thus a further set of loops can be added to block for registers.
 These loops only block the pre-packed buffers in memory and do not perform any packing themselves.
 Instead, when packing for the cache, the order in which data is packed is modified.
 Rather than packing in the same order relative to the original data, data is organised such that these sub-matrix register arguments are contiguous.
-Packing in this way results in only a single data copy and allows reads to register for calculation to be contiguous in memory.
+Packing in this way results in only a single data copy and allows reads to register for calculation to be contiguous in memory, improving hardware prefetching effects.
 
 \subsubsection{Practicality}
-Na\"ive matrix multiplication (\ie \rlst{basicmatmul}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
+Na\"ive matrix multiplication (\ie \rlst{basicInner}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
 Given small matrices as operands, this is often the correct choice.
 The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speed up gained from improved cache performance.
-When input and output data begin small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
+When input and output data are already small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
 
 However, given large matrices, lacking a blocking and packing layer is disastrous for performance.
 With sufficiently large matrices, every load will result in a cache miss because the requested data will have been expelled from the cache by a more recent load simply by the pigeonhole principle.
