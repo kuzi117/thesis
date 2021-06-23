@@ -18,7 +18,7 @@ Modifications to both software and hardware can improve the computation of matri
 Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high-performance software implementations such as EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
 These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of work into seconds or less.
 This speedup is possible through the use of hardware features, such as \gls{simd}, and code transformations, such as loop blocking and data packing.
-Understanding matrix multiplication and how it is implemented is critical to achieve these improvements.
+Understanding matrix multiplication and how it is implemented is critical to achieving these improvements.
 
 \section{Inner and Outer Product}
 \label{sec:products}
@@ -31,8 +31,7 @@ Understanding matrix multiplication and how it is implemented is critical to ach
 Computing matrix multiplication, as taught in an introductory math course, is performed using what is known as the \emph{inner product}.
 \nelson{If you state that the \emph{inner product} is not to be confused with the \emph{dot product} you must also state what is the difference between the two. You do not need to state the difference if you do not mention the dot product.}
 This is not to be confused with the \emph{dot product}, which is an operation between vectors and is used when computing the inner product, or \emph{outer product}, which is a different method of computing matrix multiplication like the inner product.
-\nelson{The following sentence is not true if we consider a single computation of an outer product or of an inner product. the inner product computes a scalar value and the outer product computes a matrix. I know what your intention is --- the matrix-multiplication computation based on inner-product computations and the one based on outer-product computations produce the same matrix}
-Both the outer product and inner product compute the same output given the same input but, as \rsec{outerKernel} and \rsec{innerKernel} will discuss, the efficacy with which they arrive at the destination can vary greatly.
+When computing matrix multiplication, both the outer product and inner product compute the same output in the end but, as \rsec{outerKernel} and \rsec{innerKernel} will discuss, the efficacy with which they arrive at the destination can vary greatly.
 
 \begin{figure}[t]
  \hfill
@@ -74,10 +73,14 @@ Both the outer product and inner product compute the same output given the same 
 \end{figure}
 
 \subsection{The Inner Product}
-\nelson{What is the difference between the inner product and the dot product in this paragraph?}
-Given the computation \matmul{M}{D}{N}, the inner product is computed by taking the dot product of the $i$th row of $A$ and the $j$th column of $B$ to produce the cell $c_{i,j}$ (\rfig{innerProduct}).
-The dot product is defined as the summation of the pair-wise products of the two vectors (\eg $a_{i,1}b_{1,j} \times a_{i,2}b_{2,j} \times \ldots \times a_{i,D}b_{D,j}$).
-Therefore, in its most naive form, matrix multiplication can be computed by the following three-layer loop nest:
+The inner product makes use of the dot product as a sub-operation.
+The dot product takes two vectors and produces a scalar value.
+More concretely, the dot product is defined as the summation of the pair-wise products of two vectors (\eg $v \cdot w=v_{i,1}w_{1,j} + v_{i,2}w_{2,j} + \ldots + v_{i,D}w_{D,j}$).
+
+Within the context of the inner product, the dot product uses a row of $A$ and a column of $B$ to produce a single cell of $C$.
+Therefore, given the computation \matmul{M}{D}{N}, the inner product computes the cell $c_{i,j}$ by taking the dot product of the $i$th row of $A$ and the $j$th column of $B$ (\rfig{innerProduct}).
+In this way, the inner product is composed of one dot product for each cell of $C$.
+Thus, in its most naive form, matrix multiplication can be computed by the following three-layer loop nest:
 \begin{lstlisting}[caption={[Basic inner product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t]
 for (uint64_t i = 0; i < M; ++i)
   for (uint64_t j = 0; j < N; ++j)
