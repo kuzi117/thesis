@@ -14,7 +14,7 @@ It is also possible to simulate quantum computing processes using matrix multipl
 Beyond this, it is well known that many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
 
 Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned to be improved in both software and hardware.
-Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations, \eg EIGEN\todo{cite} and OpenBLAS\todo{cite}.
+Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high performance software implementations, \eg EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
 These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of serial work into seconds or less.
 This speedup is possible through the use of hardware features, such as \gls{simd}, and software optimisations, such as loop blocking and data packing.
 Understanding matrix multiplication and how it is implemented is critical to unlocking these optimisations.
