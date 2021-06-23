@@ -8,14 +8,22 @@
 
 \chapter{Background}
 \label{cha:background}
+This chapter introduces concepts necessary for subsequent chapters.
+\gls{simd} architectures and vectorisation are concepts critical to every facet of the work.
+The \gls{llvm} framework in which this work is implemented as well as the \gls{ir} are also require some explanation that is given here.
 
 \section{SIMD Architecture}
 \label{sec:simd}
 First introduced as part of the ILLIAC IV~\autocite{barnes1968illiac}, processors capable of \gls{simd} computation were a crucial advancement in high-performance computing history.
-\todo{Join better.}
 Flynn characterised a \gls{simd} processor as having the ability to apply a single ``master'' instruction over a vector of related operands~\autocite{flynn1972some}.
 Such an architecture is desirable for its ability to increase the throughput of repeated operations through data-level parallelism and is thus highly applicable to one of the most standard computing control flow mechanisms: loops.
 This process of increasing the throughput of loops, through what is essentially a reduction in the number of instructions executed, has developed into what is now the well-known and well-studied process of ``\gls{vectorisation}''.
+
+\Gls{vectorisation} is the process by which a compiler merges multiple scalar operations into a single operation on a vector.
+Unrolling a loop exposes repeated operations that can be rescheduled and grouped.
+This extends loads and stores which, when combined, produce only a single (wider) memory operation.
+Repeated memory requests are queued in a memory controller, waiting for earlier requests to complete before being started.
+Requiring only a single request for the same amount of data can significantly reduce memory latency.
 
 \section{The IBM Power Architecture}
 \Gls{ibm} has decades of history in computing, tracing their roots back to the 1880s; first incorporated as the Computing-Tabulating-Recording Company in 1911, it was eventually renamed to \gls{ibm} in 1924~\autocite{ibmarchive}.
@@ -34,8 +42,8 @@ Initially, the \gls{power} architecture implemented its \gls{simd} capabilities 
 This implementation, presented under the name \gls{vmx}, was first instantiated by IBM as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007~\autocite{eisen2007ibm} despite the standard being presented in 1999~\autocite{tyler1999altivec}.
 
 Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
-\bk{Expand.}
-Both continue to exist to this day in the most recent version of the \gls{isa} (\gls{power} \gls{isa} v3.1), though many refer to them collectively under the second name, \gls{vsx}.
+This included support for up to 64 vector registers, 64-bit integers, and double-precision floating point values.
+Both \gls{vmx} and \gls{vsx} exist to this day in the most recent version of the \gls{isa} (\gls{power} \gls{isa} v3.1), though many refer to them collectively under the second name, \gls{vsx}.
 
 \subsection{Matrix Math Assist}
 \label{sec:mmaintro}
@@ -46,16 +54,18 @@ It provides a high-throughput and low-latency method for calculating matrix mult
 The state of the art for hardware that performs matrix multiplication falls into two categories:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item via external components (\eg \gls{gpu}, \gls{fpga}, or \gls{asic} such as Google's \gls{tpu})
-  \item via \gls{cpu} \gls{isa} extensions (\eg x86's \gls{amx} or ARM's Neon/\gls{sve})
+  \item via \gls{cpu} \gls{isa} extensions (\eg x86's \gls{amx} or ARM's NEON/\gls{sve})
 \end{enumerate*}
 \Gls{mma} belongs to the second category given that the facility is built directly into the \gls{cpu}.
 Thus, the facility is amenable to tasks that would normally incur avoidable overhead, for example, while sending data to an external component such as a \gls{gpu}.
 See \rcha{mma} for further discussion.
 
 \section{Matrix Multiplication}
-\bk{This section needs some sort of platitudes about matrix multiplication but let most of the explanation happen in \rcha{matmul}.}
-% Optimisation of this operation therefore has the potential to improve many tasks in both \gls{hpc} and business domains.
-
+\bk{
+  I moved the content here into \rcha{matmul}
+  Jo\~ao suggested this section just be cut and let the chapter introduce everything.
+  It feels sort of weird to do so while leaving the MMA section just before this.
+}
 
 \section{LLVM}
 \label{sec:llvm}
