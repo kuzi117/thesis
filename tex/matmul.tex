@@ -234,29 +234,17 @@ In the worst case, these issues are compounded with \gls{tlb} misses as well.
 Therefore, while a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple outer-kernel data-management strategies.
 
 \section{The Inner Kernel}
+\label{sec:innerKernel}
 The inner kernel is focused on maximising performance.
 Whether the computation itself has small dimensions or a larger computation has been blocked and packed by an outer kernel, the inner kernel is meant to be as tight and efficient as possible.
 This means considering optimisations such as loop unrolling and instruction rescheduling to improve operation pipelining.
 Hardware-wise, the instruction cache, instruction issue rate, register pressure, and functional unit availability must also be taken into account.
-
-Unrolling the kernel to a larger degree allows for greater opportunities in instruction rescheduling.
-Computations can be moved closer to loads to enable pipelining as well as interleaved to hide stalls due to occupied functional units.
-Future iterations that would load the same data can also be moved such that the values are still in register and can be reused, reducing register pressure and stores.
-However, unrolling too much can degrade instruction cache performance and bloat executable size.
-\bk{I feel like there's more discussion to be had here, I just need to return with a clear mind.}
+First, however, the product that implements the inner kernel must be chosen.
 
 \subsection{Inner Product vs Outer Product}
 \label{sec:productsVs}
 Matrix multiplication's inner kernel is implementable through two operations: inner product and outer product.
 Both operations arrive at the same destination albeit via different processes.
-Consider \rfig{product}.
-\rfig{innerProduct} illustrates the inner product: an element-wise multiplication between a row of matrix $A$ and a column of matrix $B$ followed by the summation of the products (\ie the dot product).
-In short, two vectors produce a single, fully-computed output element.
-This is the operation which usually first comes to mind when discussing matrix multiplication.
-Computing the outer product, shown in \rfig{outerProduct}, results in a column of matrix $A$ and a row of matrix $B$ producing a \emph{partial} output matrix.
-That is, a matrix whose elements are the result of a single product.
-One such matrix is produced per combination of $A$ column and $B$ row; these matrices must be summed to produce the output $C$.
-
 At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
 In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would perform the same number of stores and loads.
 In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
@@ -404,14 +392,14 @@ Therefore, a ``short'' dimension is typically a single element and a ``long'' di
 Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product.
 Following this is a presentation of a method of resolving these flaws through an improved version of the outer product.
 
-\subsubsection{Emulating Outer-Product with \gls{simd} instructions in Libraries}
+\subsubsection{Emulating Outer-Product with SIMD instructions in Libraries}
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
 The elements of the panel are then loaded into a different vector register.
 Once both registers are ready, \ifglsused{fma}{an}{a} \gls{fma} instruction multiplies the two vector registers together and accumulates the result into a third vector register representing a panel in $C$.
 This process is more effective than using the dot product because multiple output values are accumulated at the same time in each \gls{lane} of the vector.
 However, in a kernel that is supposed to be as tight as possible, cycles are lost to duplicating values.
-Furthermore, the kernel should also use resources as effectively as possible, however, the duplicated values use all \glspl{lane} of a vector, effectively reducing a vector registers back to a single scalar, nullifying the benefits of \gls{simd}.
+Furthermore, the kernel should also use resources as effectively as possible, however, the duplicated values use all \glspl{lane} of a vector, effectively reducing a vector register back to a single scalar, nullifying the benefits of \gls{simd}.
 
 \subsubsection{Improving the Design}
 \begin{figure}[t]
@@ -481,27 +469,25 @@ Given a register that could contain the much larger output data in the dot-dashe
 
 \subsection{Implementation}
 \bk{
-  This section certainly repeats some previously discussed material.
-  My hope is that in discussing it a second time, slightly more in depth, that it reinforces ideas instead of just being redundant.
-  If you think it's redundant, please let me know.
+  I'm not sure this section fits, be it after the ending of the last section or anywhere in the paper.
+  I've considered cutting it but wanted feedback first.
 }
+Having looked at which kernel to implement, discussion can turn towards actual implementation.
 As discussed previously, libraries often have kernels handwritten in assembly.
-Kernel writers must implement all of these optimisations by hand.
+Kernel writers must implement all optimisations by hand.
 In doing so, they must review \gls{cpu} properties as well as consider the design of their outer kernel to determine to what degree an optimisation will affect the hardware.
 Historically, with great effort, this process has produced excellent results.
 
-However, all of these optimisations, and others, are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
-\bk{
-  There's an example here that the default vectorisation lowering actually outputs a scalar version of matmul (simpler and easier to reason about/write) that's automatically vectorised by the compiler.
-  However, I don't know that I can easily include it because it's based on intrinsics, lowerings, etc. that aren't explained until the method chapter.
-}
-Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
-\bk{Section unfinished, got distracted by writing the previous section.}
+Unrolling the kernel to a larger degree allows for greater opportunities in instruction rescheduling as well greater use of available registers.
+Computations can be moved closer to loads to enable pipelining as well as interleaved to hide stalls due to occupied functional units.
+Future iterations that would load the same data can also be moved such that the values are still in register and can be reused, reducing register pressure and stores.
 
-\section{Usage cases}
-\bk{
-  Section to be removed per suggestion by Jo\~ao to link usage/motivation earlier.
-  Leaving it as a reminder to do so.
-}
+However, all of these optimisations, and others, are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
+For example, the kernel can be written in terms of scalars, allowing the compiler to vectorise the kernel automatically.
+Automatic vectorisation means obvious optimisations such as using the best available vector load and store instructions as well as unrolling to allow for pipelining of loads.
+Less obvious issues are also solved automatically: handling operations that may have dimensions that are not a multiple of vector register automatically creates additional code pathways that vectors at half width, reducing down to scalar computation.
+Issues such as new instructions added to an \gls{isa} that are impossible to solve for handwritten kernels without writing an entirely new kernel, are also immediately solved because the compiler knows which architecture to compile for and can use any instruction available on that architecture.
+Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
+It is for this reason that \cha{method} presents a method built fully within a compiler without a hand-written kernel.
 
 \end{document}
