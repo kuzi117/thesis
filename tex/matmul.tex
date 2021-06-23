@@ -21,7 +21,12 @@ Understanding matrix multiplication and how it is implemented is critical to unl
 
 \section{Inner and Outer Product}
 \label{sec:products}
-
+\bk{
+  Should the code in this section be algorithms instead of listings?
+  I think ``listings'' are meant to formatted output, e.g. printed output or resulting IR.
+  ``Algorithms'' are processes to get output.
+  That being said, algorithms might instead be seen as ``this is a contribution'' and listings could be ``less important code that must still be typeset nicely''.
+}
 Computing matrix multiplication, as taught in an introductory math course, is performed using what is known as the \emph{inner product}.
 This is not to be confused with the \emph{dot product}, which is an operation between vectors and is used when computing the inner product, or \emph{outer product}, which is a different method of computing matrix multiplication like the inner product.
 Both the outer product and inner product compute the same output given the same input but, as \rsec{outerKernel} and \rsec{innerKernel} will discuss, the efficacy with which they arrive at the destination can vary greatly.
