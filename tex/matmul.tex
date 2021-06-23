@@ -488,6 +488,6 @@ Automatic vectorisation means obvious optimisations such as using the best avail
 Less obvious issues are also solved automatically: handling operations that may have dimensions that are not a multiple of vector register automatically creates additional code pathways that vectors at half width, reducing down to scalar computation.
 Issues such as new instructions added to an \gls{isa} that are impossible to solve for handwritten kernels without writing an entirely new kernel, are also immediately solved because the compiler knows which architecture to compile for and can use any instruction available on that architecture.
 Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
-It is for this reason that \cha{method} presents a method built fully within a compiler without a hand-written kernel.
+It is for this reason that \rcha{method} presents a method built fully within a compiler without a hand-written kernel.
 
 \end{document}
