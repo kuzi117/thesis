@@ -16,55 +16,16 @@ Matrix engines have appeared in multiple architectures, though their implementat
 Likewise, the algorithm for optimally making use of each of these architectures differs.
 While this work focuses on \gls{mma}, a discussion of the differences in these architectural implementations follows in \rsec{matrixEngines}.
 
-\section{Computation Style}
-\label{sec:compuationStyle}
-\bk{Rewrite this section now that it's been moved.}
-\Gls{mma}'s design is built around the choice to compute the \emph{outer product} instead of the inner product, the operation that usually first comes to mind when discussing matrix multiplication.
-Both operations arrive at the same destination albeit via different processes.
-Consider \rfig{product}.
-\rfig{innerProduct} illustrates the inner product: an element-wise multiplication between a row of matrix $A$ and a column of matrix $B$ followed by the summation of the products (\ie the dot product).
-In short, two vectors produce a single, fully-computed output element.
-Computing the outer product, shown in \rfig{outerProduct}, results in a column of matrix $A$ and a row of matrix $B$ producing a \emph{partial} output matrix.
-That is, a matrix whose elements are the result of a single product.
-One such matrix is produced per combination of $A$ column and $B$ row; these matrices must be summed to produce the output $C$.
-
-At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
-As well, in a machine with unlimited resources, including vector registers of unlimited length, they will have performed the same number of stores and loads.
-In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
-However, in a practical machine, it is impossible to load the entirety of a long row or of a long column into vector registers in order to fully compute a portion of the matrix.
-Long dimension lengths makes tiling a necessity.
-Tiling, as discussed in \todo{reference mat mul section}, breaks the operation into smaller, more manageable operations.
-Different methods of tiling will affect the overall number of loads and stores performed as well as the latencies of these loads and stores based on properties of the memory hierarchy.
-Thus, how these load and store operations interact with the memory hierarchy and register usage is the largest differentiating factor between the two methods.
-Simply put, when considering the memory hierarchy and registers, the outer product produces the same results with less data movement.
-
-Goto and van de Geijn~\autocite{goto2008anatomy} demonstrate that the dot-product-based approaches are inferior when considering data movement in the cache.
-\todo{Make sure that Goto's work has been adequately explained in mat mul section for the rest of the paragraph.}
-In a dot-product solution, tiles of $C$ are packed into the L2 cache.
-Because the computation is now tiled, output values are accumulated over time rather than produced once, fully computed.
-Now, because $C$ is the accumulating output, its values must be read to register, accumulated, and written back to memory for each tile.
-Therefore, each element accessed requires bandwidth between the L2 cache and registers twice (one read, one write).
-This double access is in contrast to Goto and van de Geijn's non-dot-product methods which choose to pack and make resident either $A$ or $B$ in L2 cache.
-Given that $A$ and $B$ are read-only, they only require bandwidth once as part of a read from L2 cache to register and can be destructively overwritten when loading new values.
-In summation, the dot product requires twice the accesses to the slower, more expensive L2 cache.
-
-On the micro scale, the dot-product approach also makes poor use of \gls{simd} capabilities.
-Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the lanes of a vector register into a single scalar element.
-Computing a partial result in this manner reduces the effectiveness of \gls{simd} by creating a scalar value.
-\Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
-The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows all values to be accumulated in-place within the destination vector register or, in the case of \gls{mma}, the destination accumulator register.
-
-It is for these reasons that \gls{hpc} libraries implement matrix-matrix multiplication by emulating the outer product where only inner product operations are available.
-Emulation in this manner is possible by broadcasting (duplicating) a single value from one operand matrix into all elements of a vector register and then multiplying that vector with a full vector from the other operand.
-\Gls{mma} eschews the emulation by directly providing outer product capabilities, removing unnecessary overhead.
-
-\section{Architecture}
-\gls{mma} adds a new architectural feature: eight accumulator (ACC) registers.
-Accumulators and the new instructions for interacting with them enable the efficient matrix-matrix multiplication outlined above.
+\gls{mma} adds a new architectural feature alongside the matrix engine: eight accumulator (ACC) registers.
+Accumulators and the new instructions for interacting with them enable the efficient matrix-matrix multiplication outlined in \rsec{gotoInner}.
 Much of the content in this section can be found throughout the \gls{power10} \gls{isa} document though some of it comes as insight from engineers at \gls{ibm} or external sources.
 \bk{Unsure if I should drop the previous sentence.}
 
-\subsection{Accumulator Assembly and Disassembly}
+\Gls{mma}'s design is built around the choice to compute the outer product instead of the inner product.
+As discussed in \rsec{productsVs}, the inner product is inferior when compared with the outer product.
+\Gls{mma} eschews the overhead revealed at the end of \rsec{gotoInner} by directly providing the outlined outer product capabilities, removing unnecessary overhead, along with the large register necessary for holding the result data.
+
+\section{Accumulator Assembly and Disassembly}
 \label{sec:assDis}
 An accumulator, in all interactions with \gls{mma}, can be thought of as a single register consisting of $4 \times 4$ 32-bit elements.
 Accumulators may be assembled (initialised) in three manners:
@@ -81,14 +42,14 @@ As such, the four underlying registers used to construct the accumulator are una
 For example, \code{VSR[0:3]} are unavailable while \code{ACC[0]} is assembled.
 This blocking effect also applies to the underlying registers when assembling an accumulator to zeroes.
 
-Blocking registers is viewed as a reasonable restriction in \gls{power10}.
+Blocking the underlying registers is viewed as a reasonable restriction in \gls{power10}.
 However, the ISA is written such that if, in future versions of the hardware, the blocking restriction is removed, no changes will need to be made to the \gls{isa}.
 
 The reverse operation to assembly is disassembly (\code{xxmfacc}, Move From Acc).
 Disassembly moves each row from the accumulator into the same vector registers used for construction.
 Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]}, the second row is placed into \code{VSR[1]}, \etc.
 
-\subsection{Matrix Multiplication in MMA}
+\section{Matrix Multiplication in MMA}
 \label{sec:matMulMMA}
 
 \begin{table}[t]
@@ -109,20 +70,19 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
 \end{table}
 \footnotetext{Google's Brain floating point format~\autocite{wang2019bfloat16}.}
 
-\todo{Should word the explanation of rank-k updates better.}
-Assembly and disassembly delimit the lifetime of an accumulator, but the majority of its usage is found in matrix multiplication instructions.
 \rtab{mmaInsts} shows all seven of the datatypes usable with \gls{mma}.
 Instructions are given three arguments: an accumulator and two VSRs.
-Considering the simplest example, single-precision floating point, a single four-element row or column fills the entire VSR ($32\text{bits} \times 4 = 128\text{bits}$).
-This computation, \matmul{4}{1}{4}, is what is known as a \emph{rank-1 update} where one is the length of the innermost dimension.
+Considering the simplest example, single-precision floating point, a four-element row or column fills the entire VSR ($32\text{bits} \times 4 = 128\text{bits}$).
+Thus, two length-four vectors are multiplied in an outer product, creating the computation \matmul{4}{1}{4}.
+Recalling \rsec{outerProduct}, this is a rank-1 update to the accumulator.
 
 Halving the size of the type to 16 bits means the argument VSRs are underutilised at half capacity.
 Accumulators cannot be expanded and are always $4 \times 4$ matrices of 32-bit elements.
 Thus, to increase utilisation of VSRs, the number of elements contained in each VSR is doubled resulting in doubling the number of rows or columns in a VSR.
-Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, essentially computing two outer products at once (rank-2 update).
-The same logic applies for eight- and four-bit types, computing rank-4 and rank-8 updates.
+Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, now performing a rank-2 update to the accumulator.
+The same logic applies for eight- and four-bit types, computing rank-4 and rank-8 updates respectively.
 
-\subsubsection{Instruction Variants}
+\subsection{Instruction Variants}
 
 \begin{table}[t]
   \centering
@@ -155,7 +115,7 @@ Each of the masks allows disabling of one of the following:
 \end{enumerate*}
 Masks disables only the application of computed values to the accumulator, not the calculation; therefore, the execution time of a masked instruction is the same as that of an unmasked one.
 
-\subsubsection{Double Precision Differences}
+\subsection{Double Precision Differences}
 \label{sec:doubles}
 When all other computations produce a 32-bit value, essentially gaining precision or remaining at the same precision, it would be unreasonable to force computations with 64-bit values to lose precision.
 Therefore, when working with double-precision floats, accumulators become $4 \times 2$ arrays rather than the usual $4 \times 4$.
@@ -175,7 +135,7 @@ The features of these three matrix engines are summarised in \rtab{featComp}.
     Architecture & Location & \parbox[t][28pt][t]{40pt}{\centering Product Style} & Arg/Dest & Supported Types\\\hline
     \parbox[t][][t]{40pt}{\centering Power10 MMA} & core & outer & VSR/ACC & \parbox[t][40pt][t]{3.2cm}{\raggedright\code{i4}, \code{i8}, \code{i16}, \code{bfloat16}, \code{half}, \code{float}, \code{double}}\\\hline
     x86 AMX & off-core & inner & Tile &\parbox[t][11pt][t]{3.3cm}{\raggedright\code{i8}, \code{bfloat16}}\\\hline
-    \parbox[t][][t]{60pt}{\centering ARM Neon/SVE} & core & inner & Vector register & \parbox[t][25pt][t]{3.3cm}{\raggedright\code{i8}, \code{bfloat16}, \code{float}, \code{double}}\\\hline
+    \parbox[t][][t]{60pt}{\centering ARM NEON/SVE} & core & inner & Vector register & \parbox[t][25pt][t]{3.3cm}{\raggedright\code{i8}, \code{bfloat16}, \code{float}, \code{double}}\\\hline
   \end{tabular}
   \caption[Matrix Engine Feature Comparison]{Comparison of features currently offered by cpu-based matrix engines.}
   \label{tab:featComp}
@@ -187,8 +147,8 @@ Furthermore, the accelerator makes use of an entirely new register file consisti
 The architecture supports only inner product computations and uses tiles as both arguments and destinations .
 While it supports less types than \gls{mma}, it does support two important types for artificial-intelligence workloads: \code{i8} and \code{bfloat16}.
 
-ARM's Neon and \gls{sve} do not focus on matrix multiplication, providing them instead as a small part of a larger vector extension.
+ARM's NEON and \gls{sve} do not focus on matrix multiplication, providing them instead as a small part of a larger vector extension.
 The facility is implemented on-core and does not provide any new registers, relying on the architecture's already-present vector registers.
 These two factors, combined with an inner-product style computation mean relatively small computation sizes when compared with \gls{mma} or \gls{amx}.
-Neon, like \gls{amx}, supports \code{i8} and \code{bfloat16} while \gls{sve} adds support for \code{float} and \code{double}.
+NEON, like \gls{amx}, supports \code{i8} and \code{bfloat16} while \gls{sve} adds support for \code{float} and \code{double}.
 \end{document}
