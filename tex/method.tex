@@ -9,12 +9,12 @@
 \chapter{Method}
 \label{cha:method}
 \nelson{avoid passive voice}
-\nelson{replace "which makes use of" with "that uses" --- read on which hunting: https://wordpress.com/dailypost/2011/10/27/going-on-a-which-hunt/  There is a difference between the use of which in American vs British English. We tend to use American English.}
 This chapter discusses the contributed implementation of a high-performance and library-free matrix-matrix multiplication algorithm which makes use of \gls{mma}.
 Due to its implementation in the LLVM compiler framework, the method has immediate performance-enhancing potential on the \gls{power10} platform.
 
 \section{Intrinsics in LLVM}
-\todo{add text here?}
+\todo{Add text here.}
+
 \subsubsection{Builtin vs. Intrinsic}
 \bk{
   What does the LLVM community call these... Is it intrinsic or builtin?
@@ -103,7 +103,7 @@ define void @foo() {
 \end{lstlisting}
 
 During lowering, the \code{call} statement is replaced with a series of \gls{llvm} \gls{ir} vector operations by the \code{LowerMatrixIntrinsics} pass.
-This version of the lowering is what we refer to as the default ``vectorisation'' method.
+This version of the lowering is what is referred to as the default ``vectorisation'' method.
 Because the dimensions of the operation are known statically, the computation is completely unrolled: no loops will be generated.
 Such a lowering is ideal because it removes the need for loop analysis and allows later passes to further vectorise or pipeline the operation.
 This property makes it ideal for creating small and efficient kernels focused on efficient computation.
@@ -430,9 +430,10 @@ This means that a column major version of $COutput$ can be produced simply by sw
 \label{sec:restrictions}
 acknowledge possible improvements:
 \begin{itemize}
-  \item Currently, inputs must have dimensions which are multiples of the values described in \rtab{mmainsts}. This could be improved with masked instructions.
+  \item Currently, inputs must have dimensions which are multiples of the values described in \rtab{mmaInsts}. This could be improved with masked instructions.
   \item Currently, inputs must have constant dimensions due to the interface. This is a benefit and a restriction. We can unroll completely (good for vectorisation/pipelining), can't do generics (bad for large matrices). Can wrap in another set of loops to break down.
   \item Can't do doubles.
+  \item Can't do operation fusion like Eigen.
 \end{itemize}
 
 \end{document}
