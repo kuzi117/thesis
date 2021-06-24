@@ -16,13 +16,88 @@
   I know we've discussed that it's typically early but our area has a history of putting it as the second-to-last section (before conclusion).
   Seems better to have it late so I won't have to explain a bunch of things before the sections they're explained in.
 }
+In a seminal work, Goto and Van D. Geijn detail a layered approach to improve cache and vector-register utilization on CPUs ~\cite{goto2008}.
+Using this approach, modern linear algebra libraries, such as Eigen and BLAS, achieve high performance on HPC workloads.
+Goto and Van D. Geijn show that modelling both L2 cache and TLB --- and not only L1 as considered earlier --- is crucial for cache performance.
+That work is seminal because it publicly explained practical strategies for optimal cache and vector register utilization on CPUs; these strategies were previously only available in proprietary libraries.
+The layered strategy features two stages:
+\begin{inparaenum}
+  \item blocking input matrices and packing tiles of these blocks in such a way that tiles lay in main memory in the order that they will be accessed; and
+  \item computing a small \gemm at the register level.
+\end{inparaenum}
+This paper is the first to create a compiler-only code generation for the layered approach and adapts blocking, tiling, and packing to create a data layout that is suitable for computing with MMA and to also improve utilization of the L3 cache.
+
+Gareev et al.~\cite{GareevTACO18} implement tiling and packing within Polly~\cite{polly} without the need for an external library or automatic tuning.
+Their approach with a hand-optimized SSE kernel reports performance on par with BLIS on \Intel Sandy Bridge.
+When not relying on an assembly kernel, their pass uses the default LLVM vectorizer that delivers only a small speedup over naive code.
+The solution proposed in this paper implements both memory optimization and micro kernel in the compiler, not requiring any hand-optimized code.
+
+Uday Bondhugula presents an implementation of the BLAS strategy within the emerging MLIR framework~\cite{uday2020}.
+He demonstrates that blocking, packing, register tiling, and unroll+jam yields code that is 34\% slower than OpenBLAS on \Intel's Coffee Lake~\cite{uday2020}.
+Bondhugula also implemented a custom vectorization pass, to replace the default LLVM vectorizer, to achieve an additional 40\% performance improvement, thus reaching 91\% of the performance of OpenBLAS.
+Our experiments with \Intel, \AMD and \IBM \PowerNine machines also pointed out the weakness of the default LLVM vectorizer.
+
+Carvalho et al. introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the LLVM IR level and can replace these with library calls~\cite{CarvalhoTACO21}. While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the integration of libraries into a computer system that may not have it.
+Moreover, their experimental results indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
+The solution in this paper is orthogonal to Carvalho et al.: their pattern recognition can identify GEMM kernels at the intermediate-level representation and then invoke the compiler-only solution presented here.
+
+%\guido{GA: Notice that this a problem for us, as for some experiments we are 2x or 3x slower. Moreover if he publish it earlier it is hard to claim we have pioneered this. How extensive were his experiments? In how many targets and programs?}
+% Although MLIR is a work in progress, there is a publically available tool \code{mlir-cpu-runner} that lowers MLIR dialects to LLVM IR.
+
+\begin{comment}
+Nevertheless, the numbers are pointing that tiling, packing and unroll and jam of \kc loop are all required to reach peak performance.
+To bridge the gap to 9\%, a proper vectorization schedule (without spills, data load before every \code{nr} fused multiply-add operations) needs to be generated in place of the default LLVM choice.
+While the implementation relies on MLIR for cache optimization, the choice for code generation is flexible.
+In fact, the work presents surprising results that substituting LLVM codegen with the best tile parameters is not different from using the $6 \times 8$ micro kernel from BLIS~\cite{blis2015}.
+\end{comment}
+
+%There are other ways to increase GEMM and Matrix Multiplication performance that go beyond inproving the memory hierarchy utilization. Using architecture accelerators or extending the processor ISA can also produce significat performance boost.
+
+When presenting the ILLIAC IV, one of the first SIMD machines, Barnes et al. advocated that data parallelism would be crucial for progress~\cite{1968barnes}, citing matrix operations as a critical target~\cite{1968kuck}.
+Nearly 50 years later, Barnes' direction culminated in the inclusion of vector extensions in all mainstream CPUs.
+%, such as Intel's AVX-512~\cite{IntelISA}, \Arm's NEON~\cite{ArmISA}, and IBM's VSX~\cite{PpcISA},
+Although fast vectorization is powerful, matrix-multiplication performance could be improved further with specialized hardware units.
+This possibility is now realized with the introduction of what Domke et al. have dubbed ``matrix engines''~\cite{DomkeIPDPS21}.
+%: Intel AMX~\cite{IntelISA}, IBM MMA~\cite{PpcISA} and SVE~\cite{ArmISA}.
+
+%\bk{I looked into the source of the phrase matrix engine and found a patent filing from Apple; maybe we shouldn't use it?} \guido{GA: I do not see a problem in keeping it}
+%\guido{GA: they already did}
+%\Arm \del{takes} \guido{took}  a slightly diverging path, introducing SVE~\cite{ArmISA}, a generalized expansion to NEON.
+%\guido{Goog paragraph below!!}
+
+Robust performance benchmarking is critical for the evaluation of vector extensions.
+While there is extensive performance evaluation of matrix multiplication on vector extensions for  Intel architectures~\cite{2016hassan,2020hemeida,2020alappat}, to the best of our knowledge, similar studies do not exist for the PowerPC or \Arm platforms.
+Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for AMX, SVE, or MMA~\cite{2020poenaru,DomkeIPDPS21}.
+Therefore, this work is among the first to present performance evaluation of a matrix engine on actual hardware.
+
+The advent of the ``general purpose'' GPUs quickly saw study and performance analysis of matrix computations~\cite{2001larsen,2004fatahalian}.
+This evolved into implementations of matrix multiplications on GPUs: manually~\cite{2011li}, through libraries like BLAS~\cite{2011nath}, and through frameworks such as DistME~\cite{2019han}.
+Matrix multiplication is also central to the design of hardware for tensor-operation acceleration such as Google's Tensor Processing Unit~\cite{JouppiISCA17}, Nvidia's Tensor Core~\cite{2018markidis}, and Huawei's Cube Unit~\cite{2019liao}.
+%Performance evaluations of GEMM in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\cite{2018joupi,2019wang}.
+%Matrix-multiplication acceleration in standalone accelerators is not the focus of this paper.
 
 Sections:
 \begin{itemize}
   \item Matrix multiplication performance improvement.
+  \begin{itemize}
+    \item
+      Many works don't discuss their implementation of the matmul kernel.
+      This work specifically implements rank-1 update~\autocite{nakasato2011fast}.
+    \item
+      Another GPU paper specifically using outer product~\autocite{wu2016achieving}.
+      I'd never heard of world scientific (the hosting website) or the publishing journal ``parallel processing letters'' so I'm slightly dubious of the peer review.
+    \item
+      Potentially related work.
+      Focuses on rank-1 update as part of matrix normalisation using matrix-vector not matrix-matrix multiplication~\autocite{yu2020toward}.
+  \end{itemize}
   \item Codegen for new hardware (focus on SIMD).
   \item Performance evaluation methodologies (cross platform, new hardware).
   \item Similar works on Neon/SVE and AMX.
+    \begin{itemize}
+      \item
+        Accelerator design for outer product in sparse matmul~\autocite{pal2018outerspace}.
+        Paper which builds on the idea and compares with it~\autocite{srivastava2020matraptor}.
+    \end{itemize}
 \end{itemize}
 
 \end{document}
