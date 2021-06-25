@@ -8,14 +8,14 @@
 
 \chapter{Matrix Multiplication}
 \label{cha:matmul}
-Matrix multiplication has long been a fundamental operation to \gls{hpc} communities.
-Several fields within physics~\autocite{krol2014matrix}, biology~\autocite{akutsu2000algorithms} and chemistry~\autocite{weber2015semiempirical} benefit from matrix multiplication in some way.
+\nelson{I am rewording the opening sentence so that it is not too similar to the opening sentence in the introduction.}
+Matrix multiplication is used extensively in many fields of Science that rely on \gls{hpc}, including
+several fields within physics~\autocite{krol2014matrix}, biology~\autocite{akutsu2000algorithms} and chemistry~\autocite{weber2015semiempirical}.
 It is also possible to simulate quantum computing processes using matrix multiplication~\autocite{zulehner2019matrix}.
 Moreover, many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
 
-Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned for improvements.
-Modifications to both software and hardware can improve the computation of matrix multiplication.
-Seminal research such as that by Goto and van de Geijn~\autocite{goto2008anatomy} has resulted in high-performance software implementations such as EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
+Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned for improvements through modifications to both software and hardware.
+Seminal research, such as that by Goto and van de Geijn~\autocite{goto2008anatomy}, has resulted in high-performance software implementations, including the extensively used linear-algebra libraries EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
 These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of work into seconds or less.
 This speedup is possible through the use of hardware features, such as \gls{simd}, and code transformations, such as loop blocking and data packing.
 Understanding matrix multiplication and how it is implemented is critical to achieving these improvements.
@@ -28,8 +28,8 @@ Understanding matrix multiplication and how it is implemented is critical to ach
   ``Algorithms'' are processes to get output.
   That being said, algorithms might instead be seen as ``this is a contribution'' and listings could be ``less important code that must still be typeset nicely''.
 }
+\nelson{I still find this paragraph structure difficult to follow and I think that it can be improved. Think about the message that you want to convey and try to structure it in a way that is easier to follow.}
 Computing matrix multiplication, as taught in an introductory math course, is performed using what is known as the \emph{inner product}.
-\nelson{If you state that the \emph{inner product} is not to be confused with the \emph{dot product} you must also state what is the difference between the two. You do not need to state the difference if you do not mention the dot product.}
 This is not to be confused with the \emph{dot product}, which is an operation between vectors and is used when computing the inner product, or \emph{outer product}, which is a different method of computing matrix multiplication like the inner product.
 When computing matrix multiplication, both the outer product and inner product compute the same output in the end but, as \rsec{outerKernel} and \rsec{innerKernel} will discuss, the efficacy with which they arrive at the destination can vary greatly.
 
@@ -77,6 +77,7 @@ The inner product makes use of the dot product as a sub-operation.
 The dot product takes two vectors and produces a scalar value.
 More concretely, the dot product is defined as the summation of the pair-wise products of two vectors (\eg $v \cdot w=v_{i,1}w_{1,j} + v_{i,2}w_{2,j} + \ldots + v_{i,D}w_{D,j}$).
 
+\nelson{This paragraph sounds hand wavy and I am really confused about the distinction that you are trying to make between the inner product and the dot product.  https://math.stackexchange.com/questions/476738/difference-between-dot-product-and-inner-product Thus, in the case of matrix multiplication, where we are dealing with real numbers, the dot product and the inner product are the same. It just so happen that the people implementing matrix multiplication in processors and libraries decided to call it the inner product, specially when they needed to differentiate it from the outer-product implementation. I do not think that you need to even mention the dot product in your thesis. But if you decide to do so, you need to be precise in relation to the mathematical definitions because it is an archival document.}
 Within the context of the inner product, the dot product uses a row of $A$ and a column of $B$ to produce a single cell of $C$.
 Therefore, given the computation \matmul{M}{D}{N}, the inner product computes the cell $c_{i,j}$ by taking the dot product of the $i$th row of $A$ and the $j$th column of $B$ (\rfig{innerProduct}).
 In this way, the inner product is composed of one dot product for each cell of $C$.
@@ -104,7 +105,7 @@ for (uint64_t k = 0; k < D; ++k)
     for (uint64_t j = 0; j < N; ++j)
         C[i][j] += A[i][k] * B[k][j];
 \end{lstlisting}
-Now, the $k$ loop chooses a pair of column from $A$ and row from $B$ that are iterated by the $i$ and $j$ loops respectively.
+Now, the $k$ loop chooses a pair formed by a column from $A$ and a row from $B$ that are iterated by the $i$ and $j$ loops respectively.
 Rather than focusing on a single cell of $C$, every element of $C$ will be updated once before returning to the first cell with a new column and row combination.
 
 \subsubsection{Rank-\texorpdfstring{$r$}{r} Updates}

@@ -107,11 +107,14 @@ Therefore, a compiler-only solution should strive to be as transparent as possib
 %     This manuscript presents an easy-to-adopt, transparent method of accelerating matrix-multiplication code using matrix engines.
 % \end{itemize}
 
-\bk{Thesis:}
-This thesis presents a compiler-only path for code generation for the \gls{gemm} operation that leverages hardware support in the form of matrix-multiplication engines.
-An evaluation of this compiler-only path shows that the generated code is competitive with handwritten, cpu-tailored library implementations.
-The presented method is also easily adoptible and transparent to the user: it replaces a preexisting matrix multiplication kernel generator automatically on the \gls{power10} platform.
-This is shown through an implementation in the \gls{llvm} (\rsec{llvm}), an industry-grade compiler and related tools.
+
+\begin{quote}
+The main contribution of this thesis is a compiler-only path for code generation for the \gls{gemm} operation.
+This path leverages hardware support in the form of matrix-multiplication engines.
+An evaluation of this compiler-only path shows that the generated code is competitive with handwritten, \gls{cpu}-tailored library implementations.
+The presented method is also easily adaptable and transparent to the user: it replaces a pre-existing matrix-multiplication kernel generator automatically on the \gls{power10} platform.
+This versatility is shown through an implementation in the \gls{llvm} (\rsec{llvm}), an industry-grade compiler and related tools.
+\end{quote}
 
 \rcha{background} explains background information required to understand the rest of the manuscript.
 \rcha{related} details related works and research.
