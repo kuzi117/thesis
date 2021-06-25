@@ -127,7 +127,7 @@ doi={10.1109/PCCC.1999.749469}
   urldate = {2021-01-04}
 }
 
-@submitted{kuzma2021fast,
+@unpublished{kuzma2021fast,
   author={Braedy Kuzma and Ivan Korostelev and João P. L. de Carvalho and José Moreira and Christopher Barton and Guido Araujo and José Nelson Amaral},
   title = {Fast Matrix Multiplication via Compiler-only Layered Data Reorganization and Intrinsic Lowering},
   note = {submitted}
@@ -172,24 +172,6 @@ doi={10.1109/PCCC.1999.749469}
   volume={2011},
   pages={1},
   year={2011}
-}
-
-@inproceedings{10.1145/2814270.2814285,
-author = {Alves, P\'{e}ricles and Gruber, Fabian and Doerfert, Johannes and Lamprineas, Alexandros and Grosser, Tobias and Rastello, Fabrice and Pereira, Fernando Magno Quint\~{a}o},
-title = {Runtime Pointer Disambiguation},
-year = {2015},
-isbn = {9781450336895},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/2814270.2814285},
-doi = {10.1145/2814270.2814285},
-abstract = { To optimize code effectively, compilers must deal with memory dependencies. However, the state-of-the-art heuristics available in the literature to track memory dependencies are inherently imprecise and computationally expensive. Consequently, the most advanced code transformations that compilers have today are ineffective when applied on real-world programs. The goal of this paper is to solve this conundrum through dynamic disambiguation of pointers. We provide different ways to determine at runtime when two memory locations can overlap. We then produce two versions of a code region: one that is aliasing-free - hence, easy to optimize - and another that is not. Our checks let us safely branch to the optimizable region. We have applied these ideas on Polly-LLVM, a loop optimizer built on top of the LLVM compilation infrastructure. Our experiments indicate that our method is precise, effective and useful: we can disambiguate every pair of pointer in the loop intensive Polybench benchmark suite. The result of this precision is code quality: the binaries we generate are 10% faster than those that Polly-LLVM produces without our optimization, at the -O3 optimization level of LLVM. },
-booktitle = {Proceedings of the 2015 ACM SIGPLAN International Conference on Object-Oriented Programming, Systems, Languages, and Applications},
-pages = {589–606},
-numpages = {18},
-keywords = {optimization, dynamic guards, Alias analysis},
-location = {Pittsburgh, PA, USA},
-series = {OOPSLA 2015}
 }
 
 @article{alves2015runtime,
@@ -720,4 +702,298 @@ title={cuBLAS :: CUDA Toolkit Documentation},
 date={2021-05-20},
 urldate={2021-06-23},
 url={https://docs.nvidia.com/cuda/cublas/index.html}
+}
+
+@article{gareev2018high,
+author = {Gareev, Roman and Grosser, Tobias and Kruse, Michael},
+title = {High-Performance Generalized Tensor Operations: A Compiler-Oriented Approach},
+year = {2018},
+issue_date = {October 2018},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {15},
+number = {3},
+issn = {1544-3566},
+url = {https://doi.org/10.1145/3235029},
+doi = {10.1145/3235029},
+journal = {ACM Trans. Archit. Code Optim.},
+month = sep,
+articleno = {34},
+numpages = {27},
+keywords = {high-performance computing, Tensor contractions, matrix-matrix multiplication}
+}
+
+@article{grosser2012polly,
+author = {Grosser, Tobias and Groesslinger, Armin and Lengauer, Christian},
+title = {POLLY — PERFORMING POLYHEDRAL OPTIMIZATIONS ON A LOW-LEVEL INTERMEDIATE REPRESENTATION},
+journal = {Parallel Processing Letters},
+volume = {22},
+number = {04},
+pages = {1250010},
+year = {2012},
+doi = {10.1142/S0129626412500107},
+URL = {https://doi.org/10.1142/S0129626412500107},
+eprint = {https://doi.org/10.1142/S0129626412500107}
+}
+
+@article{bondhugula2020high,
+  author = {Uday Bondhugula},
+  title = {High Performance Code Generation in {MLIR:} An Early Case Study with {GEMM}},
+  journal = {CoRR},
+  volume = {abs/2003.00532},
+  year = {2020},
+  url = {https://arxiv.org/abs/2003.00532},
+  archivePrefix = {arXiv},
+  eprint = {2003.00532},
+  timestamp = {Tue, 10 Mar 2020 13:33:48 +0100},
+  biburl = {https://dblp.org/rec/journals/corr/abs-2003-00532.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
+}
+
+@article{carvalho2021kernelfarer,
+  author = {João P. L. de Carvalho and Braedy Kuzma and Ivan Korostelev and José Nelson Amaral and Christopher Barton and José Moreira and Guido Araujo},
+  title = {{KernelFaRer}: Replacing Native-Code Idioms with High-Performance Library Calls},
+  journal = {ACM Transactions On Architecture And Code Optimization ({TACO})},
+  year = {2021},
+  OPTkey = {},
+  OPTvolume = {},
+  OPTnumber = {},
+  OPTpages = {},
+  OPTmonth = {},
+  OPTnote = {To Appear},
+  OPTannote = {}
+}
+
+@manual{PowerISA,
+  author = {IBM},
+  title = {Power® {ISA} Version 3.1},
+  institution = {IBM},
+  year = 2020,
+  month = may,
+  url = {https://ibm.ent.box.com/s/hhjfw0x0lrbtyzmiaffnbxh2fuo0fog0}
+}
+
+@manual{IntelISA,
+  title={Intel® {A}rchitecture {I}nstruction {S}et {E}xtensions and {F}uture {F}eatures Programming Reference},
+  month=feb,
+  organization={Intel Corporation},
+  year={2021},
+  url={https://software.intel.com/content/dam/develop/external/us/en/documents-tps/architecture-instruction-set-extensions-programming-reference.pdf}
+}
+
+@manual{ArmISA,
+  title={Arm® {A}rchitecture {R}eference {M}anual Armv8, for Armv8-A {A}rchitecture {P}rofile},
+  month=jan,
+  organization={Arm Limited},
+  year={2021},
+  url={https://developer.arm.com/documentation/ddi0487/latest/}
+}
+
+@ARTICLE {kuck1968illiac,
+author = {D. Kuck},
+journal = {IEEE Transactions on Computers},
+title = {ILLIAC IV Software and Application Programming},
+year = {1968},
+volume = {17},
+number = {08},
+issn = {1557-9956},
+pages = {758-770},
+keywords = {index terms?applications of array computer;array computer;array language;compiler;operating system.},
+doi = {10.1109/TC.1968.229159},
+publisher = {IEEE Computer Society},
+address = {Los Alamitos, CA, USA},
+month = aug
+}
+
+@article{hassan20161performance,
+title = {Performance Evaluation of Matrix-Matrix Multiplications Using Intel's Advanced Vector Extensions (AVX)},
+journal = {Microprocessors and Microsystems},
+volume = {47},
+pages = {369-374},
+year = {2016},
+issn = {0141-9331},
+doi = {https://doi.org/10.1016/j.micpro.2016.10.002},
+url = {https://www.sciencedirect.com/science/article/pii/S0141933116302502},
+author = {Somaia Awad Hassan and A.M. Hemeida and Mountasser M.M. Mahmoud},
+keywords = {Advanced vector extension (AVX), Matrix-matrix multiplications, Intrinsic functions, Inline assembly, Intel C++ compiler, Microsoft VC++ compiler},
+}
+
+@article{hemeida2020optimizing,
+title = {Optimizing matrix-matrix multiplication on intel’s advanced vector extensions multicore processor},
+journal = {Ain Shams Engineering Journal},
+volume = {11},
+number = {4},
+pages = {1179-1190},
+year = {2020},
+issn = {2090-4479},
+doi = {https://doi.org/10.1016/j.asej.2020.01.003},
+url = {https://www.sciencedirect.com/science/article/pii/S2090447920300058},
+author = {A.M. Hemeida and S.A. Hassan and Salem Alkhalaf and M.M.M. Mahmoud and M.A. Saber and Ayman M. {Bahaa Eldin} and Tomonobu Senjyu and Abdullah H. Alayed},
+keywords = {Intel’s AVX, Intel MKL SGEMM, Matrix-matrix multiplications, Optimization, Multicore},
+}
+
+@inproceedings{alappat2020understanding,
+author="Alappat, Christie L.
+and Hofmann, Johannes
+and Hager, Georg
+and Fehske, Holger
+and Bishop, Alan R.
+and Wellein, Gerhard",
+editor="Sadayappan, Ponnuswamy
+and Chamberlain, Bradford L.
+and Juckeland, Guido
+and Ltaief, Hatem",
+title="Understanding {HPC} Benchmark Performance on {Intel} {Broadwell} and {Cascade} Lake Processors",
+booktitle="High Performance Computing",
+address="Frankfurt am Main, Germany",
+month="June",
+year="2020",
+pages="412--433",
+isbn="978-3-030-50743-5"
+}
+
+@InProceedings{poenaru2020evaluating,
+author="Poenaru, Andrei
+and McIntosh-Smith, Simon",
+editor="Malawski, Maciej
+and Rzadca, Krzysztof",
+title="Evaluating the Effectiveness of a Vector-Length-Agnostic Instruction Set",
+booktitle="Euro-Par 2020: Parallel Processing",
+year="2020",
+publisher="Springer International Publishing",
+address="Cham",
+pages="98--114",
+abstract="In this paper we evaluate the efficacy of the Arm Scalable Vector Extension (SVE) instruction set for HPC workloads using a set of established mini-apps. Exploiting the vector capabilities of SVE will be a key factor in achieving high performance on upcoming generations of Arm-based processors. SVE is a flexible instruction set, but its design is fundamentally different from other contemporary SIMD extensions, such as AVX or NEON, which could present a challenge to its adoption. We use a selection of mini-apps which covers a wide range of scientific application classes to investigate SVE, using a combination of static and dynamic analysis. We inspect how SVE capabilities are used in the mini-apps' kernels, as generated by all SVE compilers available at the time of writing, for both arithmetic and memory operations. We compare our findings against similar data gathered on currently available processors. Although the extent to which vector code is generated varies by mini-app, all compilers tested successfully utilise SVE to vectorise more code than they are able to when targeting NEON, Arm's previous-generation SIMD instruction set. For most mini-apps, we expect performance improvements as SVE width is increased.",
+isbn="978-3-030-57675-2"
+}
+
+@inproceedings{larsen2001fast,
+author = {Larsen, E. Scott and McAllister, David},
+title = {Fast Matrix Multiplies Using Graphics Hardware},
+year = {2001},
+isbn = {158113293X},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/582034.582089},
+doi = {10.1145/582034.582089},
+booktitle = {Proceedings of the 2001 ACM/IEEE Conference on Supercomputing},
+pages = {55},
+numpages = {1},
+keywords = {graphics hardware, matrix multiplication},
+location = {Denver, Colorado},
+series = {SC '01}
+}
+
+@inproceedings{fatahalian2004understanding,
+author = {Fatahalian, K. and Sugerman, J. and Hanrahan, P.},
+title = {Understanding the Efficiency of GPU Algorithms for Matrix-Matrix Multiplication},
+year = {2004},
+isbn = {3905673150},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/1058129.1058148},
+doi = {10.1145/1058129.1058148},
+booktitle = {Proceedings of the ACM SIGGRAPH/EUROGRAPHICS Conference on Graphics Hardware},
+pages = {133–137},
+numpages = {5},
+location = {Grenoble, France},
+series = {HWWS '04}
+}
+
+@inproceedings{li2011strassens,
+  author={Li, Junjie and Ranka, Sanjay and Sahni, Sartaj},
+  booktitle={2011 IEEE 17th International Conference on Parallel and Distributed Systems},
+  title={Strassen's Matrix Multiplication on GPUs},
+  year={2011},
+  volume={},
+  number={},
+  pages={157-164},
+  doi={10.1109/ICPADS.2011.130}
+}
+
+@inproceedings{nath2011accelerating,
+author="Nath, Rajib
+and Tomov, Stanimire
+and Dongarra, Jack",
+editor="Palma, Jos{\'e} M. Laginha M.
+and Dayd{\'e}, Michel
+and Marques, Osni
+and Lopes, Jo{\~a}o Correia",
+title="Accelerating GPU Kernels for Dense Linear Algebra",
+booktitle="High Performance Computing for Computational Science -- VECPAR 2010",
+year="2011",
+publisher="Springer Berlin Heidelberg",
+address="Berlin, Heidelberg",
+pages="83--92",
+isbn="978-3-642-19328-6"
+}
+
+@inproceedings{han2019distme,
+author = {Han, Donghyoung and Nam, Yoon-Min and Lee, Jihye and Park, Kyongseok and Kim, Hyunwoo and Kim, Min-Soo},
+title = {DistME: A Fast and Elastic Distributed Matrix Computation Engine Using GPUs},
+year = {2019},
+isbn = {9781450356435},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3299869.3319865},
+doi = {10.1145/3299869.3319865},
+booktitle = {Proceedings of the 2019 International Conference on Management of Data},
+pages = {759–774},
+numpages = {16},
+keywords = {matrix multiplication, distributed data-parallel system, gpu computation},
+location = {Amsterdam, Netherlands},
+series = {SIGMOD '19}
+}
+
+@article{jouppi2017datacenter,
+author = {Jouppi, Norman P. and Young, Cliff and Patil, Nishant and Patterson, David and Agrawal, Gaurav and Bajwa, Raminder and Bates, Sarah and Bhatia, Suresh and Boden, Nan and Borchers, Al and Boyle, Rick and Cantin, Pierre-luc and Chao, Clifford and Clark, Chris and Coriell, Jeremy and Daley, Mike and Dau, Matt and Dean, Jeffrey and Gelb, Ben and Ghaemmaghami, Tara Vazir and Gottipati, Rajendra and Gulland, William and Hagmann, Robert and Ho, C. Richard and Hogberg, Doug and Hu, John and Hundt, Robert and Hurt, Dan and Ibarz, Julian and Jaffey, Aaron and Jaworski, Alek and Kaplan, Alexander and Khaitan, Harshit and Killebrew, Daniel and Koch, Andy and Kumar, Naveen and Lacy, Steve and Laudon, James and Law, James and Le, Diemthu and Leary, Chris and Liu, Zhuyuan and Lucke, Kyle and Lundin, Alan and MacKean, Gordon and Maggiore, Adriana and Mahony, Maire and Miller, Kieran and Nagarajan, Rahul and Narayanaswami, Ravi and Ni, Ray and Nix, Kathy and Norrie, Thomas and Omernick, Mark and Penukonda, Narayana and Phelps, Andy and Ross, Jonathan and Ross, Matt and Salek, Amir and Samadiani, Emad and Severn, Chris and Sizikov, Gregory and Snelham, Matthew and Souter, Jed and Steinberg, Dan and Swing, Andy and Tan, Mercedes and Thorson, Gregory and Tian, Bo and Toma, Horia and Tuttle, Erick and Vasudevan, Vijay and Walter, Richard and Wang, Walter and Wilcox, Eric and Yoon, Doe Hyun},
+title = {In-Datacenter Performance Analysis of a Tensor Processing Unit},
+year = {2017},
+issue_date = {May 2017},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+volume = {45},
+number = {2},
+issn = {0163-5964},
+url = {https://doi.org/10.1145/3140659.3080246},
+doi = {10.1145/3140659.3080246},
+journal = {SIGARCH Comput. Archit. News},
+month = jun,
+pages = {1–12},
+numpages = {12},
+keywords = {neural network, TensorFlow, CNN, accelerator, GPU, DNN, domain-specific architecture, TPU, RNN, MLP, deep learning, LSTM}
+}
+
+@INPROCEEDINGS{markidis2018nvidia,
+  author={Markidis, Stefano and Chien, Steven Wei Der and Laure, Erwin and Peng, Ivy Bo and Vetter, Jeffrey S.},
+  booktitle={2018 IEEE International Parallel and Distributed Processing Symposium Workshops (IPDPSW)},
+  title={NVIDIA Tensor Core Programmability, Performance   Precision},
+  year={2018},
+  volume={},
+  number={},
+  pages={522-531},
+  doi={10.1109/IPDPSW.2018.00091}
+}
+
+@inproceedings{liao2019davinci,
+  title={Davinci: A scalable architecture for neural network computing},
+  author={Liao, Heng and Tu, Jiajin and Xia, Jing and Zhou, Xiping},
+  booktitle={2019 IEEE Hot Chips 31 Symposium (HCS)},
+  pages={1--44},
+  year={2019},
+  organization={IEEE Computer Society}
+}
+
+@article{wang2019benchmarking,
+  author = {Yu Wang and Gu{-}Yeon Wei and David Brooks},
+  title = {Benchmarking TPU, GPU, and {CPU} Platforms for Deep Learning},
+  journal = {CoRR},
+  volume = {abs/1907.10701},
+  year = {2019},
+  url = {http://arxiv.org/abs/1907.10701},
+  archivePrefix = {arXiv},
+  eprint = {1907.10701},
+  timestamp = {Thu, 01 Aug 2019 08:59:33 +0200},
+  biburl = {https://dblp.org/rec/journals/corr/abs-1907-10701.bib},
+  bibsource = {dblp computer science bibliography, https://dblp.org}
 }
