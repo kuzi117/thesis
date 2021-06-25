@@ -91,6 +91,7 @@ The \code{i} loop iterates the rows of $A$, also choosing a row in $C$, while th
 The final \code{k} loop iterates through the elements of the chosen row of $A$ and column of $B$, computing the dot product by accumulating (reducing) each of the pair-wise products into the chosen cell of $C$.
 
 \subsection{The Outer Product}
+\label{sec:outerProduct}
 The outer product, when seen in mathematics, is typically seen only when $D=1$ as in \matmul{M}{1}{N}, mimicking the diagram in \rfig{outerProduct}.
 Mathematicians prefer to view \matmul{M}{D}{N} with $D > 1$ as an inner product for simplicity, using the outer product only when $D=1$.
 
@@ -261,6 +262,7 @@ Computing a partial result in this manner reduces the effectiveness of \gls{simd
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
 
 \subsection{Goto and van de Geijn in the Inner Kernel}
+\label{sec:gotoInner}
 
 \begin{figure}[t]
   \hfill
