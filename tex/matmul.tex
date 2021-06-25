@@ -117,8 +117,8 @@ This update process is performed by taking a matrix derived from the model and u
 }
 Because the result of the outer product of two vectors, a matrix, will always be of rank one\footnotemark, this is called a \emph{rank-one update}.
 \footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
-Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), evenutally arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
-With this model, the outer product matrix multiplication in \rlst{basicOuter} is rewritten as such:
+Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), eventually arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
+With this model, the outer-product matrix multiplication in \rlst{basicOuter} is rewritten as such:
 \begin{lstlisting}[caption={[Matrix multiplication via rank-one update]Matrix multiplication using rank-one update.},label=lst:rankOne,language=C++,columns=flexible,morekeywords=uint64_t]
 for (uint64_t k = 0; k < D; ++k)
   rankOneUpdate(C, column(A, k), row(B, k));
@@ -167,40 +167,41 @@ This work focuses on building a modular innermost layer and therefore the outer 
 
 \section{The Outer Kernel}
 \label{sec:outerKernel}
-There are two operations which are critical to the function of the outer kernel: blocking and packing.
+There are two operations that are critical to the function of the outer kernel: blocking and packing.
 Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
-Division is necessary because matrix sizes found in applications are often much larger than what a cache can fit.
-Even with this division, the distance between elements within in different rows or columns can cause cache conflicts or \gls{tlb} misses.
-To counter this, packing takes an operand matrix and duplicates a block of data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
+Division is necessary because matrix sizes found in applications are often much larger than what can fit in a cache memory.
+Even with this division, the distance between elements within different rows or columns can cause cache conflicts or \gls{tlb} misses.
+To increase the spatial locality of accesses, packing takes an operand matrix and makes a copy of a block of data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
 Packing can also improve the data access pattern for a more efficient inner kernel, as discussed later in \rsec{blockPack}.
 
 The outer kernel is a delicate dance between blocking and packing.
 If the blocking factor is too large (\ie many small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
-However, when the blocking is too small (\ie few large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
+However, when the blocking factor is too small (\ie few large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
 The dimensions of the blocking, and therefore the packing, can be determined analytically~\autocite{low2016analytical} and are dependent on the sizes of all levels of the cache present on the target architecture (L1, L2, L3 on modern consumer machines, uncommonly L4).
 
 Goto and van de Geijn address blocking, caching, and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
-When blocking, each new blocking loop breaks up a single dimension of the multiplication.
+When blocking, each new blocking loop breaks up a single dimension of the matrix multiplication.
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
 Further dividing a panel produces a section with two short dimensions called a \emph{block}.
 Only two of the three dimensions ($M$, $D$, $N$) are blocked while the third is the inner most loop's iteration variable.
-This produces $\binom{3}{2}=3$ different innermost loops\footnotemark.
-\footnotetext{``Three choose two''.}
+This process produces $\binom{3}{2}=3$ different permutations for the innermost loops\footnotemark.
+%\footnotetext{``Three choose two''.}
 Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
 
 \subsection{Blocking and Packing for Cache}
 \label{sec:blockPack}
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
+\nelson{I do not know what a "vector-like panel" or a "cell-like block" is.}
 This breakdown is affiliated with the dot product because it multiplies two vector-like panels while producing a cell-like block.
 According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
 Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache, accumulated into, and then written back.
-When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, L2 cache is only read from.
-In essence, this means that the dot product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
+When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, there are only read operations from the L2 cache.
+Therefore, the dot product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
 
 An implementer can choose between the remaining two methods (blocking $M$ and $D$ or blocking $D$ and $N$) based on the storage order of $C$.
 Within each of these methods, the order in which $D$ and the second dimension are blocked creates two options.
-One of these options is considerably better than the other; to demonstrate, without loss of generality, consider the method which blocks $M$ and $D$ and iterates $N$.
+One of these options is considerably better than the other; to demonstrate, without loss of generality, consider the method that blocks $M$ and $D$ and iterates $N$.
 
 Given that $A$ is already packed in L2 cache, the first option, which blocks $D$ then $M$,
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
@@ -233,14 +234,14 @@ When input and output data are already small enough to be entirely resident in c
 However, given large matrices, lacking a blocking and packing layer is disastrous for performance.
 With sufficiently large matrices, every load will result in a cache miss because the requested data will have been expelled from the cache by a more recent load simply by the pigeonhole principle.
 In the worst case, these issues are compounded with \gls{tlb} misses as well.
-Therefore, while a single, optimised inner kernel is always critical to performance, it is important for library implementers or compilers to consider the size of their data when possible and offer multiple outer-kernel data-management strategies.
+Therefore, while a single, optimised inner kernel is always critical to performance, it is important for library implementers or compiler designers to consider the size of the data when possible and offer multiple outer-kernel data-management strategies.
 
 \section{The Inner Kernel}
 \label{sec:innerKernel}
 The inner kernel is focused on maximising performance.
-Whether the computation itself has small dimensions or a larger computation has been blocked and packed by an outer kernel, the inner kernel is meant to be as tight and efficient as possible.
-This means considering optimisations such as loop unrolling and instruction rescheduling to improve operation pipelining.
-Hardware-wise, the instruction cache, instruction issue rate, register pressure, and functional unit availability must also be taken into account.
+Whether the computation itself has small dimensions or a larger computation has been blocked and packed by an outer kernel, the inner kernel is meant to be as tight and as efficient as possible.
+Therefore, the implementation of the inner kernel must consider optimisations such as loop unrolling and instruction rescheduling to improve operation pipelining.
+The instruction cache capacity, instruction issue rate, register pressure, and functional unit availability must also be taken into account.
 First, however, the product that implements the inner kernel must be chosen.
 
 \subsection{Inner Product vs Outer Product}
@@ -262,7 +263,7 @@ Computing a partial result in this manner reduces the effectiveness of \gls{simd
 \Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
 
-\subsection{Goto and van de Geijn in the Inner Kernel}
+\subsection{Goto's and van de Geijn's  methodology in the Inner Kernel}
 \label{sec:gotoInner}
 
 \begin{figure}[t]
@@ -386,14 +387,13 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
 }
 
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
-As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, it is implemented using the multiplication of a combination of a block and a panel.
-\footnotetext{For example, the DPPS or DPPD instructions in x86 SSE 4.1 since 2008.}
+As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, in this methodology matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
+\footnotetext{For example, the DPPS or DPPD instructions that were introduced in x86 SSE 4.1 in 2008.}
 While for the outer kernel a short dimension is optimally several hundred elements wide and a long dimension is the full extent of one of the matrix dimensions, the inner kernel must operate with registers.
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
 \rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
 
-Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product.
-Following this is a presentation of a method of resolving these flaws through an improved version of the outer product.
+Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product followed by a presentation of a method to resolve these flaws through an improved version of the outer product.
 
 \subsubsection{Emulating Outer-Product with SIMD instructions in Libraries}
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
