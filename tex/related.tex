@@ -37,7 +37,6 @@ Furthermore, this work is more modular and can be reused by new passes or other 
 
 Uday Bondhugula presents an implementation of the BLAS strategy within the emerging MLIR framework~\autocite{bondhugula2020high}.
 He demonstrates that blocking, packing, register tiling, and unroll/jam yields code that achieves 34\% of OpenBLAS' performance on Intel's Coffee Lake~\autocite{bondhugula2020high}.
-\bk{Numbers in this next sentence need to be verified.}
 Bondhugula also implemented a custom \gls{vectorisation} pass to replace the default \gls{llvm} \glslink{vectorisation}{vectoriser} thus reaching 91\% of the performance of OpenBLAS.
 This work also shows the weakness of the default \gls{llvm} \glslink{vectorisation}{vectoriser}.
 As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} \gls{ir} \glspl{intrinsic} is inherently an accessible method of implementing an inner kernel in MLIR.
@@ -55,40 +54,31 @@ This possibility is now realized with the introduction of what Domke \etal have 
 This thesis, in the same vein as Barnes \etal, focuses on bringing high performance to new hardware facilities.
 
 \section{Other Matrix Engines}
-The advent of the ``general purpose'' GPUs quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
-This evolved into implementations of matrix multiplications on GPUs: manually~\autocite{li2011strassens}, through libraries like BLAS~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
+The advent of the ``general purpose'' \glspl{gpu} quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
+This evolved into implementations of matrix multiplications on \glspl{gpu}: manually~\autocite{li2011strassens}, through libraries like BLAS~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
 Matrix multiplication is also central to the design of hardware for tensor-operation acceleration such as Google's Tensor Processing Unit~\autocite{jouppi2017datacenter}, Nvidia's Tensor Core~\autocite{markidis2018nvidia}, and Huawei's Cube Unit~\autocite{liao2019davinci}.
 Performance evaluations of GEMM in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\autocite{jouppi2017datacenter,wang2019benchmarking}.
 Matrix-multiplication acceleration in standalone accelerators is not the focus of this thesis.
+
+It is difficult to find works explicitly discussing the outer product as kernels are often described in terms of Goto and van de Geijn's work.
+However, a work by Naohito Nakasato~\autocite{nakasato2011fast} and another by Wu Jing and Joseph Jaja~\autocite{wu2016achieving} both explicitly mention the use of the outer product to compute matrix multiplication.
+Both of these works use a \gls{gpu} for their implementation while this work focuses on the emerging field of on-chip matrix engines.
+
+\bk{This one might be only tangentially related.}
+Yu \etal implement a rank-one update algorithm on the \gls{gpu}, but their research focus is improving the performance of bilinear pooling~\autocite{yu2020toward}.
+Their work aims to replace another method of singular value decomposition via an iterative method requiring many matrix-matrix multiplications by using the outer product.
+This work presented in this thesis aims to improve matrix-matrix multiplication on the \gls{cpu} using rank-$r$ updates.
+
+Pal \etal introduce an outer product accelerator designed for sparse-matrix mutliplication~\autocite{pal2018outerspace}.
+Their design, called OuterSPACE, is an external accelerator focused on alleviating the memory issues associated with sparse matrix-matrix multiplication.
+The algorithm presented in this thesis uses \gls{mma} as an accelerator for dense matrix-matrix multiplication.
+Despite this, \gls{mma} is not at all limited to dense operations.
+Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix multiplication using the outer product that may prove to be an excellent match with \gls{mma}.
 
 \section{Performance Evaluation}
 Robust performance benchmarking is critical for the evaluation of vector extensions.
 While there is extensive performance evaluation of matrix multiplication on vector extensions for Intel architectures~\autocite{hassan20161performance,hemeida2020optimizing,alappat2020understanding}, to the best of the author's knowledge, similar studies do not exist for the PowerPC or ARM platforms.
 Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for AMX, SVE, or MMA~\autocite{poenaru2020evaluating,domke2020matrix}.
 Therefore, this work is among the first to present performance evaluation of a matrix engine on actual hardware.
-
-Sections:
-\begin{itemize}
-  \item Matrix multiplication performance improvement.
-  \begin{itemize}
-    \item
-      Many works don't discuss their implementation of the matmul kernel.
-      This work specifically implements rank-1 update~\autocite{nakasato2011fast}.
-    \item
-      Another GPU paper specifically using outer product~\autocite{wu2016achieving}.
-      I'd never heard of world scientific (the hosting website) or the publishing journal ``parallel processing letters'' so I'm slightly dubious of the peer review.
-    \item
-      Potentially related work.
-      Focuses on rank-1 update as part of matrix normalisation using matrix-vector not matrix-matrix multiplication~\autocite{yu2020toward}.
-  \end{itemize}
-  \item Codegen for new hardware (focus on SIMD).
-  \item Performance evaluation methodologies (cross platform, new hardware).
-  \item Similar works on Neon/SVE and AMX.
-    \begin{itemize}
-      \item
-        Accelerator design for outer product in sparse matmul~\autocite{pal2018outerspace}.
-        Paper which builds on the idea and compares with it~\autocite{srivastava2020matraptor}.
-    \end{itemize}
-\end{itemize}
 
 \end{document}

@@ -997,3 +997,21 @@ keywords = {neural network, TensorFlow, CNN, accelerator, GPU, DNN, domain-speci
   biburl = {https://dblp.org/rec/journals/corr/abs-1907-10701.bib},
   bibsource = {dblp computer science bibliography, https://dblp.org}
 }
+
+@inproceedings{gu2020bandwidth,
+author = {Gu, Zhixiang and Moreira, Jose and Edelsohn, David and Azad, Ariful},
+title = {Bandwidth Optimized Parallel Algorithms for Sparse Matrix-Matrix Multiplication Using Propagation Blocking},
+year = {2020},
+isbn = {9781450369350},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi-org.login.ezproxy.library.ualberta.ca/10.1145/3350755.3400216},
+doi = {10.1145/3350755.3400216},
+abstract = {Sparse matrix-matrix multiplication (SpGEMM) is a widely used kernel in various graph, scientific computing and machine learning algorithms. It is well known that SpGEMM is a memory-bound operation, and its peak performance is expected to be bound by the memory bandwidth. Yet, existing algorithms fail to saturate the memory bandwidth, resulting in suboptimal performance under the Roofline model. In this paper, we characterize existing SpGEMM algorithms based on their memory access patterns and develop practical lower and upper bounds for SpGEMM performance. We then develop an SpGEMM algorithm based on the outer product. The newly developed algorithm called PB-SpGEMM saturates memory bandwidth by using the propagation blocking technique and by performing in-cache sorting and merging. For many practical matrices, PB-SpGEMM runs 20%-50% faster than the state-of-the-art heap and hash SpGEMM algorithms on modern multicore processors. Most importantly, PB-SpGEMM attains performance predicted by the Roofline model, and its performance remains stable with respect to matrix size and sparsity.},
+booktitle = {Proceedings of the 32nd ACM Symposium on Parallelism in Algorithms and Architectures},
+pages = {293–303},
+numpages = {11},
+keywords = {SpGEMM, parallel algorithm},
+location = {Virtual Event, USA},
+series = {SPAA '20}
+}
