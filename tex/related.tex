@@ -17,8 +17,8 @@ Each of the following sections contains text derived from work submitted to PACT
 
 % comparitive and analytical, not descriptive.
 \section{Matrix Multiplication}
-In a seminal work, Goto and Van D. Geijn detail a layered approach to improve cache and vector-register utilization on \glspl{cpu}s~\autocite{goto2008anatomy}.
-Using this approach, modern linear algebra libraries, such as Eigen and OpenBLAS, achieve high performance on \gls{hpc} workloads.
+In a seminal work, Goto and Van D. Geijn detail a layered approach to improve cache and vector-register utilization on \glspl{cpu}~\autocite{goto2008anatomy}.
+Using this approach, modern linear-algebra libraries, such as Eigen and OpenBLAS, achieve high performance on \gls{hpc} workloads.
 Goto and Van D. Geijn show that modelling both L2 cache and \gls{tlb} --- and not only L1 cache as considered earlier --- is crucial for cache performance.
 Their work is seminal because it publicly explained practical strategies for optimal cache and vector register utilization on \glspl{cpu}; these strategies were previously only available in proprietary libraries.
 The layered strategy features two stages:
@@ -44,7 +44,8 @@ As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} 
 Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace these with library calls~\autocite{carvalho2021kernelfarer}.
 While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the integration of libraries into a computer system that may not have it.
 Moreover, their experimental results, as in this work, indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
-The solution in this paper is orthogonal to Carvalho \etal: their pattern recognition can identify GEMM kernels at the intermediate-level representation and then replace the inner most kernel with the solution presented here.
+The solution in this thesis is orthogonal to KernelFaRer. 
+The pattern recognition in  KernelFaRer can identify GEMM kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
 
 \section{Code Generation for New Hardware}
 When presenting the ILLIAC IV, one of the first SIMD machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
