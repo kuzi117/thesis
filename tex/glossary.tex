@@ -124,6 +124,9 @@
 Achieved through a program called a ``Linker'', this is typically the final step in the compilation process.
 The procedure involves combining all \glspl{object file} into a single binary, resolving symbols, as well as several more involved processes.
 }
+\longnewglossaryentry{live}{name={Linking},text={live}}{
+  A value is said to be live at a \gls{point} in a program if there exists at least one path from this point to a use of the value.
+}
 \longnewglossaryentry{llvm}{name={LLVM},text={LLVM}}{
   The name of an umbrella project of compiler technologies including an \gls{ir}, debugger, a variety of machine backends, \etc
   May also be used to refer specifically to the combination of optimiser and backend as part of the \gls{lowering} process. See \rsec{llvm}.
@@ -160,6 +163,10 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 }
 
 % P
+\longnewglossaryentry{point}{name={Point},text={point}}{
+  A point is a concept in program analysis defining places where a program can be paused and the state can be examined.
+  A point exists between each logical statement (e.g. between instructions in assembly, between statements in a higher level language) as well as before and after control flow split and join points.
+}
 \longnewglossaryentry{power}{name={POWER},text={POWER}}{
   \gls{ibm}'s high performance computing architecture built for \gls{hpc} and other applications.
 }
@@ -180,6 +187,9 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 ]{risc}{RISC}{Reduced Instruction Set Computer}
 
 % S
+\longnewglossaryentry{rematerialisation}{name={Rematerialisation},text={rematerialisation}}{
+  The process of computing a value multiple times rather than leaving it in a register or \glslink{spill}{spilling} it.
+}
 \newacronym[
   description={
     Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.

@@ -1,5 +1,6 @@
 PREFIX=thesis
 SUBFILES=$(wildcard tex/*)
+FIGURES=$(wildcard tex/figures/*)
 BIB=refs.bib
 LATEX=pdflatex -halt-on-error
 BIBTEX=bibtex
@@ -8,7 +9,10 @@ all: $(PREFIX).pdf
 
 pdf: $(PREFIX).pdf
 
-%.pdf: %.tex $(SUBFILES) $(BIB)
+print:
+	@echo $(FIGURES)
+
+%.pdf: %.tex $(SUBFILES) $(BIB) $(FIGURES)
 	$(LATEX)	$(PREFIX)
 	$(BIBTEX)	$(PREFIX)
 	$(LATEX)	$(PREFIX)
