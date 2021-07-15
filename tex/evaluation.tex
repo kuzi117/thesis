@@ -38,7 +38,7 @@ This could be due to anything from frequency changes to firmware changes or actu
 \end{itemize}
 
 \section{Caveats}
-The results presented in this section are unexpected and less than ideal.
+The results presented in \todo{link future results section} are unexpected and less than ideal.
 However, the cause of the lackluster performance, in general, is not a result of the implementation presented in \rcha{method}.
 Instead, missed performance can be traced to several factors in the backend code generator as well as limitations inherent in the surrounding framework.
 
@@ -59,7 +59,7 @@ This issue is solveable with careful scheduling but is exacerbated by the follow
 The implementation described in \rcha{method} integrates itself within a pre-existing framework which provides the default vectorisation lowering method described in \rsec{matMulInt}.
 The data structures for working with matrices that were created as part of the framework take the load of a single long vector representing a flattened matrix and replace it with several vector loads representing the matrix's major axis values.
 For example, a floating-point column-major matrix \mat{A}{4}{2} will originally be represented by \code{<8 x float>} and will be transformed into two \code{<4 x float>} column-vector loads.
-Regardless of the form this loading takes, be it one large load or several smaller, consecutive loads, this load occurs is present in the IR before all computation.
+Regardless of the form this loading takes -- be it one large load or several smaller, consecutive loads -- this load occurs in the IR before all computation.
 By examining the generated assembly, \bk{Should I attach an appendix with example code? It seems excessive.} we can, for large kernels, see that this sort of code has been interpreted by the backend as a request to bring \emph{all} of the values to register immediately.
 This translates to the entire matrix being loaded consecutively and, because the matrix may be larger than all available registers and values from other matrices must be present, it results in these values immediately being \glslink{spill}{spilled} back to memory.
 These values must be reloaded later when it is their time to be used, effectively tripling the kernel's time spent on memory accesses.
@@ -72,17 +72,17 @@ The memory operations are considerably slower than \gls{mma} operations, even th
   \label{fig:floatSink}
 \end{figure}
 
-This issue should be a consideration of the backend scheduler\footnotemark, moving loads for values that are not needed at the current \gls{point} in the schedule to another \gls{point} closer to its first use where there is potentially less register pressure (load ``sinking'').
+This issue should be a consideration of the backend scheduler\footnotemark: moving loads for values that are not needed at the current \gls{point} in the schedule to another \gls{point} closer to its first use where there is potentially less register pressure (load ``sinking'').
 \footnotetext{This issue is actively being investigated as part of future work.}
 In general, for the average program, this may not be the case, but in the case of this matrix multiplication kernel it is well within reason.
 As a stop-gap measure, this can be addressed in the IR by breaking up larger loads and sinking them closer to their uses.
 
 A short, specifically-targeted optimisation was created to implement this idea to test the feasibility of presenting more accurate\footnotemark results in this manuscripts; a representative sample of the effects are shown in \rfig{floatSink}.
 \footnotetext{Here, ``accurate results'' means ``optimal results given a more well-behaved backend code generator''.}
-Consider the pair of bars labeled ``8x8x16''.
+Consider the pair of bars labeled ``8x8x16'' (\matmul{8}{8}{16}).
 This represents the best case scenario for such an optimisation:
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=\textbf{(\arabic*)}, after={.}]
-  \item the eight-element column-vector load can be broken up in to two four-element vector loads, each of which fills an entire VSR
+  \item $A$'s eight-element column-vector load can be broken up in to two four-element vector loads, each of which fills an entire VSR (similar logic applies to $B$'s rows)
   \item only a single load is necessary to create an outer product operand (rank-one update)
   \item each operand is used only during its accumulation step ($2+4=6$ registers \gls{live} at once)
 \end{enumerate*}
@@ -93,7 +93,7 @@ If the operation were to have more accumulations then this gap would continue to
 
 \subsubsection{Operand Spilling and Rematerialisation}
 In solving the first issue, another, separate but related issue is born.
-As can be seen from the pair of bars labeled ``32x8x32'', the fix that worked for a smaller kernel produced a roughly 12\% increase\footnotemark in runtime.
+As can be seen from the pair of bars labeled ``32x8x32'', the same fix that worked for a smaller kernel produced a roughly 12\% increase\footnotemark in runtime for the larger kernel.
 \footnotetext{Changed from 710.4 ns to 796.0 ns on average.}
 Once again, by examining the assembly, it is easy to determine that original issue derived from the framework that created a large number of loads and spills in the beginning of the kernel remains solved.
 However, where there once was no spills throughout the body of the kernel, the larger kernel has multiple spills or reloads per set of outer products.
@@ -114,14 +114,15 @@ The larger kernel, however, must use the value again in computing the second set
     \draw[xstep=8, ystep=4, shift={(3, 0)}] (0, 0) grid +(16, 8);
     \draw[decorate, decoration={brace, mirror}] (0, -0.3) -- node[below=2] {$K$} +(2, 0);
   \end{tikzpicture}
-  \caption{Inner product.}
+  \caption{Demonstration of operand reuse.}
   \label{fig:opReuse}
 \end{figure}
 
 According to constraint \fbox{5} in \rsec{baseCase}, spilling an accumulator is expensive, and we must therefore fully compute an accumulator before moving on.
 This means that every operand along the dimension $K$ will be brought to register before an operand will be reused.
-Given only 32 registers and requiring six for each accumulation, if $K \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there will not be enough space for all values to remain in register.
-And thus the problem becomes apparent: operands that are still \gls{live} are being forced out of registers and the compiler is choosing to spill them.
+Given only 32 registers and requiring six for each accumulation, if $K \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there will not be enough space for all values to remain in register\footnotemark.
+\footnotetext{The issue is identical for operands of $B$, though the reuse distance is greater.}
+And thus the cause becomes apparent: operands that are still \gls{live} are being forced out of registers and the compiler is choosing to spill them.
 
 This is the well studied compiler problem of ``\gls{rematerialisation}''.
 Essentially, the compiler must answer the question ``is it more efficient to store a value to memory and retrieve it later (\gls{spill}) or to recompute it later using the same process?''
