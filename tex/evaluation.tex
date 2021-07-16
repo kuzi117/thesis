@@ -132,6 +132,66 @@ Essentially, the compiler must answer the question ``is it more efficient to sto
 In the case of floats, producing the operand is a simple load and therefore, if an operand \emph{must} be evicted from its register, \glslink{rematerialisation}{rematerialising} the value is a simple load.
 Thus, the compiler's choice to spill the operand is incorrect and, because spills are saved on the stack, not only is it wasting memory by duplicating the value, it is potentially evicting values from the cache.
 
+\subsubsection{Smaller Types}
+While the issues presented above remain roughly identical for \code{double}-typed operations, small datatypes have several extra confounding factors.
+First to consider is that the smaller datatypes, as described in \rsec{dataTypes}, require that two, four, or eight vectors be merged (shuffled) in order to create operands for the specific rank-$r$ update.
+These vectors are not contiguous in memory which counteracts condition \textbf{(2)} that applied originally to \code{float}-typed matrices.
+Together, these differences increase the cost of \gls{rematerialisation}, though it remains unclear at which point this is enough to offset the cost of \glslink{spill}{spilling}.
+Investigating such a difference requires non-negligible changes in the backend making it firmly outside the scope of this thesis.
+
+Complicating things further is that \textbf{(1)} is also no longer true.
+A four-element \code{i16} vector only fills half of a VSR; usage only decreases for the smaller types.
+Thus, register pressure actually increases as the data size decreases because a register is required to hold each of the unique loads that will be used for merging.
+
+A more complicated load breaking and sinking strategy may counteract this, but only to a certain degree.
+Combining certain loads -- for example two four-element \code{i16} column loads, making a full VSR -- would decrease register pressure as shuffles could use the upper and lower halves of the register for separate shuffles.
+However, combining four four-element \code{i8} column loads begins to span multiple blocks of accumulators, as can be seen in \rfig{opReuse}.
+This causes the VSR to be \gls{live} much longer as the upper two quarters are required for a different set of accumulators, likely introducing new spills.
+Combining enough loads eventually returns to loading the entire column or row vector and allows the previously described issues to appear again.
+
+\subsection{Shuffling}
+For datatypes smaller than 32 bits, producing the appropriate operand for a rank-$r$ update requires several vectors be merged via shuffling.
+The \gls{power} \gls{isa} offers several methods of moving vector elements, ranging from register shifting and rotating combined with masking to efficient vector upper and lower half merges based on datatype size.
+Unfortunately, producing efficient code for shuffles in assembly from \gls{ir} is difficult.
+
+There are a multitude of ways to express the same shuffling operation in \gls{ir}, each depending on multiple implementation choices made throughout the process.
+Certain variants will be interpreted by the backend and translated to efficient code while others are interpreted very conservatively.
+This can be the difference between an idiomatic assembly of several instructions, often close to an expert's handwritten version, and the same process being expressed in hundreds or thousands of instructions, often with \glspl{spill} throughout.
+Several factors which cause degraded performance from shuffling are discussed below.
+
+\subsubsection{Datatype: \texorpdfstring{\code{half}}{half}}
+\bk{
+  I think this issue is likely to affect \code{bfloat} as well but when I went to try it last night (I'd never compiled any \code{bfloat} code before) it crashed.
+  I've spoken to Nemanja and it seems to be a backend issue; I've created a github issue for it and the backend team will look at it shortly.
+}
+The \code{i16} and \code{half} types have identical widths: a half word.
+Because \glspl{cpu} and their accompanying \glspl{isa} are type-agnostic and sensitive only to the width of a data element when implementing vector shuffles, shuffle code in the \gls{ir} which differs only in choice of 16-bit type should produce identical assembly.
+This is demonstrably untrue, however.
+The assembly code generated for \code{i16} executes roughly six vector loads and six vector permute instructions to produce all operands for a single accumulation in a full $2 \times 4$ accumulator layout.
+For \code{half}, the assembly has extended from six instructions to almost 150 and has been at least partially scalarised, moving elements from vector registers to general purpose registers and back again.
+
+This explosion in code size is most apparent in the calculation epilogue where, in the \gls{ir}, the accumulators are disassembled and stored to memory.
+First, the resulting accumulator vectors are truncated to the output data type.
+They are then concatenated together into a output flattened matrix and stored to memory.
+Concatenation is also achieved through shuffling and therefore experiences the same conservative code generation as before.
+The added truncation operation worsens the effect.
+All told, the epilogue for \code{half} is roughly ten times the length of same operation for \code{i16}.
+\bk{
+  I'm concerned there's an extra factor here in the truncation operation that needs to be considered.
+  Going from \code{i32} to \code{i16} uses a ``vector pack'' instruction which is effectively just takes two vectors and truncates every word to a half-word and packs both into a single vector.
+  I can't find a similar operation for the conversion from \code{f32} to \code{f16} which is a significantly more complicated process because the exponent bias is different.
+  This might mean that it \emph{must} be scalarised which, of course, entails a longer epilogue.
+}
+
+\subsubsection{Datatype: \texorpdfstring{\code{i8}}{i8}}
+\bk{Discuss issues about merging four vectors simultaneously.}
+
+\subsubsection{Datatype: \texorpdfstring{\code{i4}}{i4}}
+\bk{Discuss issues about merging elements that have sub-byte length.}
+
+\subsection{Solutions}
+\bk{Discuss how these issues might be best addressed.}
+
 \section{MMA vs Vectorization}
 \label{sec:mmaVsVec}
 To begin, we consider a performance comparison between different methods of \gls{lowering} the \gls{llvm} intrinsic \code{llvm.matrix.multiply}.
