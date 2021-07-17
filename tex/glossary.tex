@@ -58,10 +58,12 @@
 ]{cpi}{CPI}{Cycles Per Instruction}
 
 % D
-\longnewglossaryentry{dead}{name={Dead}, text={dead}}{
-  A value is said to be dead at a \gls{point} in a program when there is no possible future use for it, i.e. it is not \gls{live}.
+\longnewglossaryentry{dead}{name={Dead},text={dead}}{
+  A value in a program is dead if it is guaranteed that the value will never be used again.
+  A static liveness analysis is performed to determine which values are dead at a given point in a program.
+  Therefore, a value that is dead at a given point of the program must be dead for all possible executions of the program.
+  A variable may be dead or a register may be dead.
 }
-
 % F
 \newacronym[
   description={
@@ -130,7 +132,7 @@ Achieved through a program called a ``Linker'', this is typically the final step
 The procedure involves combining all \glspl{object file} into a single binary, resolving symbols, as well as several more involved processes.
 }
 \longnewglossaryentry{live}{name={Linking},text={live}}{
-  A value is said to be live at a \gls{point} in a program if there exists at least one path from this point to a use of the value.
+  A value is live at a \gls{point} in a program if there exists at least one path from this \gls{point} that may use the value.
 }
 \longnewglossaryentry{llvm}{name={LLVM},text={LLVM}}{
   The name of an umbrella project of compiler technologies including an \gls{ir}, debugger, a variety of machine backends, \etc
