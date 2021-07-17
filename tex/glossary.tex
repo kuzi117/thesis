@@ -57,6 +57,11 @@
   }
 ]{cpi}{CPI}{Cycles Per Instruction}
 
+% D
+\longnewglossaryentry{dead}{name={Dead}, text={dead}}{
+  A value is said to be dead at a \gls{point} in a program when there is no possible future use for it, i.e. it is not \gls{live}.
+}
+
 % F
 \newacronym[
   description={
@@ -180,6 +185,9 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 ]{ppc}{PPC}{Power PC}
 
 % R
+\longnewglossaryentry{rematerialisation}{name={Rematerialisation},text={rematerialisation}}{
+  The process of computing a value multiple times rather than leaving it in a register or \glslink{spill}{spilling} it.
+}
 \newacronym[
   description={
     A computer focused on a small, simple, and optimised instruction set meant to enable the processor's pipeline to have a low \gls{cpi}.
@@ -187,9 +195,6 @@ The procedure involves combining all \glspl{object file} into a single binary, r
 ]{risc}{RISC}{Reduced Instruction Set Computer}
 
 % S
-\longnewglossaryentry{rematerialisation}{name={Rematerialisation},text={rematerialisation}}{
-  The process of computing a value multiple times rather than leaving it in a register or \glslink{spill}{spilling} it.
-}
 \newacronym[
   description={
     Used to describe an architecture with data-level parallelism capabilities, \ie able to perform the same operation on multiple units of data simultaneously.
