@@ -31,13 +31,13 @@ An accumulator, in all interactions with \gls{mma}, can be thought of as a singl
 Accumulators may be assembled (initialised) in three manners:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item set to zeroes (\code{xxsetaccz}, Set Acc to Zero)
-  \item constructed from four consecutive VSRs (\code{xxmtacc}, Move To Acc)
+  \item constructed from four consecutive \glspl{vsr} (\code{xxmtacc}, Move To Acc)
   \item a multiplication instruction that does not accumulate (see \rsec{matMulMMA})
 \end{enumerate*}
-When constructing from VSRs, each VSR is moved into the ACC and becomes one row\footnotemark of the resulting accumulator.
+When constructing from \glspl{vsr}, each \gls{vsr} is moved into the ACC and becomes one row\footnotemark of the resulting accumulator.
 \footnotetext{Viewing the vectors as rows is intuitively convenient, but relatively arbitrary in reality. See \rsec{arbitraryOrder} for use as columns.}
 
-In its current iteration, accumulator $n$ is the logical grouping of four 128-bit VSRs (\code{VSR[4n:4n+3]}) into a single register.
+In its current iteration, accumulator $n$ is the logical grouping of four 128-bit \glspl{vsr} (\code{VSR[4n:4n+3]}) into a single register.
 As such, the four underlying registers used to construct the accumulator are unavailable for use while the accumulator is in an assembled state.
 For example, \code{VSR[0:3]} are unavailable while \code{ACC[0]} is assembled.
 This blocking effect also applies to the underlying registers when assembling an accumulator to zeroes.
@@ -71,14 +71,14 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
 \footnotetext{Google's Brain floating point format~\autocite{wang2019bfloat16}.}
 
 \rtab{mmaInsts} shows all seven of the datatypes usable with \gls{mma}.
-Instructions are given three arguments: an accumulator and two VSRs.
-Considering the simplest example, single-precision floating point, a four-element row or column fills the entire VSR ($32\text{bits} \times 4 = 128\text{bits}$).
+Instructions are given three arguments: an accumulator and two \glspl{vsr}.
+Considering the simplest example, single-precision floating point, a four-element row or column fills the entire \gls{vsr} ($32\text{bits} \times 4 = 128\text{bits}$).
 Thus, two length-four vectors are multiplied in an outer product, creating the computation \matmul{4}{1}{4}.
 Recalling \rsec{outerProduct}, this is a rank-1 update to the accumulator.
 
-Halving the size of the type to 16 bits means the argument VSRs are underutilised at half capacity.
+Halving the size of the type to 16 bits means the argument \glspl{vsr} are underutilised at half capacity.
 Accumulators cannot be expanded and are always $4 \times 4$ matrices of 32-bit elements.
-Thus, to increase utilisation of VSRs, the number of elements contained in each VSR is doubled resulting in doubling the number of rows or columns in a VSR.
+Thus, to increase utilisation of \glspl{vsr}, the number of elements contained in each \gls{vsr} is doubled resulting in doubling the number of rows or columns in a \gls{vsr}.
 Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, now performing a rank-2 update to the accumulator.
 The same logic applies for eight- and four-bit types, computing rank-4 and rank-8 updates respectively.
 
@@ -96,7 +96,7 @@ The same logic applies for eight- and four-bit types, computing rank-4 and rank-
   \label{tab:accSign}
 \end{table}
 
-An instruction without a suffix (first column of \rtab{mmaInsts}) will both assemble the given accumulator and overwrite it with the outer product of the two VSRs.
+An instruction without a suffix (first column of \rtab{mmaInsts}) will both assemble the given accumulator and overwrite it with the outer product of the two \glspl{vsr}.
 Afterward, to accumulate into the accumulator, each datatype has a ``family'' of instructions offering different semantics.
 Four instruction suffixes are available: \code{pp}, \code{pn}, \code{np}, \code{nn}.
 The \code{p} and \code{n} stand for positive and negative respectfully.
@@ -119,7 +119,7 @@ Masks disables only the application of computed values to the accumulator, not t
 \label{sec:doubles}
 When all other computations produce a 32-bit value, essentially gaining precision or remaining at the same precision, it would be unreasonable to force computations with 64-bit values to lose precision.
 Therefore, when working with double-precision floats, accumulators become $4 \times 2$ arrays rather than the usual $4 \times 4$.
-The change in data size affects the argument VSRs as well: a single VSR now fits only two values.
+The change in data size affects the argument \glspl{vsr} as well: a single \gls{vsr} now fits only two values.
 Thus, in order to compute a rank-1 update, the first dimension requires four values, spread across two registers, while the second dimension now requires two values in a single register.
 
 \section{Matrix Engine Comparison}

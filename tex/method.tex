@@ -136,11 +136,11 @@ Nevertheless, these restrictions create a simple scenario enabling a foundationa
 \todo{Find a better title.}
 In addition to the software constraints described in \rsec{matMulInt}, an efficient MMA lowering must take into account the following hardware constraints:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\fbox{\arabic*}]
-  \item eight accumulators are available per thread and for each accumulator that is used, the usage of four VSRs are blocked;
-  \item there are 64 VSRs, thus if eight accumulators are used, there are 32 VSRs remaining to contain data from input matrices;
+  \item eight accumulators are available per thread and for each accumulator that is used, the usage of four \glspl{vsr} are blocked;
+  \item there are 64 \glspl{vsr}, thus if eight accumulators are used, there are 32 \glspl{vsr} remaining to contain data from input matrices;
   \item two multiply-and-accumulate outer-product instructions can be issued per single cycle;
   \item the issue-to-issue latency for the same accumulator is four cycles;
-  \item spilling an accumulator to memory is an expensive operation because it requires an instruction to disassemble the accumulator into four VSRs, four vector store instructions and, later, four vector load instructions.
+  \item spilling an accumulator to memory is an expensive operation because it requires an instruction to disassemble the accumulator into four \glspl{vsr}, four vector store instructions and, later, four vector load instructions.
 \end{enumerate*}
 
 \begin{figure}[t]
@@ -277,11 +277,11 @@ The following loop (line~\ref{unrollLoopStart}) iterates from $0$ to $K-1$, extr
 For each value of \code{k}, using the accumulator assignment shown in \rfig{intrinsic}, the algorithm extracts two operands from \code{ATile} (lines~\ref{VextractLoop}-\ref{aOps}) and four operands from \code{BTile} (lines~\ref{HextractLoop}-\ref{bOps}).
 For $\text{\code{k}}=0$ the operands are extracted from the leftmost column of \code{ATile} and from the topmost row of \code{BTile} in \rfig{intrinsic}.
 The algorithmic presentation in \ralg{intrinsic} uses the notation \code{ATile[}$\text{\code{v}} \times 4$\code{][k]} and \code{BTile[}$\text{\code{h}} \times 4$\code{][k]} to denote the index where operand vector starts.
-These operands are extracted to virtual IR registers; the actual VSRs to be used will be determined later by a register-allocation pass.
+These operands are extracted to virtual IR registers; the actual \glspl{vsr} to be used will be determined later by a register-allocation pass.
 
-In \rfig{intrinsic} each operand is formed by four elements and, once extracted, occupies one 128-bit VSR.
-Given constraints \fbox{1} and \fbox{2}, with the choice of $K = 5$, there are enough non-blocked VSRs to contain all the thirty operands needed for the computation illustrated in \rfig{intrinsic}.
-Thus, laying out the accumulators in this $2 \times 4$ pattern maximises the reuse of values loaded into the VSRs: operands extracted from \code{ATile} are reused four times and operands extracted from \code{BTile} are reused two times.
+In \rfig{intrinsic} each operand is formed by four elements and, once extracted, occupies one 128-bit \gls{vsr}.
+Given constraints \fbox{1} and \fbox{2}, with the choice of $K = 5$, there are enough non-blocked \glspl{vsr} to contain all the thirty operands needed for the computation illustrated in \rfig{intrinsic}.
+Thus, laying out the accumulators in this $2 \times 4$ pattern maximises the reuse of values loaded into the \glspl{vsr}: operands extracted from \code{ATile} are reused four times and operands extracted from \code{BTile} are reused two times.
 
 Once this iteration's operands are extracted, the algorithm then iterates over the accumulators (lines~\ref{computeLoop1}-\ref{computeLoop2}) and creates a call to the \gls{mma} \gls{builtin}, computing a single accumulation in each.
 Following constraint \fbox{3}, two outer-product instructions can be issued each cycle.
@@ -335,10 +335,10 @@ Thus, all operations begin from the ``same'' zeroed out accumulator, at least wi
 
 The \code{<512 x i1>} return type of \code{xxsetaccz} normally refers to a 512-length vector of one-bit integers.
 However, backend developers have co-opted the type to represent an \gls{mma} accumulator when certain flags are set.
-There also exists a separate type which represents a VSR for use with \gls{mma} \glspl{intrinsic} but its use was removed from \rlst{unrolled} to facilitate reading\footnotemark.
+There also exists a separate type which represents a \gls{vsr} for use with \gls{mma} \glspl{intrinsic} but its use was removed from \rlst{unrolled} to facilitate reading\footnotemark.
 \footnotetext{
-  VSRs are represented by \code{<16 x i8>}, a 16-element vector of bytes.
-  In the true result \gls{ir}, shuffles produce four-element vectors of floats which are bit-casted (same bit-width) to the VSR type which is then consumed by the intrinsics.
+  \glspl{vsr} are represented by \code{<16 x i8>}, a 16-element vector of bytes.
+  In the true result \gls{ir}, shuffles produce four-element vectors of floats which are bit-casted (same bit-width) to the \gls{vsr} type which is then consumed by the intrinsics.
 }
 
 Line~\ref{aShuffle1} shows the extraction of the first operand from \code{ATile} via a shuffle instruction.
@@ -369,21 +369,21 @@ This process continues with each accumulation, creating a chain of return values
 \subsection{Other Data Types}
 \label{sec:dataTypes}
 \bk{Do I need to cut some of this out now that it's explained in \rsec{matMulMMA}?}
-The presentation so far has assumed 32-bit data types where each operand VSR contains 4 elements and an MMA instruction computes a rank 1 update, computing and accumulating a single outer product.
-Halving the data-type size doubles the number of elements in each VSR and doubles the rank of the update.
+The presentation so far has assumed 32-bit data types where each operand \gls{vsr} contains 4 elements and an MMA instruction computes a rank 1 update, computing and accumulating a single outer product.
+Halving the data-type size doubles the number of elements in each \gls{vsr} and doubles the rank of the update.
 For example, for a 16-bit data type, MMA computes a rank 2 update while an 8-bit data type computes a rank 4 update.
-The packing of more elements into a single VSR and the accumulation of multiple outer products by a single MMA instruction requires changes \ralg{intrinsic}.
+The packing of more elements into a single \gls{vsr} and the accumulation of multiple outer products by a single MMA instruction requires changes \ralg{intrinsic}.
 Let $p$ be the number of outer products performed by an MMA instruction --- \ie the rank of the update.
-Now the step size of the loop on line~\ref{unrollLoopStart} must be $p$ because, in \rfig{intrinsic}, $p$ rows of a vertical section of \code{BTile} and $p$ columns of horizontal section of \code{ATile} are packed into each VSR.
+Now the step size of the loop on line~\ref{unrollLoopStart} must be $p$ because, in \rfig{intrinsic}, $p$ rows of a vertical section of \code{BTile} and $p$ columns of horizontal section of \code{ATile} are packed into each \gls{vsr}.
 The extraction of operands in lines~\ref{aOps} and \ref{bOps} is now a strided access.
-For instance, for $p=2$ (16-bit data types), four consecutive elements are extracted from row $k$ and four consecutive elements are extracted from row $k+1$ to form the 128-bit VSR.
-The length of $K$ must increase by $p$ times to provide enough data to populate the VSRs.
+For instance, for $p=2$ (16-bit data types), four consecutive elements are extracted from row $k$ and four consecutive elements are extracted from row $k+1$ to form the 128-bit \gls{vsr}.
+The length of $K$ must increase by $p$ times to provide enough data to populate the \glspl{vsr}.
 The effect is that more partial-product accumulations can be computed per micro-kernel invocation given the same number of assemblies and disassemblies because the number of multiplications per outer product increases by $p$.
 
 For the double-precision floating-point data type, an accumulator contains $4 \times 2$ 64-bit elements.
-The operand extracted from \code{ATile} is placed into a combination of two VSRs that each contain two elements, collectively four, while the operand extracted from \code{BTile}, now only two elements, is placed into a single 128-bit VSR.
-Therefore, for double-precision floats, the value of $N$ should be reduced by half to reflect the number of VSRs available.
-With this reduction, an \code{ATile} tile occupies 16 VSRs and a \code{BTile} tile also occupies 16 VSRs.
+The operand extracted from \code{ATile} is placed into a combination of two \glspl{vsr} that each contain two elements, collectively four, while the operand extracted from \code{BTile}, now only two elements, is placed into a single 128-bit \gls{vsr}.
+Therefore, for double-precision floats, the value of $N$ should be reduced by half to reflect the number of \glspl{vsr} available.
+With this reduction, an \code{ATile} tile occupies 16 \glspl{vsr} and a \code{BTile} tile also occupies 16 \glspl{vsr}.
 The extraction of operands into vector registers in lines~\ref{aOps} and~\ref{bOps} of \ralg{intrinsic} must be changed accordingly.
 
 \subsection{Arbitrary Values for \texorpdfstring{$M$}{M}, \texorpdfstring{$K$}{K}, \texorpdfstring{$N$}{N}}
@@ -406,11 +406,11 @@ The code-lowering algorithm also supports inputs and outputs in any access order
 
 Operands from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
 Without loss of generality, consider extracting an operand from \code{Atile}.
-Using the notation from \rsec{dataTypes}, the final operand VSR must be a row-major $4 \times p$ matrix.
-Given a column-major matrix argument to the intrinsic, we can extract $p$ length-four vectors from the columns and then interleave (also called zip) them to produce the VSR.
+Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times p$ matrix.
+Given a column-major matrix argument to the intrinsic, we can extract $p$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
 The interleaving essentially converts the data access order from column major to row major.
-If the operand matrix is row major, we can extract four length-$p$ vectors from the rows and then concatenate to produce the VSR.
-In the case of 32- or 64-bit data types, these operations appear to the contrary, but the truth remains that an argument VSR extracted from \code{ATile} is actually four one-element rows not one four-element column.
+If the operand matrix is row major, we can extract four length-$p$ vectors from the rows and then concatenate to produce the \gls{vsr}.
+In the case of 32- or 64-bit data types, these operations appear to the contrary, but the truth remains that an argument \gls{vsr} extracted from \code{ATile} is actually four one-element rows not one four-element column.
 
 \bk{
   I have a feeling that I'll need a diagram proving that transposition == access order change in regards to underlying element order.
