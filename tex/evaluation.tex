@@ -48,8 +48,8 @@ This variant contains several platform specific, targeted optimisations focused 
     \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$n_0$ iters} +(2, 0);
     \draw[decorate, decoration={brace}, align=center, shift={(2.125, 0)}] (0, 0) -- node[above=2] {$n_1$ iters} +(2, 0);
     \node[shift={(4.5, 0)}] {$\ldots$};
-    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n_{100}$ iters} +(2, 0);
-    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {100 repeats} +(4.875, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n_{24}$ iters} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {25 repeats} +(4.875, 0);
     \foreach \x in { 0, 2.125, 4.875 }
     {
       \pgfmathsetmacro{\xStart}{\x + 0.1}
@@ -84,7 +84,7 @@ While a single second may seem short, for the longest-running kernel presented (
 For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
 
 In \rfig{execution}, producing one measurement (\ie completing $n$ iterations of the loop) corresponds to a single of the lower braces labeled ``$n_i$ iters''.
-A total of 100 hundred measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
+A total of 25 measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
 Repetitions vary $n$ slightly because the timing iterations may produce slightly different base times, changing the iteration count.
 
 The framework presents statistics for each of the 10 loops including wall clock time, \gls{cpu} time, and cycles.
