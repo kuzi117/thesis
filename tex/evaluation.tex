@@ -45,11 +45,11 @@ This variant contains several platform specific, targeted optimisations focused 
 \begin{figure}[t]
   \centering
   \begin{tikzpicture}[scale=1]
-    \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
-    \draw[decorate, decoration={brace}, align=center, shift={(2.125, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$n_0$ iters} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(2.125, 0)}] (0, 0) -- node[above=2] {$n_1$ iters} +(2, 0);
     \node[shift={(4.5, 0)}] {$\ldots$};
-    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
-    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {10 repeats} +(4.875, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n_{100}$ iters} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {100 repeats} +(4.875, 0);
     \foreach \x in { 0, 2.125, 4.875 }
     {
       \pgfmathsetmacro{\xStart}{\x + 0.1}
@@ -63,16 +63,16 @@ This variant contains several platform specific, targeted optimisations focused 
   \label{fig:execution}
 \end{figure}
 
-Every result presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
+Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
 \footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
-The framework implements a method of timing a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
-The loop will only exit when the results collected have been executed enough times to obtain statistical stability.
+A sinlge measurement is the result of timing the execution of a kernel many times until statistical stability is obtained.
+The framework implements a method of measuring a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
+The loop will only exit when the kernel been executed enough times.
 
-To achieve this, an execution count, $n$, is determined by
+To achieve this, a loop trip count, $n$, is determined by
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
   \item timing several executions of the benchmark
-  \item multiplying the required time (set at one second\footnotemark) by $1.4$
-  \footnotetext{One second is double the default, suggested half-second time-limit.}
+  \item multiplying the required time (set at one second\footnote{One second is double the default, suggested half-second time-limit.}) by $1.4$
   \item dividing by the average execution time of those executions
 \end{enumerate*}
 \footnotetext{This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
@@ -83,9 +83,9 @@ For the kernels benchmarked in this chapter, which have very little variation, t
 While a single second may seem short, for the longest-running kernel presented (\atilde\SI{81}{\textit{\micro\second}}), this still results in roughly 17000 executions.
 For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
 
-In \rfig{execution}, completing $n$ iterations of the loop corresponds to a single of the lower braces labeled ``$n$ kernels''.
-This timing process is then repeated another nine times, the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
-Each repetition uses exactly the same number of executions; $n$ is not recalculated.
+In \rfig{execution}, producing one measurement (\ie completing $n$ iterations of the loop) corresponds to a single of the lower braces labeled ``$n_i$ iters''.
+A total of 100 hundred measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
+Repetitions vary $n$ slightly because the timing iterations may produce slightly different base times, changing the iteration count.
 
 The framework presents statistics for each of the 10 loops including wall clock time, \gls{cpu} time, and cycles.
 \bk{I think I can add instructions retired if it's a good idea.}
