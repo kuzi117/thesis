@@ -64,6 +64,8 @@
 }
 \renewcommand\lstlistlistingname{List of Listings}
 \usepackage{soul} % strikethrough
+\usepackage{siunitx}
+\usepackage{textcomp}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing}
 \usetikzlibrary{matrix}
@@ -183,6 +185,9 @@ mincitenames=1,maxcitenames=2%
 \newcommand{\new}[1]{\textcolor{green}{#1}}
 \newcommand{\ed}[1]{\textcolor{violet}{#1}}
 \newcommand{\todo}[1]{\textcolor{magenta}{(#1)}}
+
+% Tilde correction.
+ \newcommand{\atilde}{\raisebox{0.5ex}{\texttildelow}}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Title page and Table of Contents Tweaks %

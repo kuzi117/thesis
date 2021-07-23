@@ -8,36 +8,105 @@
 
 \chapter{Evaluation}
 \label{cha:evaluation}
-This section presents an evaluation of the implementation developed in \rcha{method}.
+This chapter presents an evaluation of the implementation developed in \rcha{method}.
 The results presented also represent one of the first evaluations of \gls{power10}'s \gls{mma} facility.
 Given that the evaluation was performed on test~\bk{There's a better word for this, I'm sure.} hardware, the results are expected to be representative of the hardware that will eventually be available to consumers but not exactly the same.
 This could be due to anything from frequency changes to firmware changes or actual silicon changes.
 
-\section{Experimental Methodology}
-\begin{itemize}
-  \item
-    Machine info:
-    \begin{itemize}
-      \item CPU used (P10 obviously).
-      \item Frequencies (if we can?).
-      \item Cache properties (hopefully available).
-      \item Main memory properties.
-    \end{itemize}
-  \item
-    Experimental procedure.
-    \begin{itemize}
-      \item Run count.
-      \item Run order.
-    \end{itemize}
-  \item
-    LLVM info.
-      \begin{itemize}
-        \item All matrix inputs to \code{llvm.matrix.multiply} are column major.
-        \item Could be row major.
-      \end{itemize}
-\end{itemize}
+\section{Experimental Setup}
+This section presents details on resources used and processes performed to produce the results in \rsec{caveats} and onwards.
+
+\subsection{Machine Details}
+Experiments were conducted on a \gls{power10} machine provided by \gls{ibm}.
+The processor is not yet available to the public but relevant details are presented in \rtab{machineInfo}.
+The listed core counts are per socket while the thread counts are per core.
+The machine runs Linux with a 64-bit kernel at version 5.10.0-17496-g41bc5268c5e8.
+
+\begin{table}[t]
+  \centering
+  \begin{tabular}{c | c}
+    & IBM POWER10\\\hline
+    Cores/Threads & 15/8\\
+    L1i cache & 720KiB\\
+    L1d cache & 480KiB\\
+    Frequency & 3.65 GHz\\
+  \end{tabular}
+  \caption{POWER10 machine info.}
+  \label{tab:machineInfo}
+\end{table}
+
+\subsection{Compilation}
+All binaries are compiled with Clang version 13.0.0\footnotemark at the highest optimisation level (\code{-O3}) and are tuned to the processor (\code{-mcpu=pwr10}).
+\footnotetext{At time of writing this is a development version.}
+Because support for \gls{power10} was not available in mainstream \gls{llvm} when this work began, it has been implemented as part of \glslink{ibm}{IBM's} variant of \gls{llvm} which did have support.
+This variant contains several platform specific, targeted optimisations focused on improving \gls{power} code; these have all been disabled so that results are representative of mainstream \gls{llvm}.
+
+\subsection{Experimental Methodology}
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[scale=1]
+    \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(2.125, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
+    \node[shift={(4.5, 0)}] {$\ldots$};
+    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n$ kernels} +(2, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {10 repeats} +(4.875, 0);
+    \foreach \x in { 0, 2.125, 4.875 }
+    {
+      \pgfmathsetmacro{\xStart}{\x + 0.1}
+      \foreach \i in {0,...,18}
+      {
+        \draw[shift={(\xStart + \i * 0.1, -0.1)}] (0, 0) -- +(0, -0.3);
+      }
+    }
+  \end{tikzpicture}
+  \caption{Experiment execution process.}
+  \label{fig:execution}
+\end{figure}
+
+Every result presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
+\footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
+The framework implements a method of timing a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
+The loop will only exit when the results collected have been executed enough times to obtain statistical stability.
+
+To achieve this, an execution count, $n$, is determined by
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
+  \item timing several executions of the benchmark
+  \item multiplying the required time (set at one second\footnotemark) by $1.4$
+  \footnotetext{One second is double the default, suggested half-second time-limit.}
+  \item dividing by the average execution time of those executions
+\end{enumerate*}
+\footnotetext{This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
+The true process is more iterative and tries mulitple values in order to produce a conservative estimate for benchmarks with variation in their execution times.
+For the kernels benchmarked in this chapter, which have very little variation, this is an accurate summary of the process.
+
+\bk{Double check these numbers when they're finalised.}
+While a single second may seem short, for the longest-running kernel presented (\atilde\SI{81}{\textit{\micro\second}}), this still results in roughly 17000 executions.
+For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
+
+In \rfig{execution}, completing $n$ iterations of the loop corresponds to a single of the lower braces labeled ``$n$ kernels''.
+This timing process is then repeated another nine times, the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
+Each repetition uses exactly the same number of executions; $n$ is not recalculated.
+
+The framework presents statistics for each of the 10 loops including wall clock time, \gls{cpu} time, and cycles.
+\bk{I think I can add instructions retired if it's a good idea.}
+It also presents overall statistics between each of the ten runs: mean, median, and standard deviation.
+These overall statistics are the values presented throughout the coming sections.
+Vertical bars in plots represent the overall mean while error bars represent the 95\% confidence interval derived from the standard deviation.
+Tables accompany each plot with execution count ($n$), mean \gls{cpu} time, mean cycles, and their respective confidence intervals.
+
+\subsection{Types Missing From Analysis}
+Three types are missing from the following analysis for different reasons.
+The \code{i4} and \code{bfloat} types use the same \gls{ir} code generation code paths as every other type except \code{double}.
+Given that the implemented logic works for \code{i8}, \code{i16}, \code{half}, and \code{float}, it is likely that the code generated for them is functional and as performant as the other types.
+However, while translating to assembly, the backend produces either incorrect code (\code{i4}) or an error (\code{bfloat}).
+Both issues have been acknowledged by the developer team and will be fixed in future versions of \gls{llvm}.
+
+For \code{double}, the changed operation dimensions cause a signficant divergence in code generation logic that otherwise applies to all other types usable with \gls{mma}.
+Due to the constraints of the surrounding framework, it was decided early on that development efforts should be focused on an algorithm that worked for six of the seven types.
+The method presented in \rcha{method} can easily be applied to \code{float} but its \gls{lowering} implementation will be a noticeable variant of the original code.
 
 \section{Caveats}
+\label{sec:caveats}
 The results presented in \todo{link future results section} are unexpected and less than ideal.
 However, the cause of the lackluster performance, in general, is not a result of the implementation presented in \rcha{method}.
 Instead, missed performance can be traced to several factors in the backend code generator as well as limitations inherent in the surrounding framework.
