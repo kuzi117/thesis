@@ -189,6 +189,10 @@ mincitenames=1,maxcitenames=2%
 % Tilde correction.
  \newcommand{\atilde}{\raisebox{0.5ex}{\texttildelow}}
 
+% Circle number.
+\newcommand*\circled[1]{\tikz[baseline=(char.base)]{
+    \node[shape=circle,draw,inner sep=2pt] (char) {#1};}}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Title page and Table of Contents Tweaks %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
