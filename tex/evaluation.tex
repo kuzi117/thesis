@@ -325,21 +325,19 @@ This may seem like a defeatist notion but is actually a tried-and-true approach 
 The average user interacts with a compiler through a high-level language, not its \gls{ir}.
 Thus, the frontend will choose the fastest solution to implement a user's code; if the fastest implementation is a small kernel encapsulated by an outer kernel then that is what will be chosen.
 With this notion, optimisation can be focused on this most common case for which a solution is known.
-A larger kernel will always remain usable but it will be less performant.
+A larger inner-kernel will always remain usable but it will be less performant.
 
 Furthermore, the most performant library implementations focus on using small unrolled assembly kernels, often computing kernels with dimensions of four to eight elements.
 These small kernels are then surrounded by memory-managing outer kernels as described in \rsec{outerKernel}.
 This is exactly what Kuzma \etal~\autocite{kuzma2021fast} do while using the inner kernel presented in this thesis with results comparable to libraries with kernels written in assembly.
 In this way, using only smaller kernels can be seen as a well-worn path to performance.
 
-If a larger kernel \emph{must} be used, significant investigation must be done to test load scheduling and to know the cost of operand \gls{rematerialisation}.
-It is unlikely that such a solution will be found within the \gls{ir} because it is in \gls{ssa} form.
-Because
-\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={,}]
-  \item \gls{ssa} makes it very easy to trace the process behind generating a value, easily identifying identical values
-  \item \gls{llvm} automatically folds identical values together
+If a larger kernel \emph{must} be used, significant investigation must be done to test load scheduling, value \gls{rematerialisation}, load breaking, and, if necessary, load recombination.
+It is unlikely that such a solution will be found within the \gls{ir} because .
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={.}]
+  \item it is in \gls{ssa} form which often folds identical values together without consideration for the times when a value is \gls{live}
+  \item for better or worse, the backend does not have to respect \gls{ir} operation order
 \end{enumerate*}
-it is impossible to ``duplicate'' a value in order to manually \glslink{rematerialisation}{rematerialise} a value.
 Such a solution will have to be found in the backend.
 
 \subsubsection{Shuffling}
@@ -352,9 +350,9 @@ The data can again be casted back to \code{half} at no cost when it needs to be 
 In theory, this produces much better assembly but may also trigger a very conservative response in the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
 
 The sub-byte granularity of \code{i4} vectors pose a different problem.
-Performant shuffling code for \code{i4} is nearly an impossibility.
+Performant shuffling code for \code{i4} in the same style as the larger types is an impossibility.
 Instead, clever use of bitwise operations will have to explicitly be used to implement efficient element extraction and movement.
-Depending on the implementation of cost analysis, this may or may not improve the cost of \gls{rematerialisation}, potentially reducing spills in larger kernels.
+Bitwise operations can be applied across an entire vector register, removing the need for scalarisation and improving register usage by reducing the number of required intermediate registers.
 
 \subsubsection{Evaluation Disclaimer}
 All evaluation presented in future sections have no targeted optimisations applied.
