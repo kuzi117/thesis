@@ -1,9 +1,14 @@
-import os
+import json
 import math
 import numpy as np
+import os
 import scipy.stats as st
+from scipy.stats.mstats import gmean
 
-version = '2.0'
+version = '2.4.0'
+
+# Text width in inches.
+textWidth = 5.50107
 
 vregSize = 128
 
@@ -35,7 +40,7 @@ def getFileStats(logFile, confidence=0.95):
   if not os.path.exists(logFile):
     print(f'The file "{logFile}" does not exist.')
     print('Returning zeroes.')
-    return (0, (0, 0))
+    return (0, 0, 0)
 
   # Get times.
   times = []
@@ -47,6 +52,58 @@ def getFileStats(logFile, confidence=0.95):
   mean = np.mean(times)
   lower, upper = st.t.interval(confidence, len(times) - 1, loc=mean, scale=st.sem(times))
   return (mean, mean - lower, upper - mean)
+
+def getJsonStats(logFile, confidence=0.95):
+  '''
+  Takes a path to a json log file.
+  Returns a tuple of (iterations, cpu time, cycles).
+  '''
+  if not os.path.exists(logFile):
+    print(f'The file "{logFile}" does not exist.')
+    print('Returning zeroes.')
+    return (0, 0, 0)
+
+  with open(logFile, 'r') as f:
+    objects = json.load(f)
+
+  benchmarks = objects['benchmarks']
+  assert len(benchmarks) == 1, 'Too many benchmark entries'
+  benchmark = benchmarks[0]
+
+  iterations = benchmark['iterations']
+  cycles = benchmark['CYCLES']
+  cpu_time = benchmark['cpu_time']
+
+  return (iterations, cpu_time, cycles)
+
+def getJsonCumulativeStats(fmtLogPath, count, confidence=0.95):
+  '''
+  Takes a log path with containing a single formattable field for count.
+  '''
+  # Holding place for data.
+  iterList = []
+  timeList = []
+  cycleList = []
+
+  # Gather data.
+  for i in range(count):
+    logPath = fmtLogPath.format(i)
+    iterations, cpuTime, cycles = getJsonStats(logPath)
+    iterList.append(iterations)
+    timeList.append(cpuTime)
+    cycleList.append(cycles)
+
+  mean = lambda l: sum(l) / len(l)
+  def ci(l):
+    m = mean(l)
+    lower, upper = st.t.interval(confidence, len(l) - 1, loc=m, scale=st.sem(l))
+    return (m - lower, upper - m)
+
+  iterResults = (mean(iterList), *ci(iterList))
+  timeResults = (mean(timeList), *ci(timeList))
+  cycleResults = (mean(cycleList), *ci(cycleList))
+
+  return (iterResults, timeResults, cycleResults)
 
 def plotGroupedData(ax, groupLabels, barLabels, bars, errs):
   '''
@@ -60,18 +117,18 @@ def plotGroupedData(ax, groupLabels, barLabels, bars, errs):
   errs: error bounds. A list of lists of endpoints for each bar type
   '''
   # Sanity check.
-  assert len(bars) > 0, "No groups to plot."
+  assert len(bars) > 0, 'No groups to plot.'
   assert len(bars) == len(errs), \
-    "Different number of bar groups and error groups."
+    'Different number of bar groups and error groups.'
   assert len(bars) == len(barLabels), \
-    "Different number of bars and bar labels."
+    'Different number of bars and bar labels.'
   for bar in bars:
-    assert len(bar) > 0, "No data for bar."
+    assert len(bar) > 0, 'No data for bar.'
     for err in errs:
       assert len(bar) == len(err[0]), \
-        "Different number of bars and errors within group."
+        'Different number of bars and errors within group.'
     assert len(groupLabels) == len(bar), \
-      "Different number of bar groups and bar labels."
+      'Different number of bar groups and bar labels.'
 
   # Get spacing.
   groupBarCount = len(bars)
@@ -100,5 +157,34 @@ def plotGroupedData(ax, groupLabels, barLabels, bars, errs):
   ax.set_ylim(0, maximum)
   ax.set_yticks(np.arange(0, maximum, yInterval))
 
-  # Setup legend.
-  # ax.legend(frameon=False)
+def tableData(rows):
+  '''
+  Takes a 2-tuple of (name, data) where data is a 6-tuple of (mean iterations,
+  95% CI difference, mean cpu time, 95% CI difference, mean cycles, 95% CI
+  difference).
+
+  Returns a fully formed tabular environment with four columns:
+  --------------------------------
+  | Name | n | CPU Time | Cycles |
+  --------------------------------
+
+  where n, CPU Time, and Cycles are formated as "mean +- 95%CI".
+  '''
+  header = \
+    '\\makebox[\\textwidth][c]{\n' \
+    '  \\begin{tabular}{| c | c | c | c |}\n' \
+    '    \hline\n' \
+    '    Name & $n$ & CPU Time (\\SI{}{\\textit{\\nano\\second}}) & Cycles\\\\\\hline\n'
+  footer = \
+    '  \\end{tabular}\n}'
+
+  table = header
+
+  for name, (iters, itersCI, cpuTime, cpuCI, cycles, cyclesCI) in rows:
+    table += \
+      f'    {name} & ${iters:0.2f} \pm {itersCI:0.2f}$ & ${cpuTime:0.2f} \pm ' \
+      f'{cpuCI:0.2f}$ & ${cycles:0.2f} \pm {cyclesCI:0.2f}$ \\\\\\hline\n'
+
+  table += footer
+
+  return table
