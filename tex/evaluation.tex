@@ -292,7 +292,8 @@ Several factors that lead shuffling to cause performance degradation are discuss
   I've spoken to Nemanja and it seems to be a backend issue; I've created a github issue for it and the backend team will look at it shortly.
 }
 \nelson{It this paragraph simply stating the currently the shuffling is incorrect?}
-The \code{i16} and \code{half} types have identical widths: a half word.
+\bk{No, the shuffling is correct, just needlessly conservative, choosing a very roundabout method to perform the shuffles, thus making it slow.}
+The \code{i16} and \code{half} types have identical widths: a halfword.
 Because \glspl{cpu} and their accompanying \glspl{isa} are type-agnostic and sensitive only to the width of a data element when implementing vector shuffles, shuffle code in the \gls{ir} that differs only in choice of 16-bit type should produce identical assembly.
 This is demonstrably untrue, however.
 The assembly code generated for \code{i16} executes roughly six vector loads and six vector permute instructions to produce all operands for a single accumulation in a full $2 \times 4$ accumulator layout.
@@ -303,13 +304,7 @@ First, the resulting accumulator vectors are truncated to the output data type.
 They are then concatenated together into a output flattened matrix and stored to memory.
 Concatenation is also achieved through shuffling and therefore experiences the same conservative code generation as before.
 The added truncation operation worsens the effect.
-All told, the epilogue for \code{half} is roughly ten times the length of same operation for \code{i16}.
-\bk{
-  I'm concerned there's an extra factor here in the truncation operation that needs to be considered.
-  Going from \code{i32} to \code{i16} uses a ``vector pack'' instruction which is effectively just takes two vectors and truncates every word to a half-word and packs both into a single vector.
-  I can't find a similar operation for the conversion from \code{f32} to \code{f16} which is a significantly more complicated process because the exponent bias is different.
-  This might mean that it \emph{must} be scalarised which, of course, entails a longer epilogue.
-}
+All told, the epilogue for \code{half} is roughly ten times the length of the same operation for \code{i16}.
 
 \subsubsection{Datatype: \texorpdfstring{\code{i4}}{i4}}
 For \code{i8}, degradations arise from \glspl{spill} due to extra register pressure but also from needing to merge four separate vectors (rank-four update).
