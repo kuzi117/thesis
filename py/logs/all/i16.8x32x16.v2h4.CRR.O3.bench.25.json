@@ -1,0 +1,56 @@
+{
+  "context": {
+    "date": "2021-07-23T17:27:03-05:00",
+    "host_name": "wyvernden6linux",
+    "executable": "./exe/i16.8x32x16.v2h4.CRR.O3.bench",
+    "num_cpus": 120,
+    "mhz_per_cpu": 512,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 4
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 49152,
+        "num_sharing": 4
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 1048576,
+        "num_sharing": 8
+      },
+      {
+        "type": "Unified",
+        "level": 3,
+        "size": 4194304,
+        "num_sharing": 8
+      }
+    ],
+    "load_avg": [0.85,0.77,0.74],
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "intrinsicMult",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "intrinsicMult",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 31559912,
+      "real_time": 4.4376551335182249e+01,
+      "cpu_time": 4.4376332354792368e+01,
+      "time_unit": "ns",
+      "CYCLES": 1.7729479109447453e+02,
+      "cs": 0.0000000000000000e+00
+    }
+  ]
+}
