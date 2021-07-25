@@ -404,7 +404,7 @@ This data gathering adds additional code and may impact access locality if the t
 \label{sec:arbitraryOrder}
 The code-lowering algorithm also supports inputs and outputs in any access order through modifications to the functions that extract operands and store the results in the accumulators to memory.
 
-Operands from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
+Operands in \gls{vsr} from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
 Without loss of generality, consider extracting an operand from \code{Atile}.
 Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times p$ matrix.
 Given a column-major matrix argument to the intrinsic, we can extract $p$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
@@ -420,11 +420,6 @@ Accumulators can change orientations using a simple mathematical theorem: given 
 This fact coupled with the knowledge that transposition and access order change is the same operation regarding element movement in memory, we begin by adding data ordering information to the equations: if $C_{RM}=A_{RM}B_{CM}$ then $C^T_{RM}=B^T_{CM}A^T_{RM}$.
 Now, focusing on the second equation, we can reduce the transpositions to changes in the data ordering to produce $C_{CM}=B_{RM}A_{CM}$.
 This means that a column major version of $COutput$ can be produced simply by swapping the operand registers -- no further processing required.
-
-\subsection{Extensions}
-\begin{itemize}
-  \item different matrix layouts.
-\end{itemize}
 
 \subsection{restrictions}
 \label{sec:restrictions}

@@ -318,6 +318,7 @@ This slow down negates much of the speed up that could be achieved via the \gls{
 This section presents potential solutions though it is unlikely that the ideas introduced will solve the performance degradations without further investigation and cooperation with the backend developers.
 
 \subsubsection{Spilling}
+\label{sec:spillSolution}
 The simplest solution to the noted \glslink{spill}{spilling} issues is for developers to focus on using only small kernels and, indeed, this is not so unreasonable a proposal as one might perceive it at first.
 While \gls{llvm} necessitates that certain sequences of \gls{ir} always be able to be lowered to assembly, it does not require that the code be as performant as possible, as is demonstrated by the above issues with shuffling \code{i4} vectors.
 This may seem like a defeatist notion but is actually a tried-and-true approach to performance in compilers: make the common case fast.
@@ -359,6 +360,85 @@ All evaluation presented in future sections have no targeted optimisations appli
 No tested solution positively affected all cases.
 Thus, all test cases use identical \gls{ir} generation logic with no special cases.
 The presented results are therefore equally advantaged and disadvantaged in code generation.
+
+\section{Varied Access Orders}
+As discussed in \rsec{outerKernel}, packing is incredibly important for matrix multiplication performance.
+An important part of packing, beyond choosing dimensions, is the choice of data access order.
+\rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr}.
+This inevitably translates to a sensitivity to the access order of the matrices in memory that provide the arguments in register.
+
+\subsection{Expectation}
+\label{sec:orderExpectation}
+For $A$, it is expected that data laid out in a column-major orientation is optimal.
+For \code{float}, while technically a row-major matrix when in \gls{vsr}, is indistinguishable from a single column of four elements.
+Thus, if $A$ is laid out in column-major order, an operand can be created with a single load and no waste.
+However, if $A$ is laid out in row-major order, it is likely the case that $K \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
+Therefore, to create an operand, four loads must be issued, one for each element of the operand.
+Further overhead is incurred to move elements into the vector register either from scalar registers if the four scalar loads were issued or to shuffle elements from four vectors that were loaded.
+Thus, a column-major order layout is highly preferred.
+The same logic can be applied to $B$, except that a row-major orientation is preferred.
+
+For smaller types, the logic is more complicated because the byte-length of the overall loaded data also shrinks.
+In the interest of not repeating much of the discussion in \rsec{caveats}, the same logic as above can be applied while acknowledging that as register usage efficiency decreases speedups also decrease.
+
+An interesting point of discussion exists for types \code{i8} and \code{i4} whose in-register dimensions are $4 \times 4$ and $4 \times 8$ respectively.
+Because two \code{i4} elements are packed into a byte, an eight-element vector is only four bytes.
+This means that both \code{i8} and \code{i4} require loading four four-byte vectors to provide the elements to fill a \gls{vsr}.
+Therefore, there will always be four loads issued whether the matrix that is being extracted from has a row-major or column-major order.
+In this case, it would seem that either orientation is therefore acceptable.
+This is true in the case that operands are being built in isolation.
+However, if one considers that several operands are being built simultaneously, loads can be combined to increase efficiency.
+Shuffle instructions do not decrease, only the indices from which shuffles extract elements in a vector change.
+This optimisation can have a small but noticeable impact on the results.
+
+Naively, $C$ optimally has a row-major orientation.
+This is simply because the simplest method of using \gls{mma} places the operand from $A$ as the first argument and the operand from $B$ as the second argument in the outer product instruction.
+When used in this way, the elements in the accumulator are oriented in a row-major fashion and, after disassembling, there is no extra work required before storing the underlying vectors to memory.
+Transposing the values so that they can be stored into a column-major output-matrix requires extra shuffles.
+However, with the theorem discussed in \rsec{arbitraryOrder}, it is shown that reversing the order of the arguments causes the result in the accumulator to be equivalent but in a column-major order.
+Thus, it is expected that either access order can be used for $C$ without loss of performance.
+
+\subsection{Setup}
+When using an unmodified version of \gls{llvm}, the access orders of $A$, $B$, and $C$ are tied together and must be equal.
+Thus two test cases, one all-column-major ($\textrm{C} = \textrm{C} \times \textrm{C}$) and another all-row-major ($\textrm{R} = \textrm{R} \times \textrm{R}$), constitute the baseline for the experiment.
+In order to test the performance of the hypothesised best mix of orientations, further modifications to the lowering framework were performed to enable the mixing of orientations.
+With this possibility enabled, two cases are added to the comparison: both use the proposed optimal layout for $A$ and $B$ but vary the layout of $C$ ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$)
+
+Each kernel uses a $2 \times 4$ accumulator setup and therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
+A total of 32 accumulations are performed each kernel, making the overall computation \matmul{8}{32}{16}.
+It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
+Given the discussion in \rsec{orderExpectation}, more accumulations implies more opportunities for a ``good'' orientation to outperform a bad orientation, effectively highlighting differences in performance.
+
+\subsection{Analysis}
+\begin{figure}[t]
+  \centering
+  \input{tex/figures/accessOrder.pgf}
+  \caption{The effect of matrix access order on performance.}
+  \label{fig:accessOrder}
+\end{figure}
+
+\rfig{accessOrder} visualises the results for this experiment.
+For \code{float}, \code{i16}, and \code{i8}, the numbers are inline with the hypothesised performance.
+The two order-locked variants perform worse than the optimal layout.
+Furthermore, between the two kernels whose $A$ and $B$ are laid out optimally, varying the access order of $C$ has no perceptible effect on performance.
+
+Based on the discussion in \rsec{orderExpectation}, it is also unsurprising to see the $\textrm{R} = \textrm{R} \times \textrm{R}$ test case outperform the $\textrm{C} = \textrm{C} \times \textrm{C}$ case.
+Given that the order of $C$ does no affect performance, the difference must be found in $A$ and $B$.
+In each case, one matrix is laid out ideally while the other is not.
+Because $B$ is twice the size of $A$, when it is laid out poorly the generated assembly suffers more than when a bad choice is made for $A$.
+Examining the generated assembly shows that for \code{float} the column only variant performs roughly 450 more instructions of ``setup'' (loading and shuffling values) before executing the first outer-product instruction; the generated code is effectively identical afterwards.
+This gap lessens as types become smaller due to the smaller overall amount of bytes being loaded, but the difference in performance remains.
+
+\subsubsection{\texorpdfstring{Evaluating \code{half}}{Evaluating half}}
+\bk{
+  I'm honestly not sure what to do about half.
+  The generated code is significantly worse and honestly sort of nonsensical.
+  Much of the operation is serialised in scalar registers but to different degrees.
+  That being said, I thought function length would at least be some sort of oracle for performance but it's not true.
+  I examined the code length and determined that $R \times R = R$ has the longest kernel by nearly 300 instructions and yet is the second fastest kernel.
+  Otherwise, code length matches with cycles.
+  It's to the point where I'm considering making an exception to my ``no extra optimisations applied'' rule just to get some reasonable data and avoid saying ``I don't know why'' in this section.
+}
 
 \section{More experiments}
 \begin{itemize}
