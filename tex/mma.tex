@@ -82,6 +82,79 @@ Thus, to increase utilisation of \glspl{vsr}, the number of elements contained i
 Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, now performing a rank-two update to the accumulator.
 The same logic applies for eight- and four-bit types, computing rank-four and rank-eight updates respectively.
 
+\subsection{Arguments in Register}
+\label{sec:registerArguments}
+Once the instruction is performing a rank-two update or greater, the order of the elements in the register must be considered.
+The \gls{power} \gls{isa} specifies that the first argument must have elements in row-major order while the second argument must have elements in column-major order.
+This enables simple circuit pathways where, for a rank-$r$ update, element $(i, j)$\footnotemark in $C$ accumulates with the dot product of the $r$-length group of elements in $A$ at offset $i \times r$ and in $B$ at $j \times r$.
+\footnotetext{Typical matrix notation uses one-indexing; this example uses zero-indexing.}
+
+\begin{figure}[t]
+  \hfill
+  \begin{subfigure}{.40\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      % A
+      \draw[pattern=north west lines, shift={(0, 3)}] (0, 0) rectangle +(2, 1);
+      \draw[xstep=1, ystep=1, shift={(0, 0)}, color={black!20!white}] (0, 0) grid +(2, 4);
+      \draw[xstep=2, ystep=1, shift={(0, 0)}] (0, 0) grid +(2, 4);
+
+      % B
+      \draw[pattern=dots, shift={(5, 5)}] (0, 0) rectangle +(1, 2);
+      \draw[xstep=1, ystep=1, shift={(3, 5)}, color={black!20!white}] (0, 0) grid +(4, 2);
+      \draw[xstep=1, ystep=2, shift={(3, 5)}] (0, 0) grid +(4, 2);
+
+      % C
+      \draw[pattern=crosshatch, shift={(5, 3)}] (0, 0) rectangle +(1, 1);
+      % \draw[pattern={Hatch[angle=45,distance={8pt},xshift=.2pt, line width=1.25]}, xstep=2, ystep=2, shift={(3, 6)}] (0, 0) rectangle +(8, 2);
+      \draw[xstep=1, ystep=1, shift={(3, 0)}, color={black!20!white}] (0, 0) grid +(4, 4);
+      \draw[xstep=4, ystep=4, shift={(3, 0)}] (0, 0) grid +(4, 4);
+
+      % Matrix labels.
+      \node[above] at (0, 4) {$A$};
+      \node[left] at (3, 7) {$B$};
+    \end{tikzpicture}
+    \caption{Arguments for an \code{i16} matrix shown contextually.}
+    \label{fig:registerArgumentsMatrix}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}{.4\linewidth}
+    \centering
+    \begin{tikzpicture}[scale=1/2]
+      % Spacer to move the diagram up.
+      \node[shift={(0, -.1)}] {};
+      \node[shift={(0, 3.1)}] {};
+      % A
+      \pgfmathsetmacro{\aOffset}{3.5}
+      \draw[pattern=north west lines, shift={(0, \aOffset)}] (0, 0) rectangle +(2, 1);
+      \draw[xstep=1, ystep=1, shift={(0, \aOffset)}, color={black!20!white}] (0, 0) grid +(8, 1);
+      \draw[xstep=2, ystep=1, shift={(0, \aOffset)}] (0, 0) grid +(8, 1);
+
+      % B
+      \draw[pattern=dots, shift={(4, 1)}] (0, 0) rectangle +(2, 1);
+      \draw[xstep=1, ystep=1, shift={(0, 1)}, color={black!20!white}] (0, 0) grid +(8, 1);
+      \draw[xstep=2, ystep=1, shift={(0, 1)}] (0, 0) grid +(8, 1);
+
+      % Matrix labels.
+      \node[left] at (0, 4) {$A$};
+      \node[left] at (0, 1.5) {$B$};
+    \end{tikzpicture}
+    \caption{Arguments for an \code{i16} shown in VSR.}
+    \label{fig:registerArgumentsVSR}
+  \end{subfigure}
+  \hfill
+  \caption{Element ordering in types smaller than \code{float} demonstrated using \code{i16}.}
+  \label{fig:registerArguments}
+\end{figure}
+
+\rfig{registerArgumentsMatrix} shows an example for \code{i16}.
+$A$ and $B$ are divided by dark lines according to their access order while lighter lines divide the elements within the vector.
+The first two elements of the operand from $A$, highlighted by diagonal lines, form a row while the first two elements from $B$, highlighted by dots, form a column.
+
+In \rfig{registerArgumentsVSR}, the arguments are shown laid out in a \gls{vsr}.
+The \gls{vsr} is divided using dark and light lines in the same way as \rfig{registerArgumentsMatrix} to show how the element positions are translated to a \gls{vsr}.
+The dot product of these two two-element vectors, from $A$ at offset $0 \times 2 = 0$ and from $B$ at $2 \times 2 = 4$ in their respective \glspl{vsr}, are accumulated with the value in $C$ at $(0, 2)$, highlighted in a crosshatch pattern.
+
 \subsection{Instruction Variants}
 \begin{table}[t]
   \centering
