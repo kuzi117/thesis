@@ -74,16 +74,15 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
 Instructions are given three arguments: an accumulator and two \glspl{vsr}.
 Considering the simplest example, single-precision floating point, a four-element row or column fills the entire \gls{vsr} ($32\text{bits} \times 4 = 128\text{bits}$).
 Thus, two length-four vectors are multiplied in an outer product, creating the computation \matmul{4}{1}{4}.
-Recalling \rsec{outerProduct}, this is a rank-1 update to the accumulator.
+Recalling \rsec{outerProduct}, this is a rank-one update to the accumulator.
 
 Halving the size of the type to 16 bits means the argument \glspl{vsr} are underutilised at half capacity.
 Accumulators cannot be expanded and are always $4 \times 4$ matrices of 32-bit elements.
 Thus, to increase utilisation of \glspl{vsr}, the number of elements contained in each \gls{vsr} is doubled resulting in doubling the number of rows or columns in a \gls{vsr}.
-Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, now performing a rank-2 update to the accumulator.
-The same logic applies for eight- and four-bit types, computing rank-4 and rank-8 updates respectively.
+Therefore, when using 16-bit values, the calculation performed is \matmul{4}{2}{4}, now performing a rank-two update to the accumulator.
+The same logic applies for eight- and four-bit types, computing rank-four and rank-eight updates respectively.
 
 \subsection{Instruction Variants}
-
 \begin{table}[t]
   \centering
   \begin{tabular}{| c | c | c |}
@@ -120,7 +119,7 @@ Masks disables only the application of computed values to the accumulator, not t
 When all other computations produce a 32-bit value, essentially gaining precision or remaining at the same precision, it would be unreasonable to force computations with 64-bit values to lose precision.
 Therefore, when working with double-precision floats, accumulators become $4 \times 2$ arrays rather than the usual $4 \times 4$.
 The change in data size affects the argument \glspl{vsr} as well: a single \gls{vsr} now fits only two values.
-Thus, in order to compute a rank-1 update, the first dimension requires four values, spread across two registers, while the second dimension now requires two values in a single register.
+Thus, in order to compute a rank-one update, the first dimension requires four values, spread across two registers, while the second dimension now requires two values in a single register.
 
 \section{Matrix Engine Comparison}
 \label{sec:matrixEngines}
