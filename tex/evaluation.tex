@@ -287,6 +287,7 @@ This can be the difference between an idiomatic assembly of several instructions
 Several factors that lead shuffling to cause performance degradation are discussed below.
 
 \subsubsection{Datatype: \texorpdfstring{\code{half}}{half}}
+\label{sec:halfShuffle}
 \nelson{It this paragraph simply stating the currently the shuffling is incorrect?}
 \bk{No, the shuffling is correct, just needlessly conservative, choosing a very roundabout method to perform the shuffles, thus making it slow.}
 The \code{i16} and \code{half} types have identical widths: a halfword.
@@ -426,16 +427,21 @@ Because $B$ is twice the size of $A$, when it is laid out poorly the generated a
 Examining the generated assembly shows that for \code{float} the column only variant performs roughly 450 more instructions of ``setup'' (loading and shuffling values) before executing the first outer-product instruction; the generated code is effectively identical afterwards.
 This gap lessens as types become smaller due to the smaller overall amount of bytes being loaded, but the difference in performance remains.
 
-\subsubsection{\texorpdfstring{Evaluating \code{half}}{Evaluating half}}
-\bk{
-  I'm honestly not sure what to do about half.
-  The generated code is significantly worse and honestly sort of nonsensical.
-  Much of the operation is serialised in scalar registers but to different degrees.
-  That being said, I thought function length would at least be some sort of oracle for performance but it's not true.
-  I examined the code length and determined that $R \times R = R$ has the longest kernel by nearly 300 instructions and yet is the second fastest kernel.
-  Otherwise, code length matches with cycles.
-  It's to the point where I'm considering making an exception to my ``no extra optimisations applied'' rule just to get some reasonable data and avoid saying ``I don't know why'' in this section.
-}
+\subsubsection{Evaluating \texorpdfstring{\code{half}}{half}}
+As discussed in \rsec{halfShuffle}, \code{half} and \code{i16} can and should be manipulated in exactly the same manner.
+The only difference in their generated assembly should be the outer product instruction which interprets a register as a \code{half} or \code{i16}.
+The \gls{power} \gls{isa} indicates that the two different outer product instructions also have identical latencies.
+Thus, given identical load, store, and shuffle schedules along with identical outer-product latencies, the performance of the two types should be identical in every instance.
+
+However, given the results in \rfig{accessOrder}, this is clearly not the case.
+\todo{Add table with numbers.}
+The most performant case for \code{half}, $\textrm{C} = \textrm{C} \times \textrm{C}$, still requires roughly three times the cycles of \code{i16}'s least performant cast, also $\textrm{C} = \textrm{C} \times \textrm{C}$.
+Results from test cases using \code{half} that do not follow the anticipated trend are a common thread in this chapter.
+The cause is undoubtedly the same issue discussed in \rsec{halfShuffle}: a code length explosion due to extremely conservative assembly code generation.
+For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
+Such a change is thus likely to invalidate any of the results presented for \code{half} in this and future experiments.
+Results will continue to be presented for completeness but will not be discussed unless necessary.
+\bk{Is this an acceptable statement?}
 
 \section{Varied Accumulator Layout}
 The layout of accumulators can significantly affect the performance of a kernel.
