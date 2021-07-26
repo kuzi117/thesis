@@ -19,3 +19,6 @@ img/
 
 # Python
 __pycache__/
+
+# Images
+*.png
