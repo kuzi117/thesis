@@ -357,6 +357,7 @@ Thus, all test cases use identical \gls{ir} generation logic with no special cas
 The presented results are therefore equally advantaged and disadvantaged in code generation.
 
 \section{Varied Access Orders}
+\label{sec:variedOrders}
 As discussed in \rsec{outerKernel}, packing is incredibly important for matrix multiplication performance.
 An important part of packing, beyond choosing dimensions, is the choice of data access order.
 \rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr}.
@@ -454,8 +455,10 @@ Again, using the logic of \rsec{spillSolution}, the kernel size is fit to the ac
 A kernel's dimensions are therefore four times the length of the same dimension of the accumulator layout (\eg layout $8 \times 1$ has kernel dimensions $32 \times 4$).
 As in the previous experiment, each kernel performs 32 accumulations, though smaller types perform fewer outer product instructions.
 Therefore, the overall kernel size is \matmul{(\textrm{\code{V}} \times 4)}{32}{(\textrm{\code{H}} \times 4)} where \code{V} and \code{H} correspond to the number of vertical and horizontal accumulators in the layout as described in \rsec{baseCase}.
+Additionally, using the result from \rsec{variedOrders}, all kernels use a $\textrm{R} = \textrm{C} \times \textrm{R}$ layout for their matrices.
 
 \subsection{Expectation}
+\label{sec:layoutExpectation}
 First, the two rectangular layouts and the two linear layouts are expected to have equal performance.
 Without loss of generality, one can abstractly think of executing an accumulation as performing loads from $A$, performing loads from $B$, performing shuffles for each if necessary, and then performing the outer product.
 Transposing a layout means swapping the number of loads from $A$ and $B$ with the overall total remaining the same.
@@ -482,6 +485,28 @@ In fact, if the linear layouts can activate the hardware prefetcher more readily
 \end{figure}
 
 The results of the experiment are shown in \rfig{tightAccLayout}.
+All three of \code{float}, \code{i16}, and \code{i8} meet the expectation that the rectangular layouts and linear layouts each have roughly identical performance.
+\bk{
+  It seems the more ``vertical'' of the layouts occasionally takes longer.
+  It's not consistent though as for \code{float}, the $4 \times 2$ layout takes longer while the $8 \times 1$ is identical to its transpose.
+  For \code{i16}, the $8 \times 1$ takes longer than its transpose and the rectangular layouts are indentical.
+  I have no reason to believe it's due to ``extra loads'' and am inclined to blame it on load latencies.
+  I'm not sure where to start investigating this beyond moving back to the simulator and collecting traces for analysis.
+}
+However, where \code{i16} and \code{i8} agree with the theory in \rsec{layoutExpectation}, \code{float} shows opposing results.
+
+Initial analysis of this difference hoped that, for \code{float}, the $1 \times 8$ layout and its transpose had found a better load schedule or that it had activated hardware such as the prefetcher in a way that was not possible with the data types which load less data overall.
+It is partially true that a better schedule was found, though not in the way that was anticipated.
+Instead, the changed arguments have simplified the backend code generator's analysis, likely its \glslink{live}{liveness} analysis, allowing it to find ways to deconflict \gls{live} values in order to create a simpler load schedule.
+This simplification has thus crucially resulted in the removal of the initial spills present in every test case presented so far.
+In fact, given the kernel laid out for it, the assembly is very close to the optimal, handwritten assembly, lacking only the small optimisation to combine 128-bit vector loads which use consecutive addresses into a paired-vector 256-bit load.
+For comparison's sake, activating the load sinking optimisation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts\footnotemark.
+\footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to an optimisation pass ordering issue, not deliberate choice.}
+By examining the assembly for the rectangular test case with load sinking, however, it is easy to see that the total number of vectors loaded between accumulations is less than that in the linear layout.
+In both cases the only instructions present are the loads and the outer products which means there are no instructions with which to hide a stall due to load latency.
+Thus it can be expected that equivalently-scheduled \code{float} testcases would follow the expected trend because, with less loads, there is less likely to be a load-based stall.
+
+Regarding \code{i16} and \code{i8}, the shuffles necessary to build operands serve to add extra complication to the \glslink{live}{liveness} analysis and thus the same simplified schedule cannot be found for the linear layouts.
 
 \section{More experiments}
 \begin{itemize}
