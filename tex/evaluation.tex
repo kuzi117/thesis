@@ -14,10 +14,10 @@ Given that the evaluation was performed on first-silicon version of \gls{power10
 Changes between this version and the commercial versions includes clock frequency, firmware updates or even silicon updates.
 
 \section{Experimental Setup}
-This section presents details on resources used and processes performed to produce the results in \rsec{caveats} and onwards.
+This section presents details on resources and processes that are necessary to produce the results in \rsec{caveats} and onwards.
 
 \subsection{Machine Details}
-The experimental platform is a \gls{power10} machine provided by \gls{ibm}.
+The experimental platform is a pre-commercial \gls{ibm} \gls{power10} machine that was made available through a research collaboration with \gls{ibm}.
 The processor is not yet available to the public but relevant details are presented in \rtab{machineInfo}.
 The listed core counts are per socket while the thread counts are per core.
 The machine runs Linux with a 64-bit kernel at version 5.10.0-17496-g41bc5268c5e8.
@@ -36,12 +36,15 @@ The machine runs Linux with a 64-bit kernel at version 5.10.0-17496-g41bc5268c5e
 \end{table}
 
 \subsection{Compilation}
-All binaries are compiled with Clang version 13.0.0\footnotemark at the highest optimisation level (\code{-O3}) and are tuned to the processor (\code{-mcpu=pwr10}).
+All binaries are compiled with Clang version 13.0.0\footnotemark   at the highest optimisation level (\code{-O3}) and are tuned to the processor (\code{-mcpu=pwr10}).
 \footnotetext{At time of writing this is a development version.}
 Because support for \gls{power10} was not available in mainstream \gls{llvm} when this work began, it has been implemented as part of \glslink{ibm}{IBM's} variant of \gls{llvm} which did have support for \gls{mma} instructions.
-This variant contains several platform specific, targeted optimisations focused on improving \gls{power} code; all these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
+This variant contains several platform-specific optimisations to improve \gls{power} code; all these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
+
+\nelson{There is lots that is in your mind but not in the text in this section. Sounds like you should have a first paragraph that talks about the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench} method in general first. And then a second paragraph that talks about the specific use of that method in this chapter. Sounds like the low variability enabled a simplification of the method but this is mixed with other information and sentences in this text now.}
+
 \begin{figure}[t]
   \centering
   \begin{tikzpicture}[scale=1]
@@ -72,10 +75,11 @@ The loop will only exit when the kernel has been executed enough times.
 To implement this method, a loop trip count, $n$, is determined by
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
   \item timing several executions of the benchmark
-  \item multiplying the required time (set at one second\footnote{One second is double the default, suggested half-second time-limit.}) by $1.4$
+  \item \nelson{Why 1.4? Why we are using double thee default of 0.5 s?}multiplying the required time (set at one second)\footnote{One second is double the default, suggested half-second time-limit.} by $1.4$
   \item dividing by the average execution time of those executions
 \end{enumerate*}
-\footnotetext{This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
+\footnotetext{\nelson{Which process?}This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
+\nelson{What "multiple values" refer to?}
 The true process is more iterative and tries multiple values in order to produce a conservative estimate for benchmarks with variation in their execution times.
 For the kernels studied in this chapter, which have very little variation, this is an accurate summary of the process.
 
@@ -84,9 +88,11 @@ While a single second may seem short, for the longest-running kernel presented (
 For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
 
 In \rfig{execution}, producing one measurement (\ie completing $n$ iterations of the loop) corresponds to a single of the lower braces labeled ``$n_i$ iters''.
+\nelson{What value is reported after measuring 25 times?}
 A total of 25 measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
 Repetitions vary $n$ slightly because the timing iterations may produce slightly different base times, changing the iteration count.
 
+\nelson{which loops?}
 The framework presents statistics for each of the 10 loops including wall clock time, \gls{cpu} time, and cycles.
 \bk{I think I can add instructions retired if it's a good idea.}
 It also presents overall statistics between each of the ten runs: mean, median, and standard deviation.
@@ -101,18 +107,18 @@ Given that the implemented logic works for \code{i8}, \code{i16}, \code{half}, a
 However, while translating to assembly, the backend produces either incorrect code (\code{i4}) or an error (\code{bfloat}).
 Both issues have been acknowledged by the developer team and will be fixed in future versions of \gls{llvm}.
 
-For \code{double}, the changed operation dimensions cause a signficant divergence in code generation logic that otherwise applies to all other types usable with \gls{mma}.
-Due to the constraints of the surrounding framework, it was decided early on that development efforts should be focused on an algorithm that worked for six of the seven types.
-The method presented in \rcha{method} can easily be applied to \code{float} but its \gls{lowering} implementation will be a noticeable variant of the original code.
+\nelson{What "changed operation dimensions" means?}
+For \code{double}, the changed operation dimensions cause a significant divergence in code-generation logic that otherwise applies to all other types usable with \gls{mma}.
+Within the scope of this thesis, the development efforts focus on an algorithm that worked for six of the seven types.
+The method presented in \rcha{method} applies to \code{float} but its \gls{lowering} implementation will require changes in relation to the original code.
 
 \section{Caveats}
 \label{sec:caveats}
-The results presented in \todo{link future results section} are unexpected and less than ideal.
-However, the cause of the lackluster performance, in general, is not a result of the implementation presented in \rcha{method}.
-Instead, missed performance can be traced to several factors in the backend code generator as well as limitations inherent in the surrounding framework.
+There are some unexpected performance results reported in \todo{link future results section}.
+The unexpected performance is caused either by issues in the backend code generator or by limitations inherent to the compilation framework, both of which are outside of the scope of this thesis.
 
-Before presenting the results, this section explains sources of performance degradations.
-The results are counterintuitive, but the issues they reveal are addressable in the future and represent opportunities for improving code generation for the entire \gls{power} software stack.
+Before presenting the results, this section discusses some of the causes for the unexpected performance results.
+These issues are addressable in the future and the performance study in this thesis uncovered opportunities for improving code generation for the entire \gls{power} software stack.
 The presented \gls{mma} kernel is a new type of kernel never before seen by the backend and therefore the assembly code generation has not been as tuned as other kernels have been.
 Only after stripping away certain bottlenecks present in the naive kernel can we learn about new issues that are still to be addressed by the backend design team.
 
@@ -180,7 +186,7 @@ A workaround for the spilling resulting from unsunk loads, which can be used unt
 In preparation for the performance evaluation in this thesis, a short targeted \gls{ir} transformation was implemented using this tactic.
 Its goal was to produce results that are more representative of the code that will be generated by a final production-ready backend.
 Consider the pair of bars labeled ``8x8x16'' (\matmul{8}{8}{16}) for \code{float} (left) in \rfig{floatSink}.
-This matrix size represents the best case scenario for such an optimisation:
+This matrix size represents the best-case scenario for such an optimisation:
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label={\protect\circled{\arabic*}}, after={.}]
   \item $A$'s eight-element column-vector load can be broken up into two four-element vector loads, each of which fills an entire \gls{vsr} (similar logic applies to $B$'s rows)
   \item only a single load is necessary to create an outer-product operand (rank-one update)
@@ -190,11 +196,11 @@ This matrix size represents the best case scenario for such an optimisation:
 Given such a perfect case, the runtime of the original version (labeled ``No Load Sinking'') is roughly quartered (\rtab{floatSink}, rows 1 and 2) in the optimised version (labeled ``Load Sinking'').
 If the operation were to have more accumulations, then this gap would continue to grow as more and more spills would be required in the unoptimised version.
 
-However, by examining the bars labeled ``8x8x16'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types this optimisation actually causes a slight slow down (\rtab{floatSink}, rows 5 and 6).
-This can be attributed to invalidating properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
-In fact, the assembly produced by the unoptimised version is much closer to the optimal handwritten version because it loads multiple vectors into a single register and uses these as source vectors for multiple shuffle instructions.
-The ``optimised'' version loads only a single vector into a register, increasing register pressure, and uses each vector for only a single shuffle instruction.
-It is only because the overall register pressure has been decreased by halving the element width that the performance of these two kernels show only a slight difference.
+However, by examining the bars labeled ``8x8x16'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slow down (\rtab{floatSink}, rows 5 and 6).
+This slowdown can be attributed to the invalidation of properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
+In fact, the assembly produced without load sinking is much closer to the handwritten version because it loads multiple vectors into a single register and uses these as source vectors for multiple shuffle instructions.
+The load-sinking version loads only a single vector into a register, increasing register pressure, and uses each vector for only a single shuffle instruction.
+The performance degradation because of load-sinking in this case is small only because the overall register pressure has been decreased by halving the element width.
 
 \subsubsection{Operand Spilling and Rematerialisation}
 After addressing the load-sinking issue in this way, another, separate but related, issue appears.
@@ -230,12 +236,7 @@ The larger kernel, however, must use the value again in computing the second set
 \end{figure}
 
 According to constraint \fbox{5} in \rsec{baseCase}, spilling an accumulator is expensive, and therefore an efficient solution must finish computing a block of accumulators before moving on to a different area of the matrix.
-\nelson{Not clear what "before an operand" means here.}
-\bk{
-  Is this clear now?
-  There was a typo before but I've also cleared up some other things.
-}
-Doing so requires that every operand along the dimension $K$ be brought to register before an operand can be reused with a new block of accumulators.
+Doing so requires that every operand along the dimension $K$ be brought to register before any operand can be reused with a new block of accumulators.
 For instance, an accumulator layout like that in \rfig{opReuse} requires six operand registers for each accumulation to be performed.
 Using only the 32 registers available while the accumulators are assembled, if $K \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there is not enough space for all values to remain in registers.
 And thus the cause for the multiple spills and reloads throughout the computation becomes apparent: operands from $A$\footnotemark that are still \gls{live} are being forced out of registers and the compiler is choosing to spill them.
@@ -246,26 +247,26 @@ This code generation evokes the well-studied compiler technique ``\gls{remateria
 Essentially, the compiler analysis must answer the question ``is it more efficient to store a value to memory and retrieve it later (\gls{spill}) or to recompute it later using the same process?''
 
 In the case of floats, producing the operand is a simple load and therefore, if an operand \emph{must} be evicted from its register, \glslink{rematerialisation}{rematerialising} the value is a simple load.
-Thus, the compiler's choice to spill the operand is incorrect and, because spills are saved on the stack, not only is it wasting memory by duplicating the value, it is potentially evicting values from the cache.
-Regardless, the larger kernel's execution, optimised or not, is signficantly influenced by memory operations, though the gains from reducing the initial spills still have significant impact.
+Thus, the compiler's choice to spill the operand is incorrect and, because spills are saved on the stack, not only it is wasting memory by duplicating the value, but it is also potentially evicting values from the cache.
+Regardless, the larger kernel's execution, optimised or not, is significantly influenced by memory operations, though the gains from reducing the initial spills still have significant impact.
 
-For smaller datatypes however, spilling is the correct choice.
+For smaller datatypes, however, spilling is the correct choice.
 Materialising an \code{i16} involves two loads and at least one instruction to shuffle the loaded data together.
 Rematerialising the value in the future becomes a simple load, significantly reducing register pressure and required memory bandwidth.
-Both the unoptimised and load-sinking version correctly choose to spill their values instead of \glslink{rematerialisation}{rematerialising} them.
+Both the original version and load-sinking version correctly choose to spill their values instead of \glslink{rematerialisation}{rematerialising} them.
 As with \code{float}, the increased number of memory operations explains the significant increase in execution time for the larger \code{i16} kernel in \rfig{floatSink}, but it does not, however, explain the large difference between the two version.
 The next section investigates this discrepancy.
 
 \subsubsection{Smaller Types}
 While the issues affecting \code{float} matrices presented above remain roughly identical for \code{double}-typed operations, small datatypes have a separate source of slow down.
 The difference in performance is actually an exacerbation of an already-discussed issue, namely the invalidation of properties \circled{1} and \circled{2}.
-For \code{i16}, in the load-sinking version, loads are performed four \code{i16} elements at the same time using the 64-bit doubleword load.
-The unoptimised version loads 16 elements at a time using 256-bit vector-pair loads, meaning that the load-sinking version quadruples the number of ``necessary'' loads (excluding loads from the original spilling issue).
-If the scheduling were fixed, removing the unnecessary loads and stores, it is likely the performance gap would be much more significant.
+For \code{i16}, in the load-sinking version, a single 64-bit double-word load instruction loads four \code{i16} elements at the same time.
+The original version loads 16 elements at a time using 256-bit vector-pair loads, meaning that the load-sinking version quadruples the number of loads required to load the values needed for the computation (excluding loads from the original spilling issue).
+Changing the scheduling to remove the unnecessary loads and stores would likely lead to a much more significant the performance gap between the two versions.
 
-This issue extends to the other data types which perform rank-two, -four, or -eight updates.
-The issue is aggravated as the number of memory requests increase due to shrinking data width and a greater required number of vectors for shuffling.
-For example, where, for \code{i16}, the load-sinking version has roughly 114\% of the execution time of the unoptimised version, the same comparison for \code{i8} shows the load-sinking version has 292\% of the unoptimised version's execution time.
+This issue extends to the other data types, which perform rank-two, -four, or -eight updates.
+The issue is aggravated when the number of memory requests increases because of the shrinking data width that require more vectors for shuffling.
+For example, where, for \code{i16}, the load-sinking version takes roughly 114\% of the execution time of the original version, the same comparison for \code{i8} shows that the load-sinking version takes 292\% of the execution time of the original version.
 
 A more complicated load breaking and sinking strategy may counteract this slowdown, but only to a certain degree.
 Combining certain loads -- for example two four-element \code{i16} column loads, making a full \gls{vsr} -- would decrease register pressure because the upper and lower halves of the register can be used in separate shuffles.
@@ -288,20 +289,17 @@ Several factors that lead shuffling to cause performance degradation are discuss
 
 \subsubsection{Datatype: \texorpdfstring{\code{half}}{half}}
 \label{sec:halfShuffle}
-\nelson{It this paragraph simply stating the currently the shuffling is incorrect?}
-\bk{No, the shuffling is correct, just needlessly conservative, choosing a very roundabout method to perform the shuffles, thus making it slow.}
 The \code{i16} and \code{half} types have identical widths: a halfword.
 Because \glspl{cpu} and their accompanying \glspl{isa} are type-agnostic and sensitive only to the width of a data element when implementing vector shuffles, shuffle code in the \gls{ir} that differs only in choice of 16-bit type should produce identical assembly.
-This is demonstrably untrue, however.
-The assembly code generated for \code{i16} executes roughly six vector loads and six vector permute instructions to produce all operands for a single accumulation in a full $2 \times 4$ accumulator layout.
-For \code{half}, the assembly has extended from six instructions to almost 150 and has been at least partially scalarised, moving elements from vector registers to general purpose registers and back again.
+However, in the assembly code currently generated  by the compiler backend  for \code{i16} executes roughly six vector loads and six vector permute instructions to produce all operands for a single accumulation in a full $2 \times 4$ accumulator layout.
+For \code{half}, the generated assembly code has gone from six instructions to almost 150 instructions because thee computation is partially scalarised by moving elements from vector registers to general purpose registers and back again.
 
 This explosion in code size is most apparent in the calculation epilogue where, in the \gls{ir}, the accumulators are disassembled and stored to memory.
 First, the resulting accumulator vectors are truncated to the output data type.
-They are then concatenated together into a output flattened matrix and stored to memory.
+They are then concatenated together into an output flattened matrix and stored to memory.
 Concatenation is also achieved through shuffling and therefore experiences the same conservative code generation as before.
 The added truncation operation worsens the effect.
-All told, the epilogue for \code{half} is roughly ten times the length of the same operation for \code{i16}.
+All told, in the assembly code currently being generated the epilogue for \code{half} is roughly ten times the length of the same operation for \code{i16}.
 
 \subsubsection{Datatype: \texorpdfstring{\code{i4}}{i4}}
 For \code{i8}, degradations arise from \glspl{spill} due to extra register pressure but also from needing to merge four separate vectors (rank-four update).
