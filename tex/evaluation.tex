@@ -287,10 +287,6 @@ This can be the difference between an idiomatic assembly of several instructions
 Several factors that lead shuffling to cause performance degradation are discussed below.
 
 \subsubsection{Datatype: \texorpdfstring{\code{half}}{half}}
-\bk{
-  I think this issue is likely to affect \code{bfloat} as well but when I went to try it last night (I'd never compiled any \code{bfloat} code before) it crashed.
-  I've spoken to Nemanja and it seems to be a backend issue; I've created a github issue for it and the backend team will look at it shortly.
-}
 \nelson{It this paragraph simply stating the currently the shuffling is incorrect?}
 \bk{No, the shuffling is correct, just needlessly conservative, choosing a very roundabout method to perform the shuffles, thus making it slow.}
 The \code{i16} and \code{half} types have identical widths: a halfword.
