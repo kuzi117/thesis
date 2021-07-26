@@ -441,6 +441,48 @@ This gap lessens as types become smaller due to the smaller overall amount of by
   It's to the point where I'm considering making an exception to my ``no extra optimisations applied'' rule just to get some reasonable data and avoid saying ``I don't know why'' in this section.
 }
 
+\section{Varied Accumulator Layout}
+The layout of accumulators can significantly affect the performance of a kernel.
+Both the input and output memory efficiency as well as the in-register performance can degrade due to a suboptimal layout.
+
+\subsection{Setup}
+Intuitively, leaving an accumulator unused means unused functional units and therefore wasted performance; thus, any layout which aspires to be a contender for best performance must use all eight accumulators.
+The implemented framework allows only for rectangular layouts.
+Combining these two restrictions creates four test cases: two rectangular layouts, $2 \times 4$ and $4 \times 2$, and two linear layouts, $1 \times 8$ and $8 \times 1$.
+
+Again, using the logic of \rsec{spillSolution}, the kernel size is fit to the accumulator layout.
+A kernel's dimensions are therefore four times the length of the same dimension of the accumulator layout (\eg layout $8 \times 1$ has kernel dimensions $32 \times 4$).
+As in the previous experiment, each kernel performs 32 accumulations, though smaller types perform fewer outer product instructions.
+Therefore, the overall kernel size is \matmul{(\textrm{\code{V}} \times 4)}{32}{(\textrm{\code{H}} \times 4)} where \code{V} and \code{H} correspond to the number of vertical and horizontal accumulators in the layout as described in \rsec{baseCase}.
+
+\subsection{Expectation}
+First, the two rectangular layouts and the two linear layouts are expected to have equal performance.
+Without loss of generality, one can abstractly think of executing an accumulation as performing loads from $A$, performing loads from $B$, performing shuffles for each if necessary, and then performing the outer product.
+Transposing a layout means swapping the number of loads from $A$ and $B$ with the overall total remaining the same.
+Likewise, the number of shuffles and outer products also remains the same.
+In this way, the total work remains the same and therefore the performance should be identical.
+Any difference in performance will certainly indicate a missed optimisation in one of the compilations.
+
+\rsec{baseCase} discusses a proposed ideal layout for the eight accumulators available in \gls{power10} \gls{mma}.
+The two proposed rectangular layouts, $2 \times 4$, and its transpose, $4 \times 2$, have the highest factor of reuse, with operands from one matrix being reused four times and an operand the other matrix being used twice.
+Moreover, it effectively reduces register pressure by requiring only six elements to be \gls{live} before performing eight consecutive accumulations.
+With 32 total registers, using only six per accumulation allows for the arguments of future accumulations to be brought to register ahead of time or even for multiple accumulations to be performed uninterrupted.
+
+However, the argument in \rsec{baseCase} is made under the assumption that the most efficient schedule for outer-product instructions is a large set of loads followed by as many outer products as possible.
+In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
+If this is not the case, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effecitively hidden.
+In fact, if the linear layouts can activate the hardware prefetcher more readily, there is a potential for speedup that may not be found in the rectangular layouts.
+
+\subsection{Analysis}
+\begin{figure}[t]
+  \centering
+  \input{tex/figures/tightAccLayouts.pgf}
+  \caption{The effect of accumulator layout on performance.}
+  \label{fig:tightAccLayout}
+\end{figure}
+
+The results of the experiment are shown in \rfig{tightAccLayout}.
+
 \section{More experiments}
 \begin{itemize}
   \item Comparison between:
