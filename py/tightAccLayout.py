@@ -58,14 +58,14 @@ if __name__ == '__main__':
     # Get axis and start plotting.
     ax = fig.add_subplot(figHeight, figWidth, i + 1)
     tu.plotGroupedData(ax, groupLabels, barLabels, bars, errs)
-    ax.set_title(type.capitalize())
+    ax.set_title('\\texttt{{{}}}'.format(type))
 
     ax.set_xlabel('Accumulator Layout')
     ax.set_ylabel('Cycles')
 
   # Save figure.
   fig.suptitle('Cycle Counts for Different Accumulator Layouts per Type')
-  fig.set_size_inches(tu.textWidth, 5.5)
+  fig.set_size_inches(tu.textWidth, 5)
   fig.tight_layout()
   fig.savefig('tightAccLayouts.png')
   fig.savefig('tightAccLayouts.pgf')
