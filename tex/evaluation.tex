@@ -367,6 +367,18 @@ An important part of packing, beyond choosing dimensions, is the choice of data 
 \rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr}.
 This inevitably translates to a sensitivity to the access order of the matrices in memory that provide the arguments in register.
 
+\subsection{Setup}
+When using an unmodified version of \gls{llvm}, the access orders of $A$, $B$, and $C$ are tied together and must be equal.
+Thus two test cases, one all-column-major ($\textrm{C} = \textrm{C} \times \textrm{C}$) and another all-row-major ($\textrm{R} = \textrm{R} \times \textrm{R}$), constitute the baseline for the experiment.
+In order to test the performance of the hypothesised best mix of orientations, further modifications to the lowering framework were performed to enable the mixing of orientations.
+With this possibility enabled, two cases are added to the comparison: both use the proposed optimal layout for $A$ and $B$ but vary the layout of $C$ ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$)
+
+Each kernel uses a $2 \times 4$ accumulator setup and therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
+The inner most dimension of the kernel is 32, making the overall computation \matmul{8}{32}{16}.
+An inner dimension of 32 requires 32 accumulations but smaller datatypes perform rank-$r$ updates, effectively reducing the number of operations required to compute the kernel.
+It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
+Given the discussion in \rsec{orderExpectation}, more accumulations implies more opportunities for a ``good'' orientation to outperform a bad orientation, effectively highlighting differences in performance.
+
 \subsection{Expectation}
 \label{sec:orderExpectation}
 For $A$, it is expected that data laid out in a column-major orientation is optimal.
@@ -397,17 +409,6 @@ When used in this way, the elements in the accumulator are oriented in a row-maj
 Transposing the values so that they can be stored into a column-major output-matrix requires extra shuffles.
 However, with the theorem discussed in \rsec{arbitraryOrder}, it is shown that reversing the order of the arguments causes the result in the accumulator to be equivalent but in a column-major order.
 Thus, it is expected that either access order can be used for $C$ without loss of performance.
-
-\subsection{Setup}
-When using an unmodified version of \gls{llvm}, the access orders of $A$, $B$, and $C$ are tied together and must be equal.
-Thus two test cases, one all-column-major ($\textrm{C} = \textrm{C} \times \textrm{C}$) and another all-row-major ($\textrm{R} = \textrm{R} \times \textrm{R}$), constitute the baseline for the experiment.
-In order to test the performance of the hypothesised best mix of orientations, further modifications to the lowering framework were performed to enable the mixing of orientations.
-With this possibility enabled, two cases are added to the comparison: both use the proposed optimal layout for $A$ and $B$ but vary the layout of $C$ ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$)
-
-Each kernel uses a $2 \times 4$ accumulator setup and therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
-A total of 32 accumulations are performed each kernel, making the overall computation \matmul{8}{32}{16}.
-It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
-Given the discussion in \rsec{orderExpectation}, more accumulations implies more opportunities for a ``good'' orientation to outperform a bad orientation, effectively highlighting differences in performance.
 
 \subsection{Analysis}
 \begin{figure}[t]
