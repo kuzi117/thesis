@@ -3,16 +3,16 @@ from matplotlib import pyplot as plt
 import thesUtils as tu
 
 # Log file name format.
-mmaLogNameFormat = '{type}.{m}x{d}x{n}.vdhd.CCC.O3.timed.txt'
-vecLogNameFormat = '{type}.{m}x{d}x{n}.vdhd.CCC.O3.vector.timed.txt'
+mmaLogNameFormat = '{type}.{m}x{d}x{n}.vdhd.CRR.O3.bench.{c}.json'
+vecLogNameFormat = '{type}.{m}x{d}x{n}.vdhd.CRR.O3.vector.bench.{c}.json'
 
 # Layouts in test with name.
 layouts = [
-  ((16, 8, 8), '16x8x8'),
-  ((16, 8, 16), '16'),
-  ((32, 8, 32), '32'),
-  ((64, 8, 64), '64'),
-  ((128, 8, 128), '128'),
+  ((8, 8, 16), '8x8x16'),
+  ((16, 8, 16), '16x8x16'),
+  ((32, 8, 32), '32x8x32'),
+  ((64, 8, 64), '64x8x64'),
+  ((128, 8, 128), '128x8x128'),
 ]
 
 def plotByType():
@@ -29,6 +29,7 @@ def plotByType():
     mmaData, vecData = data[type]
 
     # Get data points.
+
     bars = [
       [mmaData[layoutName][0] for layoutName in layoutLabels],
       [vecData[layoutName][0] for layoutName in layoutLabels]
@@ -69,12 +70,14 @@ if __name__ == '__main__':
     # Get the vec and mma data.
     for (m, d, n), layoutName in layouts:
       # Read logs for data.
-      mmaLog = mmaLogNameFormat.format(type=type, m=m, d=d, n=n)
-      vecLog = vecLogNameFormat.format(type=type, m=m, d=d, n=n)
+      mmaLog = mmaLogNameFormat.format(type=type, m=m, d=d, n=n, c='{}')
+      vecLog = vecLogNameFormat.format(type=type, m=m, d=d, n=n, c='{}')
 
       # Save vec and mma data.
-      mmaData[layoutName] = tu.getFileStats('logs/mmaVsx/' + mmaLog)
-      vecData[layoutName] = tu.getFileStats('logs/mmaVsx/' + vecLog)
+      _, _, mmaCycleStats = tu.getJsonCumulativeStats('logs/all/' + mmaLog, 25)
+      mmaData[layoutName] = mmaCycleStats
+      _, _, vecCycleStats = tu.getJsonCumulativeStats('logs/all/' + vecLog, 25)
+      vecData[layoutName] = vecCycleStats
 
     # Save type data.
     data[type] = (mmaData, vecData)
@@ -88,8 +91,13 @@ if __name__ == '__main__':
   groupNames = tu.orderedTypes
   barNames = ['MMA', 'Vector']
 
+
+  # Get data points.
+  for type in groupNames:
+    for layoutName in plots:
+      print(type, layoutName, data[type][0][layoutName][0])
+
   for i, plot in enumerate(plots):
-    # Get data points.
     bars = [
       [data[type][0][plot][0] for type in groupNames],
       [data[type][1][plot][0] for type in groupNames]
