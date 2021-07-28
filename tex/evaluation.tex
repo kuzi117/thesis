@@ -42,8 +42,74 @@ Because support for \gls{power10} was not available in mainstream \gls{llvm} whe
 This variant contains several platform-specific optimisations to improve \gls{power} code; all these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
+\nelson{
+  There is lots that is in your mind but not in the text in this section.
+  Sounds like you should have a first paragraph that talks about the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench} method in general first.
+  And then a second paragraph that talks about the specific use of that method in this chapter.
+  Sounds like the low variability enabled a simplification of the method but this is mixed with other information and sentences in this text now.
+}
+\bk{
+  I've taken your suggestion and added multiple paragraphs along with an algorithm that summarises the process (very close to the actual code).
+}
 
-\nelson{There is lots that is in your mind but not in the text in this section. Sounds like you should have a first paragraph that talks about the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench} method in general first. And then a second paragraph that talks about the specific use of that method in this chapter. Sounds like the low variability enabled a simplification of the method but this is mixed with other information and sentences in this text now.}
+Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
+\footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
+A single measurement is the result of timing the execution of a kernel many times until statistical stability is obtained.
+The framework implements a method of measuring a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
+\ralg{benchmark} summarises the algorithm for determining the iteration count.
+
+\begin{algorithm}[t]
+  \caption[Algorithm for creating a cycle measurement]{Algorithm for dynamically determining a statistically stable kernel timing loop iteration count.}
+  \label{alg:benchmark}
+  \begin{algorithmic}[1]
+    \State minTime = 1e9 \Comment{\SI{1e9}{\textit{\nano\second}} \textrightarrow \SI{1}{\second}}
+    \Function{\code{ShouldReportResults}}{Results r}
+      \State \Return (r.iters >= 1e9) || (r.totalCpuTime >= minTime)
+    \EndFunction
+    \Function{\code{PredictItersNeeded}}{Results r, iters}
+      \State multiplier = minTime * 1.4 / r.totalCpuTime
+      \State isSignificant = (r.totalCpuTime / minTime) > 0.1
+      \State multiplier = isSignificant ? multiplier : min(multiplier, 10)
+      \State nextIters = min(round(iters * multiplier), 1e9)
+      \State \Return nextIters
+    \EndFunction
+    \Function{\code{RunBenchmark}}{Results r}
+      \State iters = 1
+      \While {true}
+        \State results = RunNIterations(iters)
+        \If{\code{ShouldReportResults}(results)}
+          \State \code{reportResults}(results)
+          \State \Return
+        \EndIf
+        \State iters = \code{PredictItersNeeded}(results, iters)
+      \EndWhile
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+The body of function \code{RunBenchmark} is an infinite loop that exits only when the results are statistically stable.
+Every iteration of the loop, the function \code{RunNIterations} is called.
+\code{RunNIterations} executes and times the tested kernel \code{iters} times and returns the statistics.
+These results are passed to the function \code{ShouldReportResults} that decides if the results of the latest set of kernel executions have reached stability.
+A simple metric determines this condition: did the kernel execute more than a maximum iteration count (1e9 iterations) or was the total time spent executing on the \gls{cpu} longer than a threshold (one second\footnotemark).
+The framework's default \code{minTime} is set at half a second; the value was doubled to one second for the following experiments to simulate a longer running matrix multiplication with many inner kernel executions.
+
+\bk{Editing still a WIP.}
+
+To implement this method, a loop trip count, $n$, is determined by
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
+  \item timing several executions of the benchmark
+  \item \nelson{Why 1.4? Why we are using double thee default of 0.5 s?}multiplying the required time (set at one second)\footnote{One second is double the default, suggested half-second time-limit.} by $1.4$
+  \item dividing by the average execution time of those executions
+\end{enumerate*}
+\footnotetext{\nelson{Which process?}This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
+\nelson{What "multiple values" refer to?}
+The true process is more iterative and tries multiple values in order to produce a conservative estimate for benchmarks with variation in their execution times.
+For the kernels studied in this chapter, which have very little variation, this is an accurate summary of the process.
+
+\bk{Double check these numbers when they're finalised.}
+While a single second may seem short, for the longest-running kernel presented (\atilde\SI{81}{\textit{\micro\second}}), this still results in roughly 17000 executions.
+For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
 
 \begin{figure}[t]
   \centering
@@ -65,27 +131,6 @@ This variant contains several platform-specific optimisations to improve \gls{po
   \caption{Experiment execution process.}
   \label{fig:execution}
 \end{figure}
-
-Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
-\footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
-A single measurement is the result of timing the execution of a kernel many times until statistical stability is obtained.
-The framework implements a method of measuring a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
-The loop will only exit when the kernel has been executed enough times.
-
-To implement this method, a loop trip count, $n$, is determined by
-\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
-  \item timing several executions of the benchmark
-  \item \nelson{Why 1.4? Why we are using double thee default of 0.5 s?}multiplying the required time (set at one second)\footnote{One second is double the default, suggested half-second time-limit.} by $1.4$
-  \item dividing by the average execution time of those executions
-\end{enumerate*}
-\footnotetext{\nelson{Which process?}This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
-\nelson{What "multiple values" refer to?}
-The true process is more iterative and tries multiple values in order to produce a conservative estimate for benchmarks with variation in their execution times.
-For the kernels studied in this chapter, which have very little variation, this is an accurate summary of the process.
-
-\bk{Double check these numbers when they're finalised.}
-While a single second may seem short, for the longest-running kernel presented (\atilde\SI{81}{\textit{\micro\second}}), this still results in roughly 17000 executions.
-For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
 
 In \rfig{execution}, producing one measurement (\ie completing $n$ iterations of the loop) corresponds to a single of the lower braces labeled ``$n_i$ iters''.
 \nelson{What value is reported after measuring 25 times?}
