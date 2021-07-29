@@ -520,6 +520,12 @@ In this case, the more square layout should be more performant because it requir
 If this is not the case, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effecitively hidden.
 In fact, if the linear layouts can activate the hardware prefetcher more readily, there is a potential for speedup that may not be found in the rectangular layouts.
 
+An important cause for slow down is also the difference in raw element count between linear and rectangular layouts.
+A rectangular layout loads a total of $8 \times 32 + 16 \times 32 = 768$ elements while a linear layout loads a total of $4 \times 32 + 32 \times 32 = 1152$ elements.
+Both the rectangular and linear layouts result in 128 elements each with 32 accumulations applied, albeit in different orientations.
+This is an important consideration for an outer kernel which, when using a rectangular layout, can pack less elements to achieve the same throughput or pack the larger number of elements (if it can afford it) and receive 48 accumulations instead of 32.
+In this experiment, the lower number of total loads should result in a smaller execution time for the rectangular layouts.
+
 \subsection{Analysis}
 \label{sec:layoutAnalysis}
 \begin{figure}[t]
