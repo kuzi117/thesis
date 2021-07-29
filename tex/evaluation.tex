@@ -27,9 +27,9 @@ The machine runs Linux with a 64-bit kernel at version 5.10.0-17496-g41bc5268c5e
   \begin{tabular}{c | c}
     & IBM POWER10\\\hline
     Cores/Threads & 15/8\\
-    L1i cache & 720KiB\\
-    L1d cache & 480KiB\\
-    Frequency & 3.65 GHz\\
+    L1i cache & 48KiB\\
+    L1d cache & 32KiB\\
+    Frequency & 4.00 GHz\\
   \end{tabular}
   \caption{POWER10 machine info.}
   \label{tab:machineInfo}
@@ -241,8 +241,13 @@ If the operation were to have more accumulations, then this gap would continue t
 
 However, by examining the bars labeled ``8x8x16'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slow down (\rtab{floatSink}, rows 5 and 6).
 This slowdown can be attributed to the invalidation of properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
-In fact, the assembly produced without load sinking is much closer to the handwritten version because it loads multiple vectors into a single register and uses these as source vectors for multiple shuffle instructions.
-The load-sinking version loads only a single vector into a register, increasing register pressure, and uses each vector for only a single shuffle instruction.
+In fact, the assembly produced without load sinking is much closer to the handwritten version because it loads multiple vectors into a single register and uses this register as a source for multiple shuffle instructions.
+Loading multiple vectors into a single register is possible because the \gls{ir} of the version without load sinking has all of vectors being loaded simulataneously.
+When lowered by the backend, this single contiguous load is automatically broken into register-sized pieces that are then, importantly, also spilled in the same format.
+Thus when the \glspl{vsr} are reloaded, they contain two \code{i16} vectors.
+The load-sinking version avoids spills by breaking the single contiguous load into individual vector loads, removing the \gls{ir} opportunity to have the loads merged.
+It is possible for the backend to recombine the loads but this has yet to be observed in any kernel compilation.
+These individual vector loads increase register pressure and each loaded \gls{vsr} is used in a single shuffle instruction.
 The performance degradation because of load-sinking in this case is small only because the overall register pressure has been decreased by halving the element width.
 
 \subsubsection{Operand Spilling and Rematerialisation}
@@ -395,8 +400,8 @@ Instead, clever use of bitwise operations will have to explicitly be used to imp
 Bitwise operations can be applied across an entire vector register, removing the need for scalarisation and improving register usage by reducing the number of required intermediate registers.
 
 \subsubsection{Evaluation Disclaimer}
-All evaluation presented in future sections have no targeted optimisations applied.
-No tested solution positively affected all cases.
+All evaluation presented in future sections have no load-sinking or shuffling optimisations applied because no tested optimisation positively affected all cases.
+Advantaging one type or one size of kernel would give an unfair view of the results.
 Thus, all test cases use identical \gls{ir} generation logic with no special cases.
 The presented results are therefore equally advantaged and disadvantaged in code generation.
 
@@ -483,8 +488,7 @@ Results from test cases using \code{half} that do not follow the anticipated tre
 The cause is undoubtedly the same issue discussed in \rsec{halfShuffle}: a code length explosion due to extremely conservative assembly code generation.
 For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
 Such a change is thus likely to invalidate any of the results presented for \code{half} in this and future experiments.
-Results will continue to be presented for completeness but will not be discussed unless necessary.
-\bk{Is this an acceptable statement?}
+Results for \code{half} will continue to be presented for completeness.
 
 \section{Varied Accumulator Layout}
 The layout of accumulators can significantly affect the performance of a kernel.
@@ -518,7 +522,6 @@ With 32 total registers, using only six per accumulation allows for the argument
 However, the argument in \rsec{baseCase} is made under the assumption that the most efficient schedule for outer-product instructions is a large set of loads followed by as many outer products as possible.
 In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
 If this is not the case, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effecitively hidden.
-In fact, if the linear layouts can activate the hardware prefetcher more readily, there is a potential for speedup that may not be found in the rectangular layouts.
 
 An important cause for slow down is also the difference in raw element count between linear and rectangular layouts.
 A rectangular layout loads a total of $8 \times 32 + 16 \times 32 = 768$ elements while a linear layout loads a total of $4 \times 32 + 32 \times 32 = 1152$ elements.
@@ -556,8 +559,13 @@ For comparison's sake, activating the load sinking optimisation for the rectangu
 By examining the assembly for the rectangular test case with load sinking, however, it is easy to see that the total number of vectors loaded between accumulations is less than that in the linear layout.
 In both cases the only instructions present are the loads and the outer products which means there are no instructions with which to hide a stall due to load latency.
 Thus it can be expected that equivalently-scheduled \code{float} testcases would follow the expected trend because, with less loads, there is less likely to be a load-based stall.
+Following the results in \rfig{floatSink}, fixing the spilling issue for the \code{float} square layouts should quarter the number of cycles required.
+Such a decrease in the $2 \times 4$ and $4 \times 2$ bars would cause the \code{float} plot to follow the same trend as \code{i16} and \code{i8}.
 
 Regarding \code{i16} and \code{i8}, the shuffles necessary to build operands serve to add extra complication to the \glslink{live}{liveness} analysis and thus the same simplified schedule cannot be found for the linear layouts.
+Therefore, both the rectangular and linear layouts are affected by spills and can be compared directly.
+As expected in \rsec{layoutAnalysis}, the linear layouts were significantly slower for the same reasons discussed and so, for the sake of brevity, will not be reiterated.
+\bk{Is this acceptable or should I reiterate.}
 
 \section{Vectorisation and MMA}
 The closest point of reference, that is a compiler-only method of generating generic matrix-multiplication code, is the preexisting vectorised lowering of the \code{llvm.matrix.multiply} intrinsic.
