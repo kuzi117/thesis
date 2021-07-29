@@ -42,12 +42,6 @@ Because support for \gls{power10} was not available in mainstream \gls{llvm} whe
 This variant contains several platform-specific optimisations to improve \gls{power} code; all these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
-\nelson{
-  There is lots that is in your mind but not in the text in this section.
-  Sounds like you should have a first paragraph that talks about the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench} method in general first.
-  And then a second paragraph that talks about the specific use of that method in this chapter.
-  Sounds like the low variability enabled a simplification of the method but this is mixed with other information and sentences in this text now.
-}
 \bk{
   I've taken your suggestion and added multiple paragraphs along with an algorithm that summarises the process (very close to the actual code).
 }
@@ -69,7 +63,7 @@ The framework implements a method of measuring a kernel by placing it in a loop 
     \Function{\code{PredictItersNeeded}}{Results r, iters}
       \State multiplier = minTime * 1.4 / r.totalCpuTime
       \State isSignificant = (r.totalCpuTime / minTime) > 0.1
-      \State multiplier = isSignificant ? multiplier : min(multiplier, 10)
+      \State multiplier = isSignificant ? multiplier : 10
       \State nextIters = min(round(iters * multiplier), 1e9)
       \State \Return nextIters
     \EndFunction
@@ -89,40 +83,46 @@ The framework implements a method of measuring a kernel by placing it in a loop 
 
 The body of function \code{RunBenchmark} is an infinite loop that exits only when the results are statistically stable.
 Every iteration of the loop, the function \code{RunNIterations} is called.
-\code{RunNIterations} executes and times the tested kernel \code{iters} times and returns the statistics.
+\code{RunNIterations} executes and times the tested kernel \code{iters} times and returns statistics.
 These results are passed to the function \code{ShouldReportResults} that decides if the results of the latest set of kernel executions have reached stability.
-A simple metric determines this condition: did the kernel execute more than a maximum iteration count (1e9 iterations) or was the total time spent executing on the \gls{cpu} longer than a threshold (one second\footnotemark).
+A simple metric determines this condition: did the kernel execute more than a maximum iteration count (one billion iterations) or was the total time spent executing on the \gls{cpu} (\code{totalCpuTime}) longer than a threshold (\code{minTime}, one second).
 The framework's default \code{minTime} is set at half a second; the value was doubled to one second for the following experiments to simulate a longer running matrix multiplication with many inner kernel executions.
 
-\bk{Editing still a WIP.}
+If \code{ShouldReportResults} returns false, then a new iteration count is decided using \code{PredictItersNeeded}.
+\code{PredictItersNeeded}, in conjunction with \code{ShouldReportResults}, tries to find the number of iterations that will cause the sum of \gls{cpu} execution time to be between \code{minTime} and $1.4 \times \textrm{\code{minTime}}$.
+For benchmarks with variable execution times, this target window is an important part of conservatively determining statistical stability according to the minimum execution time.
+Aiming for close to or equal to \code{minTime} can result in less than \code{minTime} \gls{cpu} execution time in the final set of kernel executions which can in turn return unstable results.
+The presented framework thus aims to overestimate the required iterations to ensure that execution time meets or exceeds \code{minTime}.
 
-To implement this method, a loop trip count, $n$, is determined by
-\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=(\arabic*), after={\footnotemark.}]
-  \item timing several executions of the benchmark
-  \item \nelson{Why 1.4? Why we are using double thee default of 0.5 s?}multiplying the required time (set at one second)\footnote{One second is double the default, suggested half-second time-limit.} by $1.4$
-  \item dividing by the average execution time of those executions
+To implement this strategy, \code{PredictItersNeeded} first creates a multipler that, if the kernel execution time is very consistent, would perfectly scale the total execution time to be $1.4 \times \textrm{\code{minTime}}$.
+Next, the function decides if the previous total execution time was a significant portion of the desired \code{minTime} (more than 10\%).
+If it was a significant portion, then the multiplier is unchanged, with the assumption that $\textrm{\code{iters}} \times \textrm{\code{multiplier}}$ iterations is enough for the total exection time to be greater than \code{minTime}.
+Otherwise, if the total time was not significant, the multiplier becomes 10.
+Finally, the chosen multiplier is applied to the original iteration count to produce the next iteration count -- up to a maximum of one billion iterations -- and the process is restarted.
+
+Thus, because the execution time of the kernels presented in this thesis are so consistent, a reasonable summary is as follows:
+\begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; }}, label=(\arabic*), after={.}]
+  \item execute the kernel with one iteration
+  \item if the total execution time of step one is less than a tenth of a second, repeat step one with ten times the iterations, else go to step three
+  \item determine a multiplier using $1.4 / \textrm{\code{cpuTime}}_{\textrm{prev}}$
+  \item execute the kernel $\textrm{\code{iters}}_{\textrm{prev}} \times \textrm{\code{multiplier}}$ times
+  \item produce results
 \end{enumerate*}
-\footnotetext{\nelson{Which process?}This process can be verified in any upcoming table using $n \times \text{cpuTime} \approx 1.4e9$.}
-\nelson{What "multiple values" refer to?}
-The true process is more iterative and tries multiple values in order to produce a conservative estimate for benchmarks with variation in their execution times.
-For the kernels studied in this chapter, which have very little variation, this is an accurate summary of the process.
-
-\bk{Double check these numbers when they're finalised.}
-While a single second may seem short, for the longest-running kernel presented (\atilde\SI{81}{\textit{\micro\second}}), this still results in roughly 17000 executions.
-For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the kernel is executed nearly 100 million times.
+As mentioned before, because the execution times of the tested kernels are very consistent, the total execution time of the final set of kernel executions is roughly 1.4 seconds.
+The final iteration count used in this process is named $n$ for future reference.
 
 \begin{figure}[t]
   \centering
   \begin{tikzpicture}[scale=1]
-    \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$n_0$ iters} +(2, 0);
-    \draw[decorate, decoration={brace}, align=center, shift={(2.125, 0)}] (0, 0) -- node[above=2] {$n_1$ iters} +(2, 0);
-    \node[shift={(4.5, 0)}] {$\ldots$};
-    \draw[decorate, decoration={brace}, align=center, shift={(4.875, 0)}] (0, 0) -- node[above=2] {$n_{24}$ iters} +(2, 0);
-    \draw[decorate, decoration={brace}, align=center, shift={(1, .8)}] (0, 0) -- node[above=2] {25 repeats} +(4.875, 0);
-    \foreach \x in { 0, 2.125, 4.875 }
+    \draw[decorate, decoration={brace}, align=center, shift={(0, 0)}] (0, 0) -- node[above=2] {$\textrm{\code{RunBenchmark}}_0$} +(3, 0);
+    \draw[decorate, decoration={brace}, align=center, shift={(3.125, 0)}] (0, 0) -- node[above=2] {$\textrm{\code{RunBenchmark}}_1$} +(3, 0);
+    \node[shift={(6.5, 0)}] {$\ldots$};
+    \draw[decorate, decoration={brace}, align=center, shift={(6.875, 0)}] (0, 0) -- node[above=2] {$\textrm{\code{RunBenchmark}}_{24}$} +(3, 0);
+    \draw[decorate, decoration={brace,amplitude=7.5}, align=center, shift={(1.5, .8)}] (0, 0) -- node[above=9] {25 repeats} +(6.875, 0);
+    \foreach \x in { 0, 3.125, 6.875 }
     {
       \pgfmathsetmacro{\xStart}{\x + 0.1}
-      \foreach \i in {0,...,18}
+      \foreach \i in {0,...,28}
       {
         \draw[shift={(\xStart + \i * 0.1, -0.1)}] (0, 0) -- +(0, -0.3);
       }
@@ -132,18 +132,14 @@ For the shortest-running kernel (\atilde\SI{14}{\textit{\nano\second}}), the ker
   \label{fig:execution}
 \end{figure}
 
-In \rfig{execution}, producing one measurement (\ie completing $n$ iterations of the loop) corresponds to a single of the lower braces labeled ``$n_i$ iters''.
-\nelson{What value is reported after measuring 25 times?}
+One measurement is the result of executing \code{RunBenchmark} once.
+In \rfig{execution}, producing one measurement corresponds to a single of the lower braces labeled ``$\textrm{\code{RunBenchmark}}_i$''.
 A total of 25 measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
-Repetitions vary $n$ slightly because the timing iterations may produce slightly different base times, changing the iteration count.
+Repetitions vary $n$ slightly because the timing iterations may produce slightly different overall times, changing the final multiplier.
 
-\nelson{which loops?}
-The framework presents statistics for each of the 10 loops including wall clock time, \gls{cpu} time, and cycles.
-\bk{I think I can add instructions retired if it's a good idea.}
-It also presents overall statistics between each of the ten runs: mean, median, and standard deviation.
-These overall statistics are the values presented throughout the coming sections.
-Vertical bars in plots represent the overall mean while error bars represent the 95\% confidence interval derived from the standard deviation.
-Tables accompany each plot with execution count ($n$), mean \gls{cpu} time, mean cycles, and their respective confidence intervals.
+Each measurement produces two values alongside the iteration count: the mean \gls{cpu} execution time and the mean cycles passed in the kernel.
+Vertical bars in plots represent mean cycles and the attached error bars represent the 95\% confidence interval across the 25 repetitions.
+Tables accompany each plot with mean iteration count ($n$), mean \gls{cpu} time, mean cycles, and their respective confidence intervals.
 
 \subsection{Types Missing From Analysis}
 Three types are missing from the following analysis for different reasons.
