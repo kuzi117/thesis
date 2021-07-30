@@ -82,9 +82,9 @@ The framework implements a method of measuring a kernel by placing it in a loop 
 \end{algorithm}
 
 The body of function \code{RunBenchmark} is an infinite loop that exits only when the results are statistically stable.
-Every iteration of the loop, the function \code{RunNIterations} is called.
+Every iteration of the loop calls the function \code{RunNIterations}.
 \code{RunNIterations} executes and times the tested kernel \code{iters} times and returns statistics.
-These results are passed to the function \code{ShouldReportResults} that decides if the results of the latest set of kernel executions have reached stability.
+These statistics are passed to the function \code{ShouldReportResults} that decides if the results of the latest set of kernel executions have reached stability.
 A simple metric determines this condition: did the kernel execute more than a maximum iteration count (one billion iterations) or was the total time spent executing on the \gls{cpu} (\code{totalCpuTime}) longer than a threshold (\code{minTime}, one second).
 The framework's default \code{minTime} is set at half a second; the value was doubled to one second for the following experiments to simulate a longer running matrix multiplication with many inner kernel executions.
 
@@ -94,13 +94,13 @@ For benchmarks with variable execution times, this target window is an important
 Aiming for close to or equal to \code{minTime} can result in less than \code{minTime} \gls{cpu} execution time in the final set of kernel executions which can in turn return unstable results.
 The presented framework thus aims to overestimate the required iterations to ensure that execution time meets or exceeds \code{minTime}.
 
-To implement this strategy, \code{PredictItersNeeded} first creates a multipler that, if the kernel execution time is very consistent, would perfectly scale the total execution time to be $1.4 \times \textrm{\code{minTime}}$.
+To implement this strategy, \code{PredictItersNeeded} first creates a multiplier that, if the kernel execution time is very consistent, would perfectly scale the total execution time to be $1.4 \times \textrm{\code{minTime}}$.
 Next, the function decides if the previous total execution time was a significant portion of the desired \code{minTime} (more than 10\%).
-If it was a significant portion, then the multiplier is unchanged, with the assumption that $\textrm{\code{iters}} \times \textrm{\code{multiplier}}$ iterations is enough for the total exection time to be greater than \code{minTime}.
-Otherwise, if the total time was not significant, the multiplier becomes 10.
+If it was a significant portion, then the multiplier is unchanged, with the assumption that $\textrm{\code{iters}} \times \textrm{\code{multiplier}}$ iterations is enough for the total execution time to be greater than \code{minTime}.
+Otherwise, if the total time was not significant, the multiplier becomes ten.
 Finally, the chosen multiplier is applied to the original iteration count to produce the next iteration count -- up to a maximum of one billion iterations -- and the process is restarted.
 
-Thus, because the execution time of the kernels presented in this thesis are so consistent, a reasonable summary is as follows:
+Thus, because the execution time of the kernels presented in this thesis are very consistent, a reasonable summary of the process is as follows:
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; }}, label=(\arabic*), after={.}]
   \item execute the kernel with one iteration
   \item if the total execution time of step one is less than a tenth of a second, repeat step one with ten times the iterations, else go to step three
