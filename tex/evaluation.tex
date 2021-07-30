@@ -85,14 +85,15 @@ The body of function \code{RunBenchmark} is an infinite loop that exits only whe
 Every iteration of the loop calls the function \code{RunNIterations}.
 \code{RunNIterations} executes and times the tested kernel \code{iters} times and returns statistics.
 These statistics are passed to the function \code{ShouldReportResults} that decides if the results of the latest set of kernel executions have reached stability.
-A simple metric determines this condition: did the kernel execute more than a maximum iteration count (one billion iterations) or was the total time spent executing on the \gls{cpu} (\code{totalCpuTime}) longer than a threshold (\code{minTime}, one second).
+Stability is reached when the kernel has executed more than a maximum iteration count (one billion iterations) or the total time spent executing on the \gls{cpu} (\code{totalCpuTime}) is longer than a threshold (\code{minTime}, one second).
+\nelson{Not clear what "the following experiments" refer to. Be more specific.}
 The framework's default \code{minTime} is set at half a second; the value was doubled to one second for the following experiments to simulate a longer running matrix multiplication with many inner kernel executions.
 
 If \code{ShouldReportResults} returns false, then a new iteration count is decided using \code{PredictItersNeeded}.
 \code{PredictItersNeeded}, in conjunction with \code{ShouldReportResults}, tries to find the number of iterations that will cause the sum of \gls{cpu} execution time to be between \code{minTime} and $1.4 \times \textrm{\code{minTime}}$.
 For benchmarks with variable execution times, this target window is an important part of conservatively determining statistical stability according to the minimum execution time.
 Aiming for close to or equal to \code{minTime} can result in less than \code{minTime} \gls{cpu} execution time in the final set of kernel executions which can in turn return unstable results.
-The presented framework thus aims to overestimate the required iterations to ensure that execution time meets or exceeds \code{minTime}.
+The framework thus aims to overestimate the number of required iterations to ensure that execution time meets or exceeds \code{minTime}.
 
 To implement this strategy, \code{PredictItersNeeded} first creates a multiplier that, if the kernel execution time is very consistent, would perfectly scale the total execution time to be $1.4 \times \textrm{\code{minTime}}$.
 Next, the function decides if the previous total execution time was a significant portion of the desired \code{minTime} (more than 10\%).
@@ -137,15 +138,15 @@ In \rfig{execution}, producing one measurement corresponds to a single of the lo
 A total of 25 measurements are produced in this way, corresponding to the upper brace in \rfig{execution}, to reduce the impact of system fluctuations in any execution.
 Repetitions vary $n$ slightly because the timing iterations may produce slightly different overall times, changing the final multiplier.
 
-Each measurement produces two values alongside the iteration count: the mean \gls{cpu} execution time and the mean cycles passed in the kernel.
-Vertical bars in plots represent mean cycles and the attached error bars represent the 95\% confidence interval across the 25 repetitions.
-Tables accompany each plot with mean iteration count ($n$), mean \gls{cpu} time, mean cycles, and their respective confidence intervals.
+Each measurement produces two values alongside the iteration count: the mean \gls{cpu} execution time and the mean of the number of cycles required by each kernel execution.
+Vertical bars in plots represent the mean number of cycles and the attached error bars represent the 95\% confidence interval across the 25 repetitions.
+Tables accompany each plot with mean iteration count ($n$), mean \gls{cpu} time, mean number of cycles, and their respective confidence intervals.
 
 \subsection{Types Missing From Analysis}
-Three types are missing from the following analysis for different reasons.
-The \code{i4} and \code{bfloat} types use the same \gls{ir} code generation code paths as every other type except \code{double}.
-Given that the implemented logic works for \code{i8}, \code{i16}, \code{half}, and \code{float}, it is likely that the code generated for them is functional and as performant as the other types.
-However, while translating to assembly, the backend produces either incorrect code (\code{i4}) or an error (\code{bfloat}).
+The performance analysis in this section does not include the types (\code{i4}) and (\code{bfloat}) because of limitations in the backend code generator and the microkernel code generation for \code{double} is not within the scope of this thesis.
+The \code{i4} and \code{bfloat} types use the same \gls{ir} code generation code paths and the same logic as every other type except \code{double}.
+Thus, the code generated for them is  likely to be functional and as performant as the code for these other types.
+However, while translating to assembly, the backend produces incorrect code for \code{i4} or an error (\code{bfloat}).
 Both issues have been acknowledged by the developer team and will be fixed in future versions of \gls{llvm}.
 
 \nelson{What "changed operation dimensions" means?}
@@ -195,19 +196,20 @@ Memory operations are considerably slower than \gls{mma} operations, even though
   \label{fig:floatSink}
 \end{figure}
 
+\nelson{In a thesis a table cannot exceed the width of the margins of the document. You can revise the table. For example, it makes no send to report the precision of $25623185.92 \pm 623715.04$, you could instead have $25.6 \pm 0.6$ if you reported $n$ in millions. You could have a separate column called "Load Sinking" (use two lines at the header, use multirow to center other column headers) and have a yes or no in each row. Have a single place after the decimal for CPU  Time and for Cycles. This is better practice anyway. It is best to not have lines between rows of the table (I removed them).}
 \begin{table}[t]
   \centering
   \makebox[\textwidth][c]{
     \begin{tabular}{| c | c | c | c |}
       \hline
       Name & $n$ & CPU Time (\SI{}{\textit{\nano\second}}) & Cycles\\\hline
-      \code{float}, $8 \times 8 \times 16$, No Load Sinking & $25623185.92 \pm 623715.04$ & $54.84 \pm 1.39$ & $219.11 \pm 5.57$ \\\hline
-      \code{float}, $8 \times 8 \times 16$, Load Sinking & $97308628.60 \pm 144463.04$ & $14.44 \pm 0.05$ & $57.67 \pm 0.19$ \\\hline
-      \code{float}, $32 \times 8 \times 32$, No Load Sinking & $2146145.16 \pm 50283.11$ & $654.30 \pm 14.86$ & $2614.07 \pm 59.39$ \\\hline
-      \code{float}, $32 \times 8 \times 32$, Load Sinking & $2352684.80 \pm 51746.61$ & $596.81 \pm 13.12$ & $2384.39 \pm 52.42$ \\\hline
-      \code{i16}, $8 \times 8 \times 16$, No Load Sinking & $91419216.40 \pm 35690.47$ & $15.31 \pm 0.00$ & $61.18 \pm 0.02$ \\\hline
-      \code{i16}, $8 \times 8 \times 16$, Load Sinking & $80431238.20 \pm 148030.83$ & $17.42 \pm 0.01$ & $69.61 \pm 0.03$ \\\hline
-      \code{i16}, $32 \times 8 \times 32$, No Load Sinking & $3368892.16 \pm 18135.72$ & $415.63 \pm 2.21$ & $1660.53 \pm 8.85$ \\\hline
+      \code{float}, $8 \times 8 \times 16$, No Load Sinking & $25623185.92 \pm 623715.04$ & $54.84 \pm 1.39$ & $219.11 \pm 5.57$ \\
+      \code{float}, $8 \times 8 \times 16$, Load Sinking & $97308628.60 \pm 144463.04$ & $14.44 \pm 0.05$ & $57.67 \pm 0.19$ \\
+      \code{float}, $32 \times 8 \times 32$, No Load Sinking & $2146145.16 \pm 50283.11$ & $654.30 \pm 14.86$ & $2614.07 \pm 59.39$ \\
+      \code{float}, $32 \times 8 \times 32$, Load Sinking & $2352684.80 \pm 51746.61$ & $596.81 \pm 13.12$ & $2384.39 \pm 52.42$ \\
+      \code{i16}, $8 \times 8 \times 16$, No Load Sinking & $91419216.40 \pm 35690.47$ & $15.31 \pm 0.00$ & $61.18 \pm 0.02$ \\
+      \code{i16}, $8 \times 8 \times 16$, Load Sinking & $80431238.20 \pm 148030.83$ & $17.42 \pm 0.01$ & $69.61 \pm 0.03$ \\
+      \code{i16}, $32 \times 8 \times 32$, No Load Sinking & $3368892.16 \pm 18135.72$ & $415.63 \pm 2.21$ & $1660.53 \pm 8.85$ \\
       \code{i16}, $32 \times 8 \times 32$, Load Sinking & $2230348.60 \pm 7729.44$ & $627.73 \pm 2.19$ & $2507.92 \pm 8.75$ \\\hline
     \end{tabular}
   }
@@ -219,10 +221,10 @@ Memory operations are considerably slower than \gls{mma} operations, even though
   \label{tab:floatSink}
 \end{table}
 
-This spilling issue must be resolved by the backend scheduler\footnotemark: the scheduler needs to move loads closer to the \gls{point} in the program that contains the first use of the loaded value to reduce register pressure by using a technique called ``load sinking''.
+This spilling issue must be resolved by the backend scheduler: the scheduler needs to move loads closer to the \gls{point} in the program that contains the first use of the loaded value to reduce register pressure by using a technique called ``load sinking.''\footnotemark
 \footnotetext{The backend design team is currently investigating how to implement this change to the scheduler.}
 Load sinking may not reduce register pressure in many other programs, but in the case of this matrix-multiplication kernel it certainly does.
-A workaround for the spilling resulting from unsunk loads, which can be used until the backend scheduler improves, consists of modifying the \gls{ir} by further breaking up the vector loads into smaller vector loads and sinking these smaller loads closer to the first use of the loaded values.
+A workaround for the spilling that results from unsunk loads, which can be used until the backend scheduler improves, consists of modifying the \gls{ir} by further breaking up the vector loads into smaller vector loads and sinking these smaller loads closer to the first use of the loaded values.
 
 In preparation for the performance evaluation in this thesis, a short targeted \gls{ir} transformation was implemented using this tactic.
 Its goal was to produce results that are more representative of the code that will be generated by a final production-ready backend.
@@ -277,10 +279,10 @@ The larger kernel, however, must use the value again in computing the second set
 \end{figure}
 
 According to constraint \fbox{5} in \rsec{baseCase}, spilling an accumulator is expensive, and therefore an efficient solution must finish computing a block of accumulators before moving on to a different area of the matrix.
-Doing so requires that every operand along the dimension $K$ be brought to register before any operand can be reused with a new block of accumulators.
+Doing so requires that every operand along the dimension $K$ be brought to a register before any operand can be reused with a new block of accumulators.
 For instance, an accumulator layout like that in \rfig{opReuse} requires six operand registers for each accumulation to be performed.
 Using only the 32 registers available while the accumulators are assembled, if $K \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there is not enough space for all values to remain in registers.
-And thus the cause for the multiple spills and reloads throughout the computation becomes apparent: operands from $A$\footnotemark that are still \gls{live} are being forced out of registers and the compiler is choosing to spill them.
+And thus the cause for the multiple spills and reloads throughout the computation becomes apparent: operands from $A$ that are still \gls{live} are being forced out of registers and the compiler is choosing to spill them.\footnotemark
 \footnotetext{The issue is identical for operands of $B$, though the reuse distance is greater.}
 
 \bk{I've changed the discussion of rematerialisation, let me know if it's better.}
@@ -294,7 +296,7 @@ Regardless, the larger kernel's execution, optimised or not, is significantly in
 For smaller datatypes, however, spilling is the correct choice.
 Materialising an \code{i16} involves two loads and at least one instruction to shuffle the loaded data together.
 Rematerialising the value in the future becomes a simple load, significantly reducing register pressure and required memory bandwidth.
-Both the original version and load-sinking version correctly choose to spill their values instead of \glslink{rematerialisation}{rematerialising} them.
+Both the original version and the load-sinking version correctly choose to spill their values instead of \glslink{rematerialisation}{rematerialising} them.
 As with \code{float}, the increased number of memory operations explains the significant increase in execution time for the larger \code{i16} kernel in \rfig{floatSink}, but it does not, however, explain the large difference between the two version.
 The next section investigates this discrepancy.
 
