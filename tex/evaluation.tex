@@ -386,31 +386,30 @@ It is unlikely that such a solution will be found within the \gls{ir} because .
 Such a solution will have to be found in the backend.
 
 \subsubsection{Shuffling}
-Unlike issues with spilling, it is likely that performance degradations caused by misbehaving shuffles can be solved by creating type specific shuffling code.
-While injecting the proposed solution code into the original vectorisation framework is possible, it would be much more effective to first refactor the framework so such a modification is easier.
+Unlike issues with spilling, it is likely that performance degradations caused by misbehaving shuffles can be solved by creating type-specific shuffling code.
+While injecting the proposed solution code into the original vectorisation framework is possible, it would be much more effective to first refactor the framework so that such a modification is easier.
 
-For \code{half} vectors, it may be possible to fool the compiler into generating code as is done for \code{i16} simply by reinterpreting data as \code{i16} via casts and manipulating the data in this state.
-The cast is not a conversion, simply a reinterpretation of the bits in a register, meaningful only within the \gls{llvm} framework and producing no new instructions.
-The data can again be casted back to \code{half} at no cost when it needs to be used in a computation.
-In theory, this produces much better assembly but may also trigger a very conservative response in the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
+For \code{half} vectors, it may be possible for the compiler to generate code in a similar fashion as is done for \code{i16} simply by reinterpreting data as \code{i16} via casts and manipulating the data in this state.
+The cast is not a conversion, simply a reinterpretation of the bits in a register and it is meaningful only within the \gls{llvm} framework.
+Such casting produces no new instructions.
+The data can be casted back to \code{half} at no cost when it needs to be used in a computation.
+In theory, this produces much better assembly but may also trigger a very conservative response in the back-end of the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
 
-The sub-byte granularity of \code{i4} vectors pose a different problem.
+The sub-byte granularity of \code{i4} vectors poses a different problem.
 Performant shuffling code for \code{i4} in the same style as the larger types is an impossibility.
-Instead, clever use of bitwise operations will have to explicitly be used to implement efficient element extraction and movement.
+Instead, clever use of bitwise operations must explicitly be used to implement efficient element extraction and movement.
 Bitwise operations can be applied across an entire vector register, removing the need for scalarisation and improving register usage by reducing the number of required intermediate registers.
 
 \subsubsection{Evaluation Disclaimer}
-All evaluation presented in future sections have no load-sinking or shuffling optimisations applied because no tested optimisation positively affected all cases.
-Advantaging one type or one size of kernel would give an unfair view of the results.
-Thus, all test cases use identical \gls{ir} generation logic with no special cases.
-The presented results are therefore equally advantaged and disadvantaged in code generation.
+The load-sinking and shuffling code transformations are not applied to any of the experimental evaluations presented in the remainder sections of this chapter  because no tested transformation positively affected all cases.
+Advantaging one type or one size of kernel would give a distorted view of the performance that can be achieved in the machine.
+Thus, all test cases use identical \gls{ir} generation logic and are equally advantaged and disadvantaged in code generation.
 
-\section{Varied Access Orders}
+\section{Data Access Orders}
 \label{sec:variedOrders}
-As discussed in \rsec{outerKernel}, packing is incredibly important for matrix multiplication performance.
+As discussed in \rsec{outerKernel}, packing is very important for matrix-multiplication performance.
 An important part of packing, beyond choosing dimensions, is the choice of data access order.
-\rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr}.
-This inevitably translates to a sensitivity to the access order of the matrices in memory that provide the arguments in register.
+\rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr} and, therefore, also sensitive to the access order of the matrices in memory from where values are loaded into registers.
 
 \subsection{Setup}
 When using an unmodified version of \gls{llvm}, the access orders of $A$, $B$, and $C$ are tied together and must be equal.
@@ -418,7 +417,7 @@ Thus two test cases, one all-column-major ($\textrm{C} = \textrm{C} \times \text
 In order to test the performance of the hypothesised best mix of orientations, further modifications to the lowering framework were performed to enable the mixing of orientations.
 With this possibility enabled, two cases are added to the comparison: both use the proposed optimal layout for $A$ and $B$ but vary the layout of $C$ ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$)
 
-Each kernel uses a $2 \times 4$ accumulator setup and therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
+Each kernel uses a $2 \times 4$ accumulator setup and, therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
 The inner most dimension of the kernel is 32, making the overall computation \matmul{8}{32}{16}.
 An inner dimension of 32 requires 32 accumulations but smaller datatypes perform rank-$r$ updates, effectively reducing the number of operations required to compute the kernel.
 It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
@@ -426,34 +425,32 @@ Given the discussion in \rsec{orderExpectation}, more accumulations implies more
 
 \subsection{Expectation}
 \label{sec:orderExpectation}
-For $A$, it is expected that data laid out in a column-major orientation is optimal.
-For \code{float}, while technically a row-major matrix when in \gls{vsr}, is indistinguishable from a single column of four elements.
+A column-major orientation data layout for $A$ should be optimal.
+For \code{float}, when stored \gls{vsr} a row-major matrix is indistinguishable from a single column of four elements.
 Thus, if $A$ is laid out in column-major order, an operand can be created with a single load and no waste.
-However, if $A$ is laid out in row-major order, it is likely the case that $K \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
+However, if $A$ is laid out in row-major order, it is likely that $K \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
 Therefore, to create an operand, four loads must be issued, one for each element of the operand.
 Further overhead is incurred to move elements into the vector register either from scalar registers if the four scalar loads were issued or to shuffle elements from four vectors that were loaded.
 Thus, a column-major order layout is highly preferred.
 The same logic can be applied to $B$, except that a row-major orientation is preferred.
 
-For smaller types, the logic is more complicated because the byte-length of the overall loaded data also shrinks.
+For smaller types, the logic is more complicated because the byte length of the overall loaded data also shrinks.
 In the interest of not repeating much of the discussion in \rsec{caveats}, the same logic as above can be applied while acknowledging that as register usage efficiency decreases speedups also decrease.
 
 An interesting point of discussion exists for types \code{i8} and \code{i4} whose in-register dimensions are $4 \times 4$ and $4 \times 8$ respectively.
-Because two \code{i4} elements are packed into a byte, an eight-element vector is only four bytes.
-This means that both \code{i8} and \code{i4} require loading four four-byte vectors to provide the elements to fill a \gls{vsr}.
-Therefore, there will always be four loads issued whether the matrix that is being extracted from has a row-major or column-major order.
-In this case, it would seem that either orientation is therefore acceptable.
-This is true in the case that operands are being built in isolation.
-However, if one considers that several operands are being built simultaneously, loads can be combined to increase efficiency.
-Shuffle instructions do not decrease, only the indices from which shuffles extract elements in a vector change.
-This optimisation can have a small but noticeable impact on the results.
+With two \code{i4} elements packed into a byte, an eight-element vector only occupies four bytes and, therefore, \code{i8} and \code{i4} require loading four four-byte vectors to provide the elements to fill a \gls{vsr}.
+Thus, four loads must be issued when extracting operands from either  a row-major or a column-major order matrix.
+In this case, either orientation is acceptable when operands are being built in isolation.
+However, if several operands are being built simultaneously, loads can be combined to increase efficiency.
+The need for shuffle instructions does not decrease, only the indices from which shuffles extract elements in a vector change.
+This change can have a small, but noticeable, impact on the results.
 
-Naively, $C$ optimally has a row-major orientation.
+The initial expectation is that $C$ should be stored in row-major orientation.
 This is simply because the simplest method of using \gls{mma} places the operand from $A$ as the first argument and the operand from $B$ as the second argument in the outer product instruction.
 When used in this way, the elements in the accumulator are oriented in a row-major fashion and, after disassembling, there is no extra work required before storing the underlying vectors to memory.
 Transposing the values so that they can be stored into a column-major output-matrix requires extra shuffles.
-However, with the theorem discussed in \rsec{arbitraryOrder}, it is shown that reversing the order of the arguments causes the result in the accumulator to be equivalent but in a column-major order.
-Thus, it is expected that either access order can be used for $C$ without loss of performance.
+However, the theorem discussed in \rsec{arbitraryOrder} states that reversing the order of the arguments causes the result in the accumulator to be equivalent but in a column-major order.
+Thus, either access order can be used for $C$ without loss of performance.
 
 \subsection{Analysis}
 \begin{figure}[t]
@@ -463,29 +460,30 @@ Thus, it is expected that either access order can be used for $C$ without loss o
   \label{fig:accessOrder}
 \end{figure}
 
-\rfig{accessOrder} visualises the results for this experiment.
+\rfig{accessOrder} shows the effect of matrix access order on performance.
 For \code{float}, \code{i16}, and \code{i8}, the numbers are inline with the hypothesised performance.
 The two order-locked variants perform worse than the optimal layout.
+\nelson{Be specific about which two kernels are laid out optimally.}
 Furthermore, between the two kernels whose $A$ and $B$ are laid out optimally, varying the access order of $C$ has no perceptible effect on performance.
 
-Based on the discussion in \rsec{orderExpectation}, it is also unsurprising to see the $\textrm{R} = \textrm{R} \times \textrm{R}$ test case outperform the $\textrm{C} = \textrm{C} \times \textrm{C}$ case.
+Based on the discussion in \rsec{orderExpectation}, it is also unsurprising that $\textrm{R} = \textrm{R} \times \textrm{R}$ outperforms $\textrm{C} = \textrm{C} \times \textrm{C}$.
 Given that the order of $C$ does no affect performance, the difference must be found in $A$ and $B$.
 In each case, one matrix is laid out ideally while the other is not.
+\nelson{Refer to the bars in the plots when making these observations. For instance, is the next sentence about the difference between the two last column of half? For the other types there is not difference between C x R and R x C.}
 Because $B$ is twice the size of $A$, when it is laid out poorly the generated assembly suffers more than when a bad choice is made for $A$.
-Examining the generated assembly shows that for \code{float} the column only variant performs roughly 450 more instructions of ``setup'' (loading and shuffling values) before executing the first outer-product instruction; the generated code is effectively identical afterwards.
+Examining the generated assembly shows that for \code{float} the column-only variant executes roughly 450 more instructions of ``setup'' (loading and shuffling values) before executing the first outer-product instruction; the generated code is effectively identical afterwards.
 This gap lessens as types become smaller due to the smaller overall amount of bytes being loaded, but the difference in performance remains.
 
 \subsubsection{Evaluating \texorpdfstring{\code{half}}{half}}
 As discussed in \rsec{halfShuffle}, \code{half} and \code{i16} can and should be manipulated in exactly the same manner.
-The only difference in their generated assembly should be the outer product instruction which interprets a register as a \code{half} or \code{i16}.
+The only difference in their generated assembly should be the outer-product instruction which interprets a register as a \code{half} or as an \code{i16}.
 The \gls{power} \gls{isa} indicates that the two different outer product instructions also have identical latencies.
 Thus, given identical load, store, and shuffle schedules along with identical outer-product latencies, the performance of the two types should be identical in every instance.
 
 However, given the results in \rfig{accessOrder}, this is clearly not the case.
 \todo{Add table with numbers.}
 The most performant case for \code{half}, $\textrm{C} = \textrm{C} \times \textrm{C}$, still requires roughly three times the cycles of \code{i16}'s least performant cast, also $\textrm{C} = \textrm{C} \times \textrm{C}$.
-Results from test cases using \code{half} that do not follow the anticipated trend are a common thread in this chapter.
-The cause is undoubtedly the same issue discussed in \rsec{halfShuffle}: a code length explosion due to extremely conservative assembly code generation.
+Results for \code{half} that do not follow the anticipated trend are a common thread in this chapter and are caused by a code length explosion due to extremely conservative assembly code generation (see~\rsec{halfShuffle}).
 For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
 Such a change is thus likely to invalidate any of the results presented for \code{half} in this and future experiments.
 Results for \code{half} will continue to be presented for completeness.
@@ -500,24 +498,29 @@ The implemented framework allows only for rectangular layouts.
 Combining these two restrictions creates four test cases: two rectangular layouts, $2 \times 4$ and $4 \times 2$, and two linear layouts, $1 \times 8$ and $8 \times 1$.
 
 Again, using the logic of \rsec{spillSolution}, the kernel size is fit to the accumulator layout.
-A kernel's dimensions are therefore four times the length of the same dimension of the accumulator layout (\eg layout $8 \times 1$ has kernel dimensions $32 \times 4$).
-As in the previous experiment, each kernel performs 32 accumulations, though smaller types perform fewer outer product instructions.
+The dimensions of a kernel are, therefore, four times the length of the same dimension of the accumulator layout (\eg layout $8 \times 1$ has kernel dimensions $32 \times 4$).
+As in the previous experiment, each kernel performs 32 accumulations, though smaller types perform fewer outer-product instructions.
 Therefore, the overall kernel size is \matmul{(\textrm{\code{V}} \times 4)}{32}{(\textrm{\code{H}} \times 4)} where \code{V} and \code{H} correspond to the number of vertical and horizontal accumulators in the layout as described in \rsec{baseCase}.
 Additionally, using the result from \rsec{variedOrders}, all kernels use a $\textrm{R} = \textrm{C} \times \textrm{R}$ layout for their matrices.
 
 \subsection{Expectation}
 \label{sec:layoutExpectation}
-First, the two rectangular layouts and the two linear layouts are expected to have equal performance.
-Without loss of generality, one can abstractly think of executing an accumulation as performing loads from $A$, performing loads from $B$, performing shuffles for each if necessary, and then performing the outer product.
-Transposing a layout means swapping the number of loads from $A$ and $B$ with the overall total remaining the same.
-Likewise, the number of shuffles and outer products also remains the same.
-In this way, the total work remains the same and therefore the performance should be identical.
-Any difference in performance will certainly indicate a missed optimisation in one of the compilations.
+The two rectangular layouts and the two linear layouts are expected to have equal performance.
+An accumulation consists of: 
+\begin{enumerate*}
+\item loads from $A$;
+\item loads from $B$;
+\item shuffles for each if necessary; 
+\item computation of the outer product.
+\end{enumerate*}
+Transposing a layout means swapping the number of loads from $A$ and $B$ with the overall number of loads remaining the same and the number of shuffles and outer products also remaining the same.
+Thus, the total work remains the same and therefore the performance should be identical.
+Any difference in performance will certainly indicate a missed opportunity in one of the compilations.
 
-\rsec{baseCase} discusses a proposed ideal layout for the eight accumulators available in \gls{power10} \gls{mma}.
-The two proposed rectangular layouts, $2 \times 4$, and its transpose, $4 \times 2$, have the highest factor of reuse, with operands from one matrix being reused four times and an operand the other matrix being used twice.
-Moreover, it effectively reduces register pressure by requiring only six elements to be \gls{live} before performing eight consecutive accumulations.
-With 32 total registers, using only six per accumulation allows for the arguments of future accumulations to be brought to register ahead of time or even for multiple accumulations to be performed uninterrupted.
+\rsec{baseCase} describes layouts for the eight accumulators available in \gls{power10} \gls{mma} --- $2 \times 4$ and its transpose $4 \times 2$ --- that have the highest factor of reuse, with operands from one matrix being reused four times and an operand for the other matrix being used twice.
+Moreover, these layouts reduce register pressure by requiring only six operands to be \gls{live} before performing eight consecutive accumulations.
+With 32 registers available, using only six of these registers per accumulation allows for the operands needed for future 
+\nelson{What do you mean by "for multiple accumulations to be performed uninterrupted"? Are there cases where the accumulations are interrupted?} accumulations to be brought to registers ahead of time or even for multiple accumulations to be performed uninterrupted.
 
 However, the argument in \rsec{baseCase} is made under the assumption that the most efficient schedule for outer-product instructions is a large set of loads followed by as many outer products as possible.
 In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
@@ -538,7 +541,8 @@ In this experiment, the lower number of total loads should result in a smaller e
   \label{fig:tightAccLayout}
 \end{figure}
 
-The results of the experiment are shown in \rfig{tightAccLayout}.
+\rfig{tightAccLayout} shows the effect of accumulator layout on performance.
+\nelson{This sentence is not clear. Are you saying that 2x4 and 4x2 have identical performance, and that 1x8 and 8x1 have identical performance? Or are you saying that they all have identical performance? Which is not true according to the graph.}
 All three of \code{float}, \code{i16}, and \code{i8} meet the expectation that the rectangular layouts and linear layouts each have roughly identical performance.
 \bk{
   It seems the more ``vertical'' of the layouts occasionally takes longer.
@@ -549,13 +553,16 @@ All three of \code{float}, \code{i16}, and \code{i8} meet the expectation that t
 }
 However, where \code{i16} and \code{i8} agree with the theory in \rsec{layoutExpectation}, \code{float} shows opposing results.
 
-Initial analysis of this difference hoped that, for \code{float}, the $1 \times 8$ layout and its transpose had found a better load schedule or that it had activated hardware such as the prefetcher in a way that was not possible with the data types which load less data overall.
-It is partially true that a better schedule was found, though not in the way that was anticipated.
-Instead, the changed arguments have simplified the backend code generator's analysis, likely its \glslink{live}{liveness} analysis, allowing it to find ways to deconflict \gls{live} values in order to create a simpler load schedule.
-This simplification has thus crucially resulted in the removal of the initial spills present in every test case presented so far.
-In fact, given the kernel laid out for it, the assembly is very close to the optimal, handwritten assembly, lacking only the small optimisation to combine 128-bit vector loads which use consecutive addresses into a paired-vector 256-bit load.
-For comparison's sake, activating the load sinking optimisation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts\footnotemark.
-\footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to an optimisation pass ordering issue, not deliberate choice.}
+An initial analysis of this difference may hypothesize that, for \code{float}, the $1 \times 8$ layout and its transpose had found a better load schedule or that it had activated hardware such as the stream prefetcher in a way that was not possible with the data types that loaded less data overall.
+It is true that the code generator found a better schedule, though not in the way that we anticipated.
+Instead, the changed arguments have simplified the backend code generator's analysis, likely its \glslink{live}{liveness} analysis, 
+\nelson{What "deconflict \gls{live} values" mean? Are you talking about reducing register interference?} 
+allowing it to find ways to deconflict \gls{live} values in order to create a simpler load schedule.
+This simplification has resulted in the removal of the initial spills present in every test case presented so far.
+\nelson{Where this handwritten assembly that you are comparing with comes from? Was it introduced in this document before?}
+In fact, given the kernel laid out for it, the assembly is very close to the handwritten assembly, lacking only the small code transformations to combine 128-bit vector loads which use consecutive addresses into a paired-vector 256-bit load.
+For comparison's sake, activating the load sinking code transformation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts\footnotemark.
+\footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to a code-transformation pass ordering issue, not deliberate choice.}
 By examining the assembly for the rectangular test case with load sinking, however, it is easy to see that the total number of vectors loaded between accumulations is less than that in the linear layout.
 In both cases the only instructions present are the loads and the outer products which means there are no instructions with which to hide a stall due to load latency.
 Thus it can be expected that equivalently-scheduled \code{float} testcases would follow the expected trend because, with less loads, there is less likely to be a load-based stall.
@@ -564,7 +571,8 @@ Such a decrease in the $2 \times 4$ and $4 \times 2$ bars would cause the \code{
 
 Regarding \code{i16} and \code{i8}, the shuffles necessary to build operands serve to add extra complication to the \glslink{live}{liveness} analysis and thus the same simplified schedule cannot be found for the linear layouts.
 Therefore, both the rectangular and linear layouts are affected by spills and can be compared directly.
-As expected in \rsec{layoutAnalysis}, the linear layouts were significantly slower for the same reasons discussed and so, for the sake of brevity, will not be reiterated.
+\nelson{Simply state the reason with a few words instead of saying "for the same reasons". The reference is to this same section.}
+As explained in \rsec{layoutAnalysis}, the linear layouts were significantly slower for the same reasons discussed and so, for the sake of brevity, will not be reiterated.
 \bk{Is this acceptable or should I reiterate.}
 
 \section{Vectorisation and MMA}
@@ -603,6 +611,7 @@ The lowering is already set up to extract vectors from $A$, scalars from $B$, an
 All of this is done with the vectoriser in mind.
 The lowering decouples operations from each other as best as possible, enabling the vectoriser to effectively combine operations into a single vector operation.
 
+\nelson{same comments as for the previous table in terms of the precision that you use to report the values. Make the table fit within the margins.}
 \subsection{Analysis}
 \label{sec:mmaVsxAnalysis}
 \begin{figure}[t]
