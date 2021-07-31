@@ -8,10 +8,42 @@
 
 % environment for abstract.
 \begin{abstract} % Enforces spacing rules already.
-  \begin{itemize}
-    \item $\leq 700$ words.
-    \item Text only.
-  \end{itemize}
+  % \begin{itemize}
+  %   \item $\leq 700$ words.
+  %   \item Text only.
+  % \end{itemize}
+\Gls{gemm} is used widely in many high-performance application-domains.
+In many cases, these applications repeatedly execute their matrix-multiplication subroutine, as is the case in various machine learning methods or in the implementation of particle physics simulator.
+Repeated executions cause matrix-multiplication operations to therefore become a computational bottleneck in these applications, creating an ideal opportunity for optimisation.
+
+Current state-of-the-art optimisation consists of manual, programmer-directed replacement of matrix multiplication with calls to highly-optimised \gls{blas}-like libraries.
+Such implementations contain kernels painstakingly written by hand in assembly.
+Beyond a clear expertise barrier for porting each kernel to each iteration of a specific platform -- and thus a maintenance issue -- such a replacement creates a dependency on external code over which a developer has no control.
+Moreover, calls to an unknowable library function disables critical optimisations such as inlining that can enable further optimisations in the calling code.
+
+A less common yet critical opportunity for optimisation is operation combination via loop fusion.
+When matrix operations directly follow each other with the input data of one operation being the output of the previous, they can be combined in such a way as to immediately pass the results of one operation to the next.
+In this way, all operations over a piece of single piece of input data can be computed before writing it back to memory.
+Function calls induce artificial memory synchronisation points which in turn cause performance degradations that cannot be alleviated by a compiler.
+
+The solution to these issues is to provide a matrix-multiplication alternative with competitive performance directly within the compiler.
+An implementation in this style will automatically generate a matrix-multiplication kernel that is immediately optimised by the compiler's optimiser.
+This thesis addresses this issue by investigating and implementing a high-performance matrix-multiplication kernel implementation directly within the \gls{llvm} compiler framework.
+Furthermore, the proposed method implements the proposed solution in terms of emerging technologies, namely the \gls{matrix engine}.
+
+\Glspl{matrix engine} are new facilities added in several architectures as part of the most recent \gls{cpu} generation.
+These extensions focus on enabling matrix operations by extending the preexisting \gls{simd} capabilities of the \gls{isa}.
+\gls{ibm} \glslink{power10}{POWER10's} \gls{mma} is one such extension.
+Its unique choice to implement matrix multiplication through outer product presents new opportunities to improve kernels performance.
+
+\bk{
+  It feels like there's a gap here (the method).
+  I'm not sure how or \emph{if} I should be bridging it or just jumping right to results as I do now.
+}
+A detailed analysis of the proposed method's results reveal opportunities for compiler improvements potentially affecting the entire \gls{power} compilation stack.
+In spite of missed opportunities, the implemented solution shows between 3.1 and 12.9 times speed up for various data types when compared with the closest compiler-only solution.
+\bk{Does more need to be said?}
+
 \end{abstract}
 
 \end{document}
