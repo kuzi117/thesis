@@ -9,16 +9,14 @@
 \chapter{Conclusion}
 \label{cha:conclusion}
 Beginning by highlighting code-improvement opportunities that are unrealisable while using an external library for computation, this thesis presents a performant solution to the attractive alternative of a compiler-only path to generate code to compute matrix-multiplication.
-\nelson{Is it called micro kernel elsewhere in the thesis?}
-A comprehensive review of state-of-the-art matrix-multiplication inner-kernel implementation strategies in \rcha{matmul} reveals an opportunity for significant performance improvements in the inner kernel.
+A comprehensive review of state-of-the-art matrix-multiplication micro-kernel implementation strategies in \rcha{matmul} reveals an opportunity for significant performance improvements in the inner kernel.
 This improvement comes in the form of extending operation dimensions in order to perform a full $4 \times 4$ outer-product, an operation that is supported by \glslink{power10}{POWER10's} \gls{mma} extension, as discussed in \rcha{mma}.
 The \gls{matrix engine} offers significant speedup for matrix multiplication when compared with previous \gls{simd} methods using \gls{vsx}.
 Further insight in the form of the use of the \code{llvm.matrix.multiply} intrinsic enables the proposed method to be well positioned to enter common use as a standardised \gls{lowering} for any frontend that compiles matrix-multiplication operations.
 
 \rcha{method} details a procedure for emitting a matrix-multiplication kernel in \gls{llvm} \gls{ir} that makes use of all observations made above.
 Deep understanding of the requirements of the hardware and the software led to the creation of several constraints that were used to create an efficient and performant \gls{lowering} strategy.
-\nelson{What do you mean with "specifically acknowledged"? Better wording?}
-Each of these constraints is specifically acknowledged and addressed throughout \rsec{alternateLowering} and as part of the \gls{lowering} algorithm presented in \ralg{intrinsic}.
+Each of these constraints is addressed throughout \rsec{alternateLowering} and directly influences the \gls{lowering} algorithm presented in \ralg{intrinsic}.
 The implemented lowering generates an efficient kernel for operands of any dimension, data orientation, and several data types.
 
 A thorough performance evaluation and analysis of the algorithm follows in \rcha{evaluation}.
@@ -27,6 +25,7 @@ Accounting for these deficiencies, the remaining experiments narrow kernel param
 This optimal setting is compared with the closest point of reference: the vectorised lowering of the same intrinsic which makes use of the \gls{power} \glslink{isa}{ISA's} \gls{simd} capabilities in \gls{vsx}.
 The comparison shows a speedup of at least 3.1 times for \code{half}, which is expected to improve drastically with improvements to the backend, up to a maximum of 15.8 times for \code{i8}.
 
+\bk{This text needs to be corrected; waiting on discussion.}
 The methodology followed in this thesis relies on a multi-level code generation that separates the efficient utilization of the memory hierarchy at the macro level and the efficient utilization of the processing units and vector registers in the micro level.
 This encapsulation of the micro-kernel code generation using the \code{llvm.matrix.multiply} intrinsic in \gls{llvm} as an interface is likely to also be the best methodology when targeting upcoming matrix-multiplication engines with hardware assistants that will soon be available from other vendors. The methodology presented in this thesis shall be relevant for these other machine architectures as well.
 
