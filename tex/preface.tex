@@ -13,11 +13,13 @@
 
 \rsec{alternateLowering} contains content that has been extracted from a multi-author manuscript that is currently being revised~\autocite{kuzma2021fast}.
 The content in that manuscript was written and drafted by myself before being edited by myself and my co-authors.
-The version contained in this thesis contains additional details in the description of the code-generation design and additional experi mental results and analysis that are not included in the multi-author manuscript.
+The version contained in this thesis contains additional details in the description of the code-generation design and additional experimental results and analysis that are not included in the multi-author manuscript.
 The plan at the time of writing is for the manuscript to be further revised and to be submitted to a major international journal in the area of code generation.
 
-\nelson{This is an initial draft to give you an idea of what they want in the preface about what your contributions in the multi-author effort are. Please review and revise to make it more precise if you wish.}
-In this multi-author effort to create a more efficient compiler-only code-generation path in  for \gls{llvm} for \Gls{gemm} targeting the \gls{mma} in \glslink{power10}{POWER10} my contribution was to design and implement the micro-kernel code generation to make efficient use of \gls{mma} and to increase data reuse at the vector-register level.
+This multi-author effort focuses on creating a more efficient compiler-only code-generation path for \gls{gemm} in the \gls{llvm} framework.
+The work in that manuscript addresses the much broader issue of efficient and large matrix multiplication on multiple platforms with varying memory and hardware constraints.
+My contribution to that work, the same contribution described in much greater detail in this thesis, is only one facet of the investigation developed by myself and my co-authors.
+Overall, my contribution to that work is the implementation of an efficient and performant matrix-multiplication kernel that makes use of \gls{mma}, allowing for the examination and comparison of the effects of \glspl{matrix engine} on large-scale matrix-multiplication kernels.
 
 % A preface is required if you need to describe how parts of your thesis were
 % published or co-authored, and what your contributions to these sections were.
