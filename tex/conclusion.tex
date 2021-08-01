@@ -4,11 +4,29 @@
 \providecommand{\main}{..}
 \documentclass[\main/thesis.tex]{subfiles}
 
-\onlyinsubfile{\zexternaldocument*{\main/tex/introduction}}
-
 \begin{document}
 
 \chapter{Conclusion}
 \label{cha:conclusion}
+Beginning by highlighting optimisation opportunities that are unrealisable while using an external library for computation, this thesis presents a performant solution to the attactive alternative of a compiler-only pipeline for generating matrix-multiplication kernels.
+A comprehensive review of state-of-the-art matrix-multiplication inner-kernel implementation strategies in \rcha{matmul} reveals an opportunity for significant performance improvements in the inner kernel.
+This improvement comes in the form of extending operation dimensions in order to perform a full $4 \times 4$ outer-product, an operation which is inherently supported by \glslink{power10}{POWER10's} \gls{mma} extension, as discussed in \rcha{mma}.
+The \gls{matrix engine} offers significant speedup for matrix multiplication when compared with previous \gls{simd} methods using \gls{vsx}.
+Further insight in the form of the use of the \code{llvm.matrix.multiply} intrinsic enables the proposed method to be well positioned to enter common use as a standardised \gls{lowering} for any frontend that compiles matrix-multiplication operations.
 
+\rcha{method} details a procedure for emitting a matrix-multiplication kernel in \gls{llvm} \gls{ir} that makes use of all observations made above.
+Deep understanding of the requirements of hardware and the software which uses it is applied to create several constraints to which an efficient \gls{lowering} must adhere for it to be performant.
+Each of these constraints is specifically acknowledged and addressed throughout \rsec{alternateLowering} and as part of the \gls{lowering} algorithm presented in \ralg{intrinsic}.
+The implemented lowering accepts operands of any dimension, data orientation, and several data types and can generate an efficient kernel in each case.
+
+A thorough analysis of the algorithm follows in \rcha{evaluation}.
+An investigation and discussion of several shortcomings in the compiler backend for \gls{power} demonstrates where performance can be improved in future iterations of the \gls{llvm} framework.
+Accounting for these deficiencies, the remaining experiments narrow kernel parameters to find an optimal setting.
+This optimal setting is compared with the closest point of reference: the vectorised lowering of the same intrinsic which makes use of the \gls{power} \glslink{isa}{ISA's} \gls{simd} capabilities in \gls{vsx}.
+The comparison shows a speedup of at least 3.1 times for \code{half}, which is expected to improve drastically with improvemnts to the backend, up to a maximumn of 15.8 times for \code{i8}.
+
+\bk{
+  This seems like an abrupt ending.
+  I'm not sure what else could be included.
+}
 \end{document}
