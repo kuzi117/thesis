@@ -237,7 +237,7 @@ This matrix size represents the best-case scenario for such an optimisation:
 \end{enumerate*}
 \bk{If plots are updated, update these numbers.}
 Given such a perfect case, the runtime of the original version (labeled ``No Load Sinking'') is roughly quartered (\rtab{floatSink}, rows 1 and 2) in the optimised version (labeled ``Load Sinking'').
-If the operation were to have more accumulations, then this gap would continue to grow as more and more spills would be required in the unoptimised version.
+If the operation were to have more accumulations, then this gap should continue to grow as more and more spills would be required in the unoptimised version.
 
 However, by examining the bars labeled ``8x8x16'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slow down (\rtab{floatSink}, rows 5 and 6).
 This slowdown can be attributed to the invalidation of properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
@@ -577,11 +577,6 @@ As explained in \rsec{layoutAnalysis}, the linear layouts were significantly slo
 
 \section{Vectorisation and MMA}
 The closest point of reference, that is a compiler-only method of generating generic matrix-multiplication code, is the preexisting vectorised lowering of the \code{llvm.matrix.multiply} intrinsic.
-\bk{
-  I'm writing this as if it's the final experiment.
-  If more experiments should be done, then I'll do them.
-  OpenBLAS with MMA is probably not hard to add to this comparison if that's a necessary addition as well.
-}
 Thus it is used as the baseline for speedup induced by the implementation of the proposed method.
 
 \subsection{Setup}
@@ -663,18 +658,82 @@ Regardless of the reason for a particularly slow vectorised schedule, the result
 Likewise, in spite of the issues and possible improvements noted in \rsec{caveats}, the results for the \gls{mma} lowering represent a significant and tangible improvement in performance for matrix multiplication on \gls{power10}.
 Both methods will improve in parallel with general improvements to the backend, but the \gls{mma} lowering will always show a noteworthy improvement over the vectorised version.
 
-\section{More experiments}
-\begin{itemize}
-  \item Comparison between:
-  \begin{itemize}
-    \item Naive matmul.
-    \item OpenBLAS.
-    \item GPU, but the overhead is probably much too large to warrant testing against it.
-  \end{itemize}
-\end{itemize}
+\section{Handwritten Kernel Comparison}
+While the vectorised lowering of \code{llvm.matrix.multiply} is the most comparable point of reference when it comes to improving upon compiler-only methodologies for matrix multiplication, another important point to study is overall achievable performance.
+To this end, the investigation looks to comparisons with the kernels developed by Moreira \etal~\autocite{moreira2021matrix}.
 
-\begin{itemize}
-  \item Small matrices vs big matrices (call costs).
-\end{itemize}
+\subsection{Setup}
+Because the handwritten kernels do not fall victim to the apparent spill issues, it is important to choose reference points that can demonstrate both the current state of the proposed lowering as well as the future potential within the kernels.
+As a result, three points of comparison are chosen.
+
+The first two are the intrinsic lowering for \code{float}, one with no transformations applied and the second with the load-sinking transformation applied.
+These two executables demonstrate the current and future state, respectively, of the proposed methodology.
+
+The final point of comparison is the hand-written single precision floating point kernel from Moreira \etal.
+Since publishing their work on \gls{mma}, the kernels in question have been manually improved by the authors and thus are expected to surpass the performance presented in that work.
+This experiment compares against the performance of the newer version of the kernels.
+
+Unfortunately, it is impossible to integrate the handwritten kernel directly into the benchmarking framework loop due to the explicit use of registers which results in overwritten values and segmentation faults.
+Therefore, it was necessary to separate the kernel into its own function.
+This separation, however, means that the benchmarking framework is timing both the kernel and a function call, offsetting the timing slightly.
+To counteract this, a benchmark which times only a function call was added.
+The results in \rsec{intrHandAnalysis} for the handwritten kernel thus report the average time of $\textrm{\code{kernelTime}} - \textrm{\code{fnCallTime}}$.
+
+In all cases, the kernels use \code{float} elements while computing a \matmul{8}{32}{16} kernel.
+As well, the matrices use a $\textrm{R} = \textrm{C} \times \textrm{R}$ data layout.
+
+\subsection{Expectation}
+Given the results in \rfig{floatSink}, the intrinsic version without load sinking should be significantly slower than the version with load sinking applied.
+This experiment, however, has quadrupled the number of accumulations that were performed during the analysis performed in \rsec{caveats}.
+The analysis in the same section expects the gap between the intrinsic versions to have grown as a greater number of spills should be avoided by load sinking.
+
+The handwritten kernel should represent the epitome of instruction choice and scheduling for this matrix multiplication kernel.
+With this in mind, it should be expected that the handwritten kernel outperforms both of the intrinsic lowerings.
+However, previous examinations of the assembly resulting from a compilation with load sinking has shown that the assembly contains no distracting instructions, only outer product and load instructions.
+It is thus expected that the intrinsic lowering with load sinking should be very close in performance to the handwritten kernel.
+
+\subsection{Analysis}
+\label{sec:intrHandAnalysis}
+\begin{figure}[t]
+  \centering
+  \input{tex/figures/intrHand.pgf}
+  \caption{Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.}
+  \label{fig:intrHand}
+\end{figure}
+\begin{table}[t]
+  \centering
+  \makebox[\textwidth][c]{
+    \begin{tabular}{| c | c | c | c |}
+      \hline
+      Name & $n$ & CPU Time (\SI{}{\textit{\nano\second}}) & Cycles\\\hline
+      No Load Sinking & $17995677.20 \pm 298626.48$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\\hline
+      Load Sinking & $35076889.96 \pm 42722.35$ & $39.89 \pm 0.01$ & $159.36 \pm 0.05$ \\\hline
+      Handwritten & $31504866.20 \pm 51489.54$ & $41.15 \pm 0.07$ & $164.39 \pm 0.27$ \\\hline
+    \end{tabular}
+  }
+  \caption{
+    Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.
+    See \rfig{intrHand} for graphical presentation.
+  }
+  \label{tab:intrHand}
+\end{table}
+
+The experiment produced the results in \rfig{intrHand} and \rtab{intrHand}.
+The difference between the two intrinsic lowerings is significant as expected, though the proportion of the difference is unexpected.
+In \rfig{floatSink}, the load-sinking version takes roughly a quarter of the cycles that the non-load-sinking version takes to execute.
+This proportion was expected to increase as the number of accumulations increased.
+Contrarily, the proportion has decreased to about one half, suggesting that as accumulations increase, the non-load-sinking instruction schedule improves or the load-sinking instruction schedule degrades performance.
+This is possibly due to the fact that in the assembly, after the spills in the non-load-sinking version, load instructions are interleaved much more freely with outer product instruction than in the load-sinking version, which has clear distinctions between load and outer product portions of the schedule.
+This could indicate a potential direction for improvement after the spilling issues are solved.
+
+When comparing the load-sinking lowering and the handwritten kernel, the load-sinking lowering performs better than expected.
+In fact, according to \rtab{intrHand}, the generated kernel outperforms the handwritten kernel by several cycles.
+However, upon inspecting the assembly, the instructions emitted in each kernel are identical and only the registers used differ.
+This is a great achievement for the generated kernel as it implies, once the spilling issues are resolved, that the code generated by the compiler will be on-par with handwritten code.
+Given that there is still the potential for improvements to scheduling that may be derived from the difference between the two generated lowerings, there is also the potential that the generated kernel will eventually exceed the performance of Moreira \etal.
+
+While the slight advantage in \rtab{intrHand} remains a significant and promising result, given the near identicalness of the assemblies, it is difficult to conclude that one truly outmatches the other.
+It is possible that different register choices may save several cycles due to removing a dependence, but it is far more likely that the side effects of calling a function have not been fully accounted for thus causing several additional cycles to be added to the handwritten kernel's average cycle count.
+Even still, this does not negate the fact that the proposed method can produce a matrix-multiplication kernel that is as performant as handwritten assembly.
 
 \end{document}

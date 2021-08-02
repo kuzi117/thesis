@@ -1,0 +1,72 @@
+{
+  "context": {
+    "date": "2021-08-02T13:47:53-05:00",
+    "host_name": "wyvernden6linux",
+    "executable": "./exe/float.8x32x16.vdhd.CRR.hand",
+    "num_cpus": 120,
+    "mhz_per_cpu": 512,
+    "cpu_scaling_enabled": false,
+    "caches": [
+      {
+        "type": "Data",
+        "level": 1,
+        "size": 32768,
+        "num_sharing": 4
+      },
+      {
+        "type": "Instruction",
+        "level": 1,
+        "size": 49152,
+        "num_sharing": 4
+      },
+      {
+        "type": "Unified",
+        "level": 2,
+        "size": 1048576,
+        "num_sharing": 8
+      },
+      {
+        "type": "Unified",
+        "level": 3,
+        "size": 4194304,
+        "num_sharing": 8
+      }
+    ],
+    "load_avg": [0.85,0.51,2.78],
+    "library_build_type": "release"
+  },
+  "benchmarks": [
+    {
+      "name": "fnCall",
+      "family_index": 1,
+      "per_family_instance_index": 0,
+      "run_name": "fnCall",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 424861295,
+      "real_time": 3.2960169931038870e+00,
+      "cpu_time": 3.2959999003910205e+00,
+      "time_unit": "ns",
+      "CYCLES": 1.3168354940404727e+01,
+      "cs": 0.0000000000000000e+00
+    },
+    {
+      "name": "handMult",
+      "family_index": 0,
+      "per_family_instance_index": 0,
+      "run_name": "handMult",
+      "run_type": "iteration",
+      "repetitions": 1,
+      "repetition_index": 0,
+      "threads": 1,
+      "iterations": 31410352,
+      "real_time": 4.4556919004699516e+01,
+      "cpu_time": 4.4556927665121357e+01,
+      "time_unit": "ns",
+      "CYCLES": 1.7801891640692216e+02,
+      "cs": 0.0000000000000000e+00
+    }
+  ]
+}

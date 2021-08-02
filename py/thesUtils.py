@@ -5,7 +5,7 @@ import os
 import scipy.stats as st
 from scipy.stats.mstats import gmean
 
-version = '2.4.0'
+version = '2.5.1'
 
 # Text width in inches.
 textWidth = 5.50107
@@ -55,7 +55,7 @@ def getFileStats(logFile, confidence=0.95):
   lower, upper = st.t.interval(confidence, len(times) - 1, loc=mean, scale=st.sem(times))
   return (mean, mean - lower, upper - mean)
 
-def getJsonStats(logFile, confidence=0.95):
+def getJsonStats(logFile):
   '''
   Takes a path to a json log file.
   Returns a tuple of (iterations, cpu time, cycles).
@@ -78,6 +78,52 @@ def getJsonStats(logFile, confidence=0.95):
 
   return (iterations, cpu_time, cycles)
 
+def getJsonDiffStats(logFile, firstBenchName, secondBenchName):
+  '''
+  Takes a path to a json log file and the name of two benchmarks for which the
+  difference in statistics should be returned
+  Returns a tuple of (iterations diff, cpu time diff, cycles diff).
+  '''
+  assert firstBenchName != secondBenchName, \
+    'Benchmark diff names cannot be the same'
+
+  if not os.path.exists(logFile):
+    print(f'The file "{logFile}" does not exist.')
+    print('Returning zeroes.')
+    return (0, 0, 0)
+
+  with open(logFile, 'r') as f:
+    objects = json.load(f)
+
+  benchmarks = objects['benchmarks']
+  assert len(benchmarks) == 2, 'Too many benchmark entries'
+
+  firstBench = None
+  secondBench = None
+
+  # Check first benchmark.
+  if benchmarks[0]['name'] == firstBenchName:
+    firstBench = benchmarks[0]
+  elif benchmarks[0]['name'] == secondBenchName:
+    secondBench = benchmarks[0]
+
+  # Check second benchmark.
+  if benchmarks[1]['name'] == firstBenchName:
+    firstBench = benchmarks[1]
+  elif benchmarks[1]['name'] == secondBenchName:
+    secondBench = benchmarks[1]
+
+  # Verify benchmarks were found.
+  assert firstBench is not None, 'First benchmark not found'
+  assert secondBench is not None, 'Second benchmark not found'
+
+
+  iterations = firstBench['iterations']
+  cycles = firstBench['CYCLES'] - secondBench['CYCLES']
+  cpu_time = firstBench['cpu_time'] - secondBench['cpu_time']
+
+  return (iterations, cpu_time, cycles)
+
 def getJsonCumulativeStats(fmtLogPath, count, confidence=0.95):
   '''
   Takes a log path with containing a single formattable field for count.
@@ -91,6 +137,38 @@ def getJsonCumulativeStats(fmtLogPath, count, confidence=0.95):
   for i in range(count):
     logPath = fmtLogPath.format(i)
     iterations, cpuTime, cycles = getJsonStats(logPath)
+    iterList.append(iterations)
+    timeList.append(cpuTime)
+    cycleList.append(cycles)
+
+  mean = lambda l: sum(l) / len(l)
+  def ci(l):
+    m = mean(l)
+    lower, upper = st.t.interval(confidence, len(l) - 1, loc=m, scale=st.sem(l))
+    return (m - lower, upper - m)
+
+  iterResults = (mean(iterList), *ci(iterList))
+  timeResults = (mean(timeList), *ci(timeList))
+  cycleResults = (mean(cycleList), *ci(cycleList))
+
+  return (iterResults, timeResults, cycleResults)
+
+def getJsonCumDiffStats(fmtLogPath, count, firstBench, secondBench, confidence=0.95):
+  '''
+  Takes a log path with containing a single formattable field for count.
+
+  Differs from getJsonCumulativeStats only in that it calls getJsonDiffStats
+  instead of getJsonStats. Probably a better way to factor this.
+  '''
+  # Holding place for data.
+  iterList = []
+  timeList = []
+  cycleList = []
+
+  # Gather data.
+  for i in range(count):
+    logPath = fmtLogPath.format(i)
+    iterations, cpuTime, cycles = getJsonDiffStats(logPath, firstBench, secondBench)
     iterList.append(iterations)
     timeList.append(cpuTime)
     cycleList.append(cycles)
