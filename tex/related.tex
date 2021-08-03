@@ -8,14 +8,9 @@
 
 \chapter{Related Work}
 \label{cha:related}
-\bk{
-  I'm not sure if this section should go early or late.
-  I know we've discussed that it's typically early but our area has a history of putting it as the second-to-last section (before conclusion).
-  Seems better to have it late so I won't have to explain a bunch of things before the sections they're explained in.
-}
-Each of the following sections contains text derived from work submitted to PACT 2021~\autocite{kuzma2021fast}.
+The sections below present work related to separate facets of this thesis.
+Each of the sections contains text derived from work currently under revision~\autocite{kuzma2021fast}.
 
-% comparitive and analytical, not descriptive.
 \section{Matrix Multiplication}
 In a seminal work, Goto and Van D. Geijn detail a layered approach to improve cache and vector-register utilization on \glspl{cpu}~\autocite{goto2008anatomy}.
 Using this approach, modern linear-algebra libraries, such as Eigen and OpenBLAS, achieve high performance on \gls{hpc} workloads.
@@ -44,7 +39,7 @@ As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} 
 Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace these with library calls~\autocite{carvalho2021kernelfarer}.
 While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the integration of libraries into a computer system that may not have it.
 Moreover, their experimental results, as in this work, indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
-The solution in this thesis is orthogonal to KernelFaRer. 
+The solution in this thesis is orthogonal to KernelFaRer.
 The pattern recognition in  KernelFaRer can identify GEMM kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
 
 \section{Code Generation for New Hardware}
@@ -65,7 +60,6 @@ It is difficult to find works explicitly discussing the outer product as kernels
 However, a work by Naohito Nakasato~\autocite{nakasato2011fast} and another by Wu Jing and Joseph Jaja~\autocite{wu2016achieving} both explicitly mention the use of the outer product to compute matrix multiplication.
 Both of these works use a \gls{gpu} for their implementation while this work focuses on the emerging field of on-chip matrix engines.
 
-\bk{This one might be only tangentially related.}
 Yu \etal implement a rank-one update algorithm on the \gls{gpu}, but their research focus is improving the performance of bilinear pooling~\autocite{yu2020toward}.
 Their work aims to replace another method of singular value decomposition via an iterative method requiring many matrix-matrix multiplications by using the outer product.
 This work presented in this thesis aims to improve matrix-matrix multiplication on the \gls{cpu} using rank-$r$ updates.
