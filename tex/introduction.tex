@@ -31,15 +31,6 @@ Nevertheless, each of these kernels must be produced and hand tuned for each new
 Creating these kernels requires engineers who are extremely knowledgeable about the \gls{isa} and the architectural details of a target \gls{cpu}.
 Thus, maintaining the code surrounding such a kernel as well as the kernel itself requires significant ongoing effort as developers try to obtain greater performance from the implementation.
 
-\bk{
-  I'm planning to produce results that show the cost of calling a function to compute GEMM and comparing with a na\"ive version.
-}
-This work also shows that, for small matrices, the overhead of invoking a function call along with the extra operations that are part of the library's prologue and epilogue can lead to slow down.
-\todo{
-  At what size is it better?
-  Is the na\"ive solution without MMA better?
-}
-
 Additionally, using a library means that user code now has an external dependency.
 In applications where performance and correctness are critical and must be tightly controlled by the developer, using libraries may be an impossibility.
 Similarly, while finding a \gls{blas} implementation on major platforms is often quite easy, some target platforms may not have an available implementation with which this dependency can be fulfilled~\autocite{zee2016blis}.
@@ -47,23 +38,17 @@ This is a direct product of the manual kernel porting difficulties described abo
 
 Therefore, as a counterpoint, a method of transparently accelerating matrix multiplication via a compiler-only path is important for portability and maintainability.
 When a matrix-multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
-\nelson{What is your definition of \emph{architectural sensitivity} ? And how is it different from \emph{\gls{cpu} dependency}?}
-\bk{I've rewritten this part using ``agnostic'' and ``dependent'', hopefully these are better.}
 Relaxing this requirement means that kernels become \emph{\gls{cpu} agnostic} rather than \emph{\gls{cpu} dependent}.
 It will not be \emph{\gls{isa} agnostic} because a kernel, to obtain best performance, will still need to be written in terms of an \gls{isa}'s vector extension, tying it to the architecture, but it will not be tied to a specific version of the \gls{isa}.
 The change to \gls{cpu} agnostic does, however, mean that  optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
 This automation means that an appropriately written and parameterised kernel will also still be optimal in future hardware iterations.
-\bk{
-  Note for the conclusion: tie this sentence back.
-  Future MMA versions can make use of the same kernel, tuning acc layout, etc.
-}
 
 Kernels written as part of a compiler are also implicitly subject to all of the optimisations available in the compiler, now and in the future.
 Currently, these include optimisations such as loop switching, blocking, and unrolling which are known to have significant effects on matrix multiplication speed.
 In the backend, improvements to processes such as register allocation and instruction scheduling (reordering/pipelining) will be retroactively available to these kernels as well, completely transparently to the user.
 
 Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm of library function calls.
-Mathematically, consecutive matrix multiplications (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
+Mathematically, consecutive matrix operations (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
 Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload the whole-matrix temporary value. That temporary matrix is likely to have been removed from cache if the matrices are large.
 A compiler has the foresight and tools to fuse these operations and then further optimise the resulting code.
 
