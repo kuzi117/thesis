@@ -8,9 +8,6 @@
 
 \chapter{Background}
 \label{cha:background}
-
-\nelson{This opening paragraph no longer corresponds to the content of the chapter.}
-\bk{I'm not sure how this paragraph doesn't correspond; it seems to me that it points to every topic discussed in this chapter.}
 This chapter introduces concepts that are necessary for subsequent chapters.
 \gls{simd} architectures and vectorisation are concepts critical to every facet of the work.
 This chapter also explains the \gls{llvm} framework, in which this work is implemented, as well as the \gls{ir} used in the \gls{llvm} framework.
@@ -72,10 +69,6 @@ Lattner originally positions \gls{llvm} as a ``unique multi-stage optimisation s
 Frontends exist for a multitude of languages including C/C++ (\code{clang}), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
 Backends also exist for a wide variety of platforms, such as X86, ARM, PowerPC, and WebAssembly.
 The \gls{llvm} optimiser, named \code{opt}, is a popular target compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
-\bk{
-  There are obviously a ton of papers in each of these areas, I stopped only after two examples.
-  If I should, how do I say these are only several examples.
-}
 The framework has also been adopted by several large companies who have based their own products off the ever-improving set of open-source tools.
 These include \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
 
@@ -129,11 +122,5 @@ The first reference to a variable is suffixed with a one, and all future referen
 This process continues for the entirety of a function body, regardless of any control flow.
 There are further complications in the construction algorithm in the presence of control flow but because the process presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
 This format is significantly more conducive to analysis and optimisation than the source language, allowing for a much easier data flow analysis.
-\bk{
-  I feel like I should expand here but I'm unsure which direction.
-  Should I explain more of why SSA is a good idea?
-  Should I explain more properties and the structure of LLVM IR?
-  More of SSA seems off topic and the structure of the IR takes a lot longer to describe than is reasonable.
-}
 
 \end{document}
