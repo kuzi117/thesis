@@ -26,7 +26,7 @@ This optimal setting is compared with the closest point of reference: the vector
 The comparison shows a speedup of at least 3.1 times for \code{half}, which is expected to improve drastically with improvements to the backend, up to a maximum of 15.8 times for \code{i8}.
 
 \bk{This text needs to be corrected; waiting on discussion.}
-The methodology followed in this thesis relies on a multi-level code generation that separates the efficient utilization of the memory hierarchy at the macro level and the efficient utilization of the processing units and vector registers in the micro level.
-This encapsulation of the micro-kernel code generation using the \code{llvm.matrix.multiply} intrinsic in \gls{llvm} as an interface is likely to also be the best methodology when targeting upcoming matrix-multiplication engines with hardware assistants that will soon be available from other vendors. The methodology presented in this thesis shall be relevant for these other machine architectures as well.
+The contribution of this thesis is part of a methodology that relies on a multi-level code generation that separates the efficient utilization of the memory hierarchy at the macro level and the efficient utilization of the processing units and vector registers in the micro level.
+The design of the micro-kernel code generation presented in this thesis uses the \code{llvm.matrix.multiply} intrinsic in \gls{llvm} as an interface. This solution is likely to also be the best methodology when targeting upcoming matrix-multiplication engines with hardware assistants that will soon be available from other vendors. Thus, the methodology presented in this thesis shall be relevant for these other machine architectures as well.
 
 \end{document}
