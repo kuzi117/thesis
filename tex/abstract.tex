@@ -25,12 +25,11 @@ Moreover, calls to an unknowable library function disables critical optimisation
 A less common, yet critical, opportunity for code tranformation is operation combination via loop fusion.
 When two matrix operations directly follow each other with the input data of one operation being the output of the previous, they can be combined in such a way that the results of one operation is immediately passed to the next.
 In this way, all operations over a single piece of input data can be computed before writing the overall result back to memory.
-\nelson{I am not sure what you mean by "memory synchronisation" in this sentence.}
-\bk{
-  I mean that before the function returns, all out values are essentially returned to memory, there is no passing of values through vectors between operations.
-  In this way, the function call/return serves as a barrier/synchronisation point for memory, which disables optimisation.
-}
-Function calls induce artificial memory synchronisation points which in turn cause performance degradations that cannot be alleviated by a compiler.
+
+External library functions cannot be inlined by a compiler.
+This inability to inline means loop fusion cannot be performed because the compiler cannot see all of the executed code together.
+Therefore, a function call to a library necessitates that all matrix operations read all input from and write all output to memory via pointers; no data can be passed to a future operation in a register.
+For these reasons, external library function calls disable a profitable code transformation.
 
 The solution to these issues is to provide an alternative for the computation of matrix-multiplication, with competitive performance, directly within the compiler.
 An implementation in this style automatically generates a matrix-multiplication kernel that benefits from all applicable code transformations available in the compiler.
