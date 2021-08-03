@@ -399,7 +399,7 @@ Thus, all test cases use identical \gls{ir} generation logic and are equally adv
 \label{sec:variedOrders}
 As discussed in \rsec{outerKernel}, packing is very important for matrix-multiplication performance.
 An important part of packing, beyond choosing dimensions, is the choice of data access order.
-\rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr} and, therefore, also sensitive to the access order of the matrices in memory from where values are loaded into registers.
+\rsec{registerArguments} shows that \gls{mma} is sensitive to the access order of elements in \glspl{vsr} and, therefore, also sensitive to the access order of the matrices in memory from which values are loaded into registers.
 
 \subsection{Setup}
 When using an unmodified version of \gls{llvm}, the access orders of $A$, $B$, and $C$ are tied together and must be equal.
@@ -416,7 +416,7 @@ Given the discussion in \rsec{orderExpectation}, more accumulations implies more
 \subsection{Expectation}
 \label{sec:orderExpectation}
 A column-major orientation data layout for $A$ should be optimal.
-For \code{float}, when stored \gls{vsr} a row-major matrix is indistinguishable from a single column of four elements.
+For \code{float}, a \gls{vsr}, which is a row-major $4 \times 1$ matrix according to the \gls{isa}, is indistinguishable from a single column of four elements when loaded from memory.
 Thus, if $A$ is laid out in column-major order, an operand can be created with a single load and no waste.
 However, if $A$ is laid out in row-major order, it is likely that $K \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
 Therefore, to create an operand, four loads must be issued, one for each element of the operand.
@@ -429,7 +429,7 @@ In the interest of not repeating much of the discussion in \rsec{caveats}, the s
 
 An interesting point of discussion exists for types \code{i8} and \code{i4} whose in-register dimensions are $4 \times 4$ and $4 \times 8$ respectively.
 With two \code{i4} elements packed into a byte, an eight-element vector only occupies four bytes and, therefore, \code{i8} and \code{i4} require loading four four-byte vectors to provide the elements to fill a \gls{vsr}.
-Thus, four loads must be issued when extracting operands from either  a row-major or a column-major order matrix.
+Thus, four loads must be issued when extracting operands from either a row-major or a column-major order matrix.
 In this case, either orientation is acceptable when operands are being built in isolation.
 However, if several operands are being built simultaneously, loads can be combined to increase efficiency.
 The need for shuffle instructions does not decrease, only the indices from which shuffles extract elements in a vector change.
@@ -451,15 +451,25 @@ Thus, either access order can be used for $C$ without loss of performance.
 \end{figure}
 
 \rfig{accessOrder} shows the effect of matrix access order on performance.
-For \code{float}, \code{i16}, and \code{i8}, the numbers are inline with the hypothesised performance.
-The two order-locked variants perform worse than the optimal layout.
+For \code{float}, \code{i16}, and \code{i8}, the numbers are inline with the hypothesised performance (see below for discussion of \code{half}).
+The two order-locked variants ($\textrm{C} = \textrm{C} \times \textrm{C}$ and $\textrm{R} = \textrm{R} \times \textrm{R}$) perform worse than the two with optimal layouts ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$).
 \nelson{Be specific about which two kernels are laid out optimally.}
+\bk{Does specifying it in the previous sentence count now?}
 Furthermore, between the two kernels whose $A$ and $B$ are laid out optimally, varying the access order of $C$ has no perceptible effect on performance.
 
 Based on the discussion in \rsec{orderExpectation}, it is also unsurprising that $\textrm{R} = \textrm{R} \times \textrm{R}$ outperforms $\textrm{C} = \textrm{C} \times \textrm{C}$.
-Given that the order of $C$ does no affect performance, the difference must be found in $A$ and $B$.
-In each case, one matrix is laid out ideally while the other is not.
-\nelson{Refer to the bars in the plots when making these observations. For instance, is the next sentence about the difference between the two last column of half? For the other types there is not difference between C x R and R x C.}
+Given that the order of $C$ does not affect performance, the difference must be found in $A$ and $B$.
+In each case, either $A$ or $B$ is laid out ideally while the other is not.
+\nelson{
+  Refer to the bars in the plots when making these observations.
+  For instance, is the next sentence about the difference between the two last column of half?
+  For the other types there is not difference between C x R and R x C.
+}
+\bk{
+  The beginning of this paragraph starts by saying that we're discussing the two order-locked variants.
+  We're therefore talking about the first two columns in float, i16, and i8.
+  I want to ask about where the misunderstanding comes from before adding column labels because I think they're labeled ok.
+}
 Because $B$ is twice the size of $A$, when it is laid out poorly the generated assembly suffers more than when a bad choice is made for $A$.
 Examining the generated assembly shows that for \code{float} the column-only variant executes roughly 450 more instructions of ``setup'' (loading and shuffling values) before executing the first outer-product instruction; the generated code is effectively identical afterwards.
 This gap lessens as types become smaller due to the smaller overall amount of bytes being loaded, but the difference in performance remains.
@@ -473,7 +483,7 @@ Thus, given identical load, store, and shuffle schedules along with identical ou
 However, given the results in \rfig{accessOrder}, this is clearly not the case.
 \todo{Add table with numbers.}
 The most performant case for \code{half}, $\textrm{C} = \textrm{C} \times \textrm{C}$, still requires roughly three times the cycles of \code{i16}'s least performant cast, also $\textrm{C} = \textrm{C} \times \textrm{C}$.
-Results for \code{half} that do not follow the anticipated trend are a common thread in this chapter and are caused by a code length explosion due to extremely conservative assembly code generation (see~\rsec{halfShuffle}).
+Results for \code{half} that do not follow the anticipated trend are a common thread in this chapter and are caused by a code length explosion due to extremely conservative assembly code generation (see \rsec{halfShuffle}).
 For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
 Such a change is thus likely to invalidate any of the results presented for \code{half} in this and future experiments.
 Results for \code{half} will continue to be presented for completeness.
