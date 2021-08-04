@@ -18,7 +18,6 @@ While this work focuses on \gls{mma}, a discussion of the differences in these a
 \gls{mma} adds a new architectural feature alongside the matrix engine: eight accumulator (ACC) registers.
 Accumulators and the new instructions for interacting with them enable the efficient matrix-matrix multiplication outlined in \rsec{gotoInner}.
 Much of the content in this section can be found throughout the \gls{power10} \gls{isa} document though some of it comes as insight from engineers at \gls{ibm} or external sources.
-\bk{Unsure if I should drop the previous sentence.}
 
 \Gls{mma}'s design is built around the choice to compute the outer product instead of the inner product.
 As discussed in \rsec{productsVs}, the inner product is inferior when compared with the outer product.
