@@ -21,8 +21,8 @@ opts = [
 ]
 
 layouts = [
-  ((8, 8, 16), '$8 \times 8 \times 16$'),
-  ((32, 8, 32), '$32 \times 8 \times 32$')
+  ((8, 8, 16), '$8 \\times 8 \\times 16$'),
+  ((32, 8, 32), '$32 \\times 8 \\times 32$')
 ]
 
 def generatePlot():
@@ -96,6 +96,7 @@ def generatePlot():
   fig.tight_layout()
   fig.set_size_inches(tu.textWidth, 3.3)
   fig.savefig('sinkFloats.pgf')
+  fig.savefig('sinkFloats.png')
 
 def generateTable():
   rows = []

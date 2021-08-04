@@ -153,7 +153,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.090586in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 8x8x16}%
+\pgftext[x=1.090586in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle 8 \times 8 \times 16\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -178,7 +178,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=2.172990in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 32x8x32}%
+\pgftext[x=2.172990in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle 32 \times 8 \times 32\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
@@ -635,7 +635,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=3.766121in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 8x8x16}%
+\pgftext[x=3.766121in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle 8 \times 8 \times 16\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetbuttcap%
@@ -660,7 +660,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=4.848525in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont 32x8x32}%
+\pgftext[x=4.848525in,y=0.507438in,,top]{\color{textcolor}\rmfamily\fontsize{10.000000}{12.000000}\selectfont \(\displaystyle 32 \times 8 \times 32\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
