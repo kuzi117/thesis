@@ -46,7 +46,7 @@ The pattern recognition in  KernelFaRer can identify GEMM kernels at the interme
 When presenting the ILLIAC IV, one of the first SIMD machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
 Nearly 50 years later, Barnes' direction culminated in the inclusion of vector extensions in all mainstream \glspl{cpu} such as \gls{ibm}'s \gls{vsx}~\autocite{PowerISA}, Intel's AVX-512~\autocite{IntelISA}, and ARM's NEON/\gls{sve}~\autocite{ArmISA}.
 Although fast \gls{vectorisation} is powerful, matrix-multiplication performance could be improved further with specialized hardware units.
-This possibility is now realized with the introduction of what Domke \etal have dubbed ``matrix engines''~\autocite{domke2020matrix}, now available in \gls{ibm}'s \gls{mma}~\autocite{PowerISA}, Intel's \gls{amx}~\autocite{IntelISA}, and ARM's NEON/\gls{sve}~\autocite{ArmISA}.
+This possibility is now realized with the introduction of what Domke \etal have dubbed ``matrix engines''~\autocite{domke2021matrix}, now available in \gls{ibm}'s \gls{mma}~\autocite{PowerISA}, Intel's \gls{amx}~\autocite{IntelISA}, and ARM's NEON/\gls{sve}~\autocite{ArmISA}.
 This thesis, in the same vein as Barnes \etal, focuses on bringing high performance to new hardware facilities.
 
 \section{Other Matrix Engines}
@@ -73,7 +73,7 @@ Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix 
 \section{Performance Evaluation}
 Robust performance benchmarking is critical for the evaluation of vector extensions.
 While there is extensive performance evaluation of matrix multiplication on vector extensions for Intel architectures~\autocite{hassan20161performance,hemeida2020optimizing,alappat2020understanding}, to the best of the author's knowledge, similar studies do not exist for the PowerPC or ARM platforms.
-Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for AMX, SVE, or MMA~\autocite{poenaru2020evaluating,domke2020matrix}.
+Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for AMX, SVE, or MMA~\autocite{poenaru2020evaluating,domke2021matrix}.
 Therefore, this work is among the first to present performance evaluation of a matrix engine on actual hardware.
 
 \end{document}
