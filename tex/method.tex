@@ -8,7 +8,6 @@
 
 \chapter{Method}
 \label{cha:method}
-\nelson{avoid passive voice}
 This chapter discusses the contributed implementation of a high-performance and library-free matrix-matrix multiplication algorithm which makes use of \gls{mma}.
 Due to its implementation in the LLVM compiler framework, the method has immediate performance-enhancing potential on the \gls{power10} platform.
 
@@ -38,18 +37,20 @@ declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a, <4 x i32> %b)
 
 \section{The \texorpdfstring{\code{llvm.matrix.multiply.*}}{llvm.matrix.multiply.*} Intrinsic}
 \label{sec:matMulInt}
-\bk{Discuss the input vectors already being loaded.}
 The \code{llvm.matrix.multiply.*} \gls{intrinsic} existed prior to this work and warrants a brief explanation to provide context~\autocite{llvmLangref}.
 The \gls{intrinsic} has three generic types: the return-value type and the type of the two input matrices.
 Each of the three matrices is typed as flattened vectors and therefore the signature requires three extra arguments to describe the dimensions as in \matmul{m}{d}{n}.
 
 The original implementers required that input dimensions be statically known constants.
 As well, those familiar with the analogous \gls{blas} routines may notice that arguments describing data-access order are conspicuously absent.
-\nelson{Is column-major order referring to  the storage order or to the access order in this sentence?}
-The original interface assumes that all matrices are column-major order.
+The original interface assumes that all input matrices have a column-major access order.
 Users may include a specific flag in their compiler invocation to change this setting to row-major order.
-\nelson{"This"}
-This means that a user may not mix data orientations within their program.
+
+The original implementation also includes one other significant constraint: the intrinsic must be called with the input matrices already loaded from memory into a virtual register and does not use pointers.
+Each value in \glslink{llvm}{llvm's} \gls{ssa} \gls{ir} exists in a virtual register; there is an infinite number of virtual registers and each virtual register has infinite width.
+Values which are loaded from memory into a virtual register will be broken up by the backend code generator to fit the available hardware registers.
+Thus it is possible to load a matrix with a certain access order from memory and then implement a process to reorder the elements to the opposite access order, though the process will add considerable overhead.
+Hence, while it is possible to use matrices with different access orders in memory, they must be transformed to have matching access orders before calling the \code{llvm.matrix.multiply} \gls{intrinsic}.
 \rlst{matMulIntr} provides an example declaration and invocation of the intrinsic which computes \matmul{8}{5}{16}.
 
 \begin{lstlisting}[caption={[Example Declaration and Use of \code{llvm.matrix.multiply.*}]An example declaration and usage of the \code{llvm.matrix.multiply.*} intrinsic.},
@@ -245,7 +246,7 @@ The following loop (line~\ref{unrollLoopStart}) iterates from $0$ to $K-1$, extr
 For each value of \code{k}, using the accumulator assignment shown in \rfig{intrinsic}, the algorithm extracts two operands from \code{ATile} (lines~\ref{VextractLoop}-\ref{aOps}) and four operands from \code{BTile} (lines~\ref{HextractLoop}-\ref{bOps}).
 For $\text{\code{k}}=0$ the operands are extracted from the leftmost column of \code{ATile} and from the topmost row of \code{BTile} in \rfig{intrinsic}.
 The algorithmic presentation in \ralg{intrinsic} uses the notation \code{ATile[}$\text{\code{v}} \times 4$\code{][k]} and \code{BTile[}$\text{\code{h}} \times 4$\code{][k]} to denote the index where operand vector starts.
-These operands are extracted to virtual IR registers; the actual \glspl{vsr} to be used will be determined later by a register-allocation pass.
+These operands are extracted to virtual \gls{ir} registers; the actual \glspl{vsr} to be used will be determined later by a register-allocation pass.
 
 In \rfig{intrinsic} each operand is formed by four elements and, once extracted, occupies one 128-bit \gls{vsr}.
 Given constraints \fbox{1} and \fbox{2}, with the choice of $K = 5$, there are enough non-blocked \glspl{vsr} to contain all the thirty operands needed for the computation illustrated in \rfig{intrinsic}.
