@@ -67,8 +67,8 @@ def generatePlot():
   # fig.legend(['MMA', 'Vector'])
   fig.set_size_inches(tu.textWidth, 3)
   fig.tight_layout()
-  fig.savefig('MMAvsVSX.png')
-  fig.savefig('MMAvsVSX.pgf')
+  fig.savefig('mmaVsx.png')
+  fig.savefig('mmaVsx.pgf')
 
 def generateTable():
   # Get data.

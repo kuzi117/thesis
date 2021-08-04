@@ -22,7 +22,7 @@ orders = [
   (('C', 'R', 'R'), '$\\textrm{R} = \\textrm{C} \\times \\textrm{R}$')
 ]
 
-if __name__ == '__main__':
+def generatePlot():
   # Get data.
   data = {}
   for type in tu.orderedTypes:
@@ -90,3 +90,28 @@ if __name__ == '__main__':
   fig.tight_layout()
   fig.savefig('accessOrder.png')
   fig.savefig('accessOrder.pgf')
+
+def generateTable():
+  # Get data.
+  rows = []
+  for type in tu.orderedTypes:
+    # Get the data for each access order.
+    for (aOrd, bOrd, cOrd), orderName in orders:
+      # Read logs for data.
+      log = logNameFormat.format(type=type, aOrd=aOrd, bOrd=bOrd, cOrd=cOrd, c='{}')
+
+      # Save access order data.
+      iterStats, timeStats, cycleStats = \
+        tu.getJsonCumulativeStats('logs/all/' + log, 25)
+
+      # Add row with name and data.
+      rows.append(
+        (f'\code{{{type}}}, {orderName}',
+        (*iterStats[:2], *timeStats[:2], *cycleStats[:2]))
+      )
+
+  print(tu.tableData(rows))
+
+if __name__ == '__main__':
+  generatePlot()
+  generateTable()

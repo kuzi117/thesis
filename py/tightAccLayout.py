@@ -15,13 +15,12 @@ import thesUtils as tu
 logNameFormat = '{type}.{ve}x32x{he}.v{v}h{h}.CRR.O3.bench.{c}.json'
 
 layouts = [
-  ((2, 4), '2x4'),
-  ((1, 8), '1x8'),
-  ((4, 2), '4x2'),
-  ((8, 1), '8x1'),
+  ((2, 4), '$2 \\times 4$'),
+  ((4, 2), '$4 \\times 2$'),
+  ((1, 8), '$1 \\times 8$'),
+  ((8, 1), '$8 \\times 1$')
 ]
-
-if __name__ == '__main__':
+def generatePlot():
   # Get data.
   data = {}
   for type in tu.orderedTypes:
@@ -47,7 +46,7 @@ if __name__ == '__main__':
 
   # Start plotting.
   groupLabels = [layout[1] for layout in layouts]
-  barLabels = ['runtime']
+  barLabels = ['cycles']
   for i, type in enumerate(tu.orderedTypes):
     # Get data for this type.
     accData = data[type]
@@ -79,3 +78,29 @@ if __name__ == '__main__':
   fig.tight_layout()
   fig.savefig('tightAccLayouts.png')
   fig.savefig('tightAccLayouts.pgf')
+
+def generateTable():
+  # Get data.
+  rows = []
+  for type in tu.orderedTypes:
+    # Get the data for each ACC layout.
+    for (v, h), layoutName in layouts:
+      # Read logs for data.
+      log = logNameFormat.format(type=type, v=v, h=h, ve=v * 4, he=h * 4, c='{}')
+
+      # Save layout data.
+      iterStats, timeStats, cycleStats = \
+        tu.getJsonCumulativeStats('logs/all/' + log, 25)
+
+      # Add row with name and data.
+      rows.append(
+        (f'\code{{{type}}}, {layoutName}',
+        (*iterStats[:2], *timeStats[:2], *cycleStats[:2]))
+      )
+
+  print(tu.tableData(rows))
+
+
+if __name__ == '__main__':
+  generatePlot()
+  generateTable()

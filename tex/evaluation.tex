@@ -451,8 +451,36 @@ Thus, either access order can be used for $C$ without loss of performance.
   \caption{The effect of matrix access order on performance.}
   \label{fig:accessOrder}
 \end{figure}
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c | c | c | c |}
+    \hline
+    Type & Order & \parbox[t][26pt][t]{50pt}{\centering$n$\\(millions)} & \parbox[t][28pt][t]{60pt}{\centering CPU Time\\(\SI{}{\textit{\nano\second}})} & Cycles\\\hline
+    \code{float} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $10.7 \pm 0.04$ & $130.96 \pm 0.47$ & $523.21 \pm 1.86$ \\
+    \code{float} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $13.8 \pm 0.33$ & $100.21 \pm 0.33$ & $400.36 \pm 1.32$ \\
+    \code{float} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $17.6 \pm 0.33$ & $79.64 \pm 1.50$ & $318.18 \pm 6.01$ \\
+    \code{float} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $18.0 \pm 0.30$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\
+    \code{i16} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $22.0 \pm 0.04$ & $63.79 \pm 0.14$ & $254.86 \pm 0.57$ \\
+    \code{i16} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $27.7 \pm 0.06$ & $50.64 \pm 0.12$ & $202.32 \pm 0.49$ \\
+    \code{i16} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.10$ & $44.48 \pm 0.15$ & $177.70 \pm 0.59$ \\
+    \code{i16} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.08$ & $44.44 \pm 0.11$ & $177.57 \pm 0.44$ \\
+    \code{half} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $11.6 \pm 0.00$ & $120.50 \pm 0.03$ & $481.41 \pm 0.11$ \\
+    \code{half} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $5.5 \pm 0.00$ & $256.06 \pm 0.18$ & $1023.01 \pm 0.71$ \\
+    \code{half} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $2.0 \pm 0.01$ & $691.33 \pm 4.31$ & $2762.04 \pm 17.23$ \\
+    \code{half} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $3.2 \pm 0.03$ & $438.00 \pm 4.54$ & $1749.89 \pm 18.12$ \\
+    \code{i8} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $37.9 \pm 0.03$ & $36.98 \pm 0.02$ & $147.75 \pm 0.10$ \\
+    \code{i8} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $40.8 \pm 0.44$ & $34.38 \pm 0.39$ & $137.36 \pm 1.57$ \\
+    \code{i8} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.19$ & $33.50 \pm 0.15$ & $133.82 \pm 0.61$ \\
+    \code{i8} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.20$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\\hline
+  \end{tabular}
+  \caption{
+    The effect of matrix access order on performance.
+    See \rfig{accessOrder} for graphical presentation.
+  }
+  \label{tab:accessOrder}
+\end{table}
 
-\rfig{accessOrder} shows the effect of matrix access order on performance.
+\rfig{accessOrder} and \rtab{accessOrder} show the effect of matrix access order on performance.
 For \code{float}, \code{i16}, and \code{i8}, the numbers are inline with the performance hypothesised in \rsec{orderExpectation} (see below for discussion of \code{half}).
 The two order-locked variants ($\textrm{C} = \textrm{C} \times \textrm{C}$ and $\textrm{R} = \textrm{R} \times \textrm{R}$) perform worse than the two variants with optimal layouts ($\textrm{C} = \textrm{C} \times \textrm{R}$ and $\textrm{R} = \textrm{C} \times \textrm{R}$).
 Furthermore, between the third and fourth bars, representing the two kernels whose $A$ and $B$ are laid out optimally but with differing access orders for $C$, varying the access order of $C$ has no perceptible effect on performance.
@@ -531,8 +559,37 @@ In this experiment, the lower number of total loads should result in a smaller e
   \caption{The effect of accumulator layout on performance.}
   \label{fig:tightAccLayout}
 \end{figure}
+\begin{table}[t]
+  \centering
+  \begin{tabular}{| c | c | c | c | c |}
+    \hline
+    Type & Layout & \parbox[t][26pt][t]{50pt}{\centering$n$\\(millions)} & \parbox[t][28pt][t]{60pt}{\centering CPU Time\\(\SI{}{\textit{\nano\second}})} & Cycles\\\hline
+    \code{float} & $2 \times 4$ & $17.8 \pm 0.30$ & $78.91 \pm 1.34$ & $315.27 \pm 5.34$ \\
+    \code{float} & $4 \times 2$ & $16.1 \pm 0.23$ & $87.01 \pm 1.25$ & $347.62 \pm 5.00$ \\
+    \code{float} & $1 \times 8$ & $29.5 \pm 0.30$ & $47.56 \pm 0.47$ & $190.00 \pm 1.88$ \\
+    \code{float} & $8 \times 1$ & $29.7 \pm 0.33$ & $47.21 \pm 0.53$ & $188.61 \pm 2.13$ \\
+    \code{i16} & $2 \times 4$ & $31.5 \pm 0.07$ & $44.45 \pm 0.10$ & $177.59 \pm 0.38$ \\
+    \code{i16} & $4 \times 2$ & $32.4 \pm 0.10$ & $43.22 \pm 0.13$ & $172.67 \pm 0.52$ \\
+    \code{i16} & $1 \times 8$ & $23.2 \pm 0.24$ & $60.40 \pm 0.62$ & $241.30 \pm 2.47$ \\
+    \code{i16} & $8 \times 1$ & $21.8 \pm 0.22$ & $64.25 \pm 0.63$ & $256.70 \pm 2.50$ \\
+    \code{half} & $2 \times 4$ & $3.2 \pm 0.03$ & $436.14 \pm 4.18$ & $1742.47 \pm 16.70$ \\
+    \code{half} & $4 \times 2$ & $3.2 \pm 0.04$ & $439.36 \pm 5.97$ & $1755.33 \pm 23.86$ \\
+    \code{half} & $1 \times 8$ & $3.2 \pm 0.05$ & $438.08 \pm 6.38$ & $1750.21 \pm 25.50$ \\
+    \code{half} & $8 \times 1$ & $3.2 \pm 0.06$ & $438.61 \pm 7.87$ & $1752.32 \pm 31.46$ \\
+    \code{i8} & $2 \times 4$ & $41.8 \pm 0.20$ & $33.51 \pm 0.16$ & $133.87 \pm 0.64$ \\
+    \code{i8} & $4 \times 2$ & $41.4 \pm 0.11$ & $33.79 \pm 0.08$ & $135.02 \pm 0.32$ \\
+    \code{i8} & $1 \times 8$ & $25.3 \pm 0.01$ & $55.31 \pm 0.02$ & $220.98 \pm 0.08$ \\
+    \code{i8} & $8 \times 1$ & $24.8 \pm 0.02$ & $56.50 \pm 0.05$ & $225.75 \pm 0.18$ \\\hline
+  \end{tabular}
+  \caption{
+    The effect of accumulator layout on performance.
+    See \rfig{tightAccLayout} for graphical presentation.
+  }
+  \label{tab:tightAccLayout}
+\end{table}
 
-\rfig{tightAccLayout} shows the effect of accumulator layout on performance.
+\bk{Ensure that any comment about bar number match after changing order of bars.}
+\rfig{tightAccLayout} and \rtab{tightAccLayout} show the effect of accumulator layout on performance.
 The results for each of \code{float}, \code{i16}, and \code{i8} follow the expectation in \rsec{layoutExpectation} that both rectangular layouts ($2 \times 4$, $4 \times 2$) have similar performance and both linear layouts ($1 \times 8$, $8 \times 1$) have similar performance.
 However, where \code{i16} and \code{i8} agree with the theory that rectangular layouts should outperform linear layouts, \code{float} shows opposing results.
 
@@ -585,35 +642,32 @@ The lowering is already set up to extract vectors from $A$, scalars from $B$, an
 All of this is done with the vectoriser in mind.
 The lowering decouples operations from each other as best as possible, enabling the vectoriser to effectively combine operations into a single vector operation.
 
-\nelson{same comments as for the previous table in terms of the precision that you use to report the values. Make the table fit within the margins.}
 \subsection{Analysis}
 \label{sec:mmaVsxAnalysis}
 \begin{figure}[t]
   \centering
-  \input{tex/figures/MMAvsVSX.pgf}
+  \input{tex/figures/mmaVsx.pgf}
   \caption{Comparison of MMA and vectorised lowerings of \code{llvm.matrix.multiply}.}
   \label{fig:mmaVsx}
 \end{figure}
 \begin{table}[t]
   \centering
-  \makebox[\textwidth][c]{
-    \begin{tabular}{| c | c | c | c |}
-      \hline
-      Name & $n$ & CPU Time (\SI{}{\textit{\nano\second}}) & Cycles\\\hline
-      \code{float}, MMA & $17995677.20 \pm 298626.48$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\\hline
-      \code{float}, VSX, Columns & $1394153.56 \pm 386.88$ & $1005.16 \pm 0.24$ & $4015.84 \pm 0.96$ \\\hline
-      \code{float}, VSX, Rows & $674060.48 \pm 142.09$ & $2077.55 \pm 0.40$ & $8300.11 \pm 1.59$ \\\hline
-      \code{i16}, MMA & $31504096.44 \pm 77686.83$ & $44.44 \pm 0.11$ & $177.57 \pm 0.44$ \\\hline
-      \code{i16}, VSX, Columns & $2812384.68 \pm 1449.01$ & $497.98 \pm 0.26$ & $1989.60 \pm 1.02$ \\\hline
-      \code{i16}, VSX, Rows & $3254748.16 \pm 9614.23$ & $430.18 \pm 1.29$ & $1718.67 \pm 5.14$ \\\hline
-      \code{half}, MMA & $3198386.96 \pm 32395.22$ & $438.00 \pm 4.54$ & $1749.89 \pm 18.12$ \\\hline
-      \code{half}, VSX, Columns & $1043946.76 \pm 321.59$ & $1340.99 \pm 0.41$ & $5357.58 \pm 1.63$ \\\hline
-      \code{half}, VSX, Rows & $774650.40 \pm 112.63$ & $1807.24 \pm 0.22$ & $7220.21 \pm 0.92$ \\\hline
-      \code{i8}, MMA & $41811886.04 \pm 201057.33$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\\hline
-      \code{i8}, VSX, Columns & $2521542.00 \pm 3124.84$ & $555.32 \pm 0.70$ & $2218.66 \pm 2.81$ \\\hline
-      \code{i8}, VSX, Rows & $2641147.36 \pm 7741.22$ & $530.25 \pm 1.56$ & $2118.45 \pm 6.23$ \\\hline
-    \end{tabular}
-  }
+  \begin{tabular}{| c | c | c | c | c |}
+    \hline
+    Type & Compilation & \parbox[t][26pt][t]{50pt}{\centering$n$\\(millions)} & \parbox[t][28pt][t]{60pt}{\centering CPU Time\\(\SI{}{\textit{\nano\second}})} & Cycles\\\hline
+    \code{float} & MMA & $18.0 \pm 0.30$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\
+    \code{float} & VSX, Columns & $1.4 \pm 0.00$ & $1005.16 \pm 0.24$ & $4015.84 \pm 0.96$ \\
+    \code{float} & VSX, Rows & $0.7 \pm 0.00$ & $2077.55 \pm 0.40$ & $8300.11 \pm 1.59$ \\
+    \code{i16} & MMA & $31.5 \pm 0.08$ & $44.44 \pm 0.11$ & $177.57 \pm 0.44$ \\
+    \code{i16} & VSX, Columns & $2.8 \pm 0.00$ & $497.98 \pm 0.26$ & $1989.60 \pm 1.02$ \\
+    \code{i16} & VSX, Rows & $3.3 \pm 0.01$ & $430.18 \pm 1.29$ & $1718.67 \pm 5.14$ \\
+    \code{half} & MMA & $3.2 \pm 0.03$ & $438.00 \pm 4.54$ & $1749.89 \pm 18.12$ \\
+    \code{half} & VSX, Columns & $1.0 \pm 0.00$ & $1340.99 \pm 0.41$ & $5357.58 \pm 1.63$ \\
+    \code{half} & VSX, Rows & $0.8 \pm 0.00$ & $1807.24 \pm 0.22$ & $7220.21 \pm 0.92$ \\
+    \code{i8} & MMA & $41.8 \pm 0.20$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\
+    \code{i8} & VSX, Columns & $2.5 \pm 0.00$ & $555.32 \pm 0.70$ & $2218.66 \pm 2.81$ \\
+    \code{i8} & VSX, Rows & $2.6 \pm 0.01$ & $530.25 \pm 1.56$ & $2118.45 \pm 6.23$ \\\hline
+  \end{tabular}
   \caption{
     Comparison of MMA and vectorised lowerings of \code{llvm.matrix.multiply}.
     See \rfig{mmaVsx} for graphical presentation.
@@ -621,6 +675,7 @@ The lowering decouples operations from each other as best as possible, enabling 
   \label{tab:mmaVsx}
 \end{table}
 
+\rfig{mmaVsx} and \rtab{mmaVsx} show the effect of \gls{mma} on lowering of the \code{llvm.matrix.multiply} intrinsic.
 The lowering for all four investigated types are significantly improved by using \gls{mma}.
 Comparing for each type the \gls{mma} lowering and the most performant vectorised lowering, there is a speedup, on average, of 12.9 times for \code{float}, 9.7 times for \code{i16}, 3.1 times for \code{half}, and 15.8 for \code{i8}.
 
@@ -681,15 +736,13 @@ It is thus expected that the intrinsic lowering with load sinking should be very
 \end{figure}
 \begin{table}[t]
   \centering
-  \makebox[\textwidth][c]{
-    \begin{tabular}{| c | c | c | c |}
-      \hline
-      Name & $n$ & CPU Time (\SI{}{\textit{\nano\second}}) & Cycles\\\hline
-      No Load Sinking & $17995677.20 \pm 298626.48$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\\hline
-      Load Sinking & $35076889.96 \pm 42722.35$ & $39.89 \pm 0.01$ & $159.36 \pm 0.05$ \\\hline
-      Handwritten & $31504866.20 \pm 51489.54$ & $41.15 \pm 0.07$ & $164.39 \pm 0.27$ \\\hline
-    \end{tabular}
-  }
+  \begin{tabular}{| c | c | c | c |}
+    \hline
+    Name & \parbox[t][26pt][t]{50pt}{\centering$n$\\(millions)} & \parbox[t][28pt][t]{60pt}{\centering CPU Time\\(\SI{}{\textit{\nano\second}})} & Cycles\\\hline
+    No Load Sinking & $18.0 \pm 0.30$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\
+    Load Sinking & $35.1 \pm 0.04$ & $39.89 \pm 0.01$ & $159.36 \pm 0.05$ \\
+    Handwritten & $31.5 \pm 0.05$ & $41.15 \pm 0.07$ & $164.39 \pm 0.27$ \\\hline
+  \end{tabular}
   \caption{
     Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.
     See \rfig{intrHand} for graphical presentation.

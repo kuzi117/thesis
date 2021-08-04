@@ -5,7 +5,7 @@ import os
 import scipy.stats as st
 from scipy.stats.mstats import gmean
 
-version = '2.5.1'
+version = '2.5.2'
 
 # Text width in inches.
 textWidth = 5.50107
@@ -262,8 +262,9 @@ def tableData(rows):
 
   for name, (iters, itersCI, cpuTime, cpuCI, cycles, cyclesCI) in rows:
     table += \
-      f'    {name} & ${iters:0.2f} \pm {itersCI:0.2f}$ & ${cpuTime:0.2f} \pm ' \
-      f'{cpuCI:0.2f}$ & ${cycles:0.2f} \pm {cyclesCI:0.2f}$ \\\\\\hline\n'
+      f'    {name} & ${iters / 1e6:0.1f} \pm {itersCI / 1e6:0.2f}$ & ' \
+      f'${cpuTime:0.2f} \pm {cpuCI:0.2f}$ & ${cycles:0.2f} \pm ' \
+      f'{cyclesCI:0.2f}$ \\\\\\hline\n'
 
   table += footer
 

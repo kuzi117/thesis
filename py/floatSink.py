@@ -21,8 +21,8 @@ opts = [
 ]
 
 layouts = [
-  ((8, 8, 16), '8x8x16'),
-  ((32, 8, 32), '32x8x32')
+  ((8, 8, 16), '$8 \times 8 \times 16$'),
+  ((32, 8, 32), '$32 \times 8 \times 32$')
 ]
 
 def generatePlot():
