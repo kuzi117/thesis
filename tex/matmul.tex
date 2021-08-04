@@ -197,8 +197,7 @@ Different combinations of blocking orders also induce different packing choices 
 \label{sec:blockPack}
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
-\nelson{I do not know what a "vector-like panel" or a "cell-like block" is.}
-This breakdown is affiliated with the dot product because it multiplies two vector-like panels while producing a cell-like block.
+This breakdown is affiliated with the dot product because it multiplies two panels, which resemble a vector, while producing a block, which resembles a cell.
 According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
 Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache, accumulated into, and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, there are only read operations from the L2 cache.
@@ -384,13 +383,6 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
   \vspace{-0.15cm}
 \end{figure}
 
-\bk{
-  I'm considering reordering the figures such that \rfig{gebpMath} and \rfig{gepbMath} are together since they're both referenced in one subsection.
-  Likewise, \rfig{gebpSimd} and \rfig{gepbSimd} would be together because they're referenced in the next subsection.
-  At the same time though, seeing the SIMD implementation with elements is easier if it's grouped with its mathematical representation.
-  Thoughts?
-}
-
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
 As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, in this methodology matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
 \footnotetext{For example, the DPPS or DPPD instructions that were introduced in x86 SSE 4.1 in 2008.}
@@ -477,10 +469,6 @@ Given a register that could contain the much larger output data in the dot-dashe
 \rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
-\bk{
-  I'm not sure this section fits, be it after the ending of the last section or anywhere in the paper.
-  I've considered cutting it but wanted feedback first.
-}
 Having looked at which kernel to implement, discussion can turn towards actual implementation.
 As discussed previously, libraries often have kernels handwritten in assembly.
 Kernel writers must implement all optimisations by hand.
