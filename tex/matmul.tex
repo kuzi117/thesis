@@ -21,7 +21,7 @@ Understanding matrix multiplication and how it is implemented is critical to ach
 \section{Inner and Outer Product}
 \label{sec:products}
 In the most abstract sense, matrix multiplication is a very simple operation to implement.
-As long as each element of $A$ is multiplied with the correct element of $B$ and accumulated to the correct element of $C$, the order in which these operations happen does not matter.
+As long as each element of $A$ is multiplied with the correct element of $B$ and the result is accumulated to the correct element of $C$, the order in which these operations happen does not matter.
 Thus, the simplest implementation of matrix multiplication can be written as in \rlst{basicMatMul}.
 \begin{lstlisting}[caption={[Pseudocode for matrix multiplication]Pseudocode implementing matrix multiplication as simply as possible.},label=lst:basicMatMul,columns=flexible]
 for i=0 to M, j=0 to N, k=0 to D do
@@ -30,8 +30,7 @@ for i=0 to M, j=0 to N, k=0 to D do
 
 The order in which the loops are executed does not affect the output of the algorithm on the condition that each combination of $i$, $j$, and $k$ is reached exactly once.
 However, mathematically speaking, choosing a certain order for the loops will produce functionality resembling certain common mathematical operations.
-First, the classic method taught in linear algebra courses for computing matrix multiplication, the \emph{inner product}.
-As well, with a different organisation, the \emph{outer product}.
+A given order for the loops leads to the \emph{inner product}, which is the classic method taught in linear algebra courses for computing matrix multiplication, while a different order leads to the \emph{outer product}.
 While both choices arrive at the same final result, the efficacy with which they arrive can vary significantly, as is discussed later in \rsec{outerKernel} and \rsec{innerKernel}.
 
 \begin{figure}[t]
@@ -74,6 +73,7 @@ While both choices arrive at the same final result, the efficacy with which they
 \end{figure}
 
 \subsection{The Inner Product}
+\nelson{In this section, it seems that you are talking about the inner product of two matrices (you say that the inner product is the repeated application of the dot product). Is that what you mean?}
 As taught in the classroom, the inner product can be viewed as the repeated application of the \emph{dot product} to produce a matrix.
 The dot product takes two vectors and produces a single scalar value.
 Specifically, it is defined as the summation of the pair-wise products of two vectors (\eg $v \cdot w=v_{1}w_{1} + v_{2}w_{2} + \ldots + v_{D}w_{D}$).
@@ -90,7 +90,7 @@ for (uint64_t i = 0; i < M; ++i)|\label{innerILoop}|
         C[i][j] += A[i][k] * B[k][j];
 \end{lstlisting}
 Referring back to \rlst{basicMatMul}, the loop order has been concretised to $(i, j, k)$.
-In order to implement the mathematical process ouline above, the loops on lines~\ref{innerILoop} and \ref{innerJLoop} of \rlst{basicInner} simultaneously select the cell from $C$, the row of $A$, and the column of $B$ that will be used.
+In order to implement the mathematical process outlined above, the loops on lines~\ref{innerILoop} and \ref{innerJLoop} of \rlst{basicInner} select the cell from $C$, the row of $A$, and the column of $B$ that will be used.
 The innermost loop on line~\ref{innerKLoop} implements the dot product by multiplying elements from the chosen vectors in $A$ and $B$ and then reducing them into the chosen cell of $C$.
 One can thus view the implementation in \rlst{basicInner} as a loop over $i$ and $j$ that selects an output cell and repeatedly calls a dot product operation.
 Therefore, with the choice of loop order $(i, j, k)$, matrix multiplication can be conceptualised as shown in \rlst{basicInnerPseudo}.
@@ -102,6 +102,7 @@ for i=0 to M, j=0 to N do
 \subsection{The Outer Product}
 \label{sec:outerProduct}
 The outer product, when seen in mathematics, is typically seen only when $D=1$, as in \matmul{M}{1}{N}, mimicking the diagram in \rfig{outerProduct}.
+\nelson{Please add a reference to the end of this sentence so that the reader can read more if she wishes.}
 Mathematicians prefer to view \matmul{M}{D}{N} with $D > 1$ as an inner product for simplicity, using the outer product only when $D=1$.
 
 Given the same computation, \matmul{M}{D}{N}, the outer product is computed by multiplying a column of $A$ with a row of $B$ as in \rfig{outerProduct}, producing an output matrix.
@@ -115,7 +116,7 @@ for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
     for (uint64_t j = 0; j < N; ++j)|\label{outerJLoop}|
         C[i][j] += A[i][k] * B[k][j];
 \end{lstlisting}
-Here, the loop on line~\ref{outerKLoop} selects a column from $A$ and row from $B$ while the loops on lines~\ref{outerILoop} and \ref{outerJLoop} compute the outer product of those vectors.
+Here, the loop on line~\ref{outerKLoop} selects a column from $A$ and a row from $B$ while the loops on lines~\ref{outerILoop} and \ref{outerJLoop} compute the outer product of those vectors.
 Thus, in a tranformation similar to the one between \rlst{basicInner} and \rlst{basicInnerPseudo}, \rlst{basicOuter} can be rewritten like so:
 \begin{lstlisting}[caption={[Basic outer product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
 for k=0 to D do
@@ -136,13 +137,13 @@ for k=0 to D do
 
 It is not necessary for a complicated model to update itself one data point at a time.
 Should, for example, two data points become simultaneously available, two rank-one updates can be performed at the same time.
-Updating with two rank-one updates means summing two rank-one matrices; by definition, the summation of two rank-one matrices creates a rank two matrix\footnotemark.
+Updating with two rank-one updates means summing two rank-one matrices; by definition, the summation of two rank-one matrices creates a rank two matrix.\footnotemark
 \footnotetext{Given matrices $M_1, M_2 \in \mathcal{R}^{m \times n}$, each rank one, then each matrix has $v_i$, its only basis vector. If $v_1 \ne v_2$, then $M_1+M_2$ has two basis vectors $v_1, v_2$, implying $M_1+M_2$ has rank two.}
-Therefore, this can now be described as a rank-two update.
-This same logic extends to creating updates with greater ranks, giving rise to the rank-$r$ update\footnotemark.
+Therefore, this operation can now be described as a rank-two update.
+This same logic extends to creating updates with greater ranks, giving rise to the rank-$r$ update.\footnotemark
 \footnotetext{Common notation is rank-$k$ update; it is changed to rank-$r$ update in this work so as to avoid confusion with $k$ in other uses.}
 Revisiting the process in \rlst{rankOne}, this repeated rank-one update process is apparent.
-The loop simply performs $D$ rank-one updates, implying the algorithm can be once again reinterpreted in the form of one rank-$D$ update like so:
+The loop simply performs $D$ rank-one updates, implying that the algorithm can be once again reinterpreted in the form of one rank-$D$ update like so:
 \begin{lstlisting}[caption={[Matrix multiplication via rank-$r$ update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
 // Assumption: A, B are arrays of D vectors
 rankRUpdate(C, A, B, /*rank*/ D);
