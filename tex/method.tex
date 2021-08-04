@@ -13,47 +13,14 @@ This chapter discusses the contributed implementation of a high-performance and 
 Due to its implementation in the LLVM compiler framework, the method has immediate performance-enhancing potential on the \gls{power10} platform.
 
 \section{Intrinsics in LLVM}
-\todo{Add text here.}
-
-\subsubsection{Builtin vs. Intrinsic}
-\bk{
-  What does the LLVM community call these... Is it intrinsic or builtin?
-  Kit says intrinsic, which makes sense at the IR level, as explained below.
-  We never operate at the source level, should we erase all references to builtin and call them all intrinsiscs?
-  This would allow me to cut this entire section or at least replace it with a shorter section on how the PPC intrinsics will be lowered later by the backend.
-}
-\bk{
-  Coming back at a later date, I'm fairly certain the right choice is to cut the discussion of builtins and refer to them as inrinsics (because that's what they are at the level we're at).
-  I'll continue with builtin for now but I'll need to come back and revise a bunch of this section.
-}
-Before continuing, we must disambiguate two terms: \gls{intrinsic} and \gls{builtin}.
-In general, definitions in this text defer to the \gls{llvm} community's usage where there are conflicts; this specific case is not an exception.
-Both terms describe a function which implements a well-defined operation with well-defined semantics.
-However, differences exist in their availability to the end user and their reason for existing.
-
-A \gls{builtin} is a function available to be called in a high-level language but is typically specific to a platform.
-These exist in order to hide the complexity of low-level operations which are not supported natively by the user's language of choice.
-A common example is operations which are necessarily implemented in assembly (\eg \gls{simd} operations, accessing a processor's special registers).
-Other platform-agnostic \glspl{builtin} provide common functionality extended with useful semantics or from a specific standard to avoid duplication or incorrect implementation.
-\nelson{"These" what? It should be "These functionalities" -- Do a global search for "This" and "These" and check that you used a word about the pronoun to make it specific. In technical writing we should avoid using "This" to refer to the entire content of the previous sentence.}
-These include things like \gls{clang}'s checked arithmetic builtins~\autocite{llvmCheckArith} or GCC's provision of ISO C functions~\autocite{gccOtherBuiltins}.
-
-An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available to an end user.
+An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available in higher-level languages.
+Select \glspl{intrinsic} are available in higher-level languages in the form of a \gls{builtin}, though no \glspl{builtin} are used in this work.\footnotemark
+\footnotetext{Some compilers use this terminology differently; these are the definitions according to \gls{llvm}.}
 These functions' most important role is to symbolise the concept of a common operation in a representation that must lowered to many disparate forms while maintaining efficiency and correctness.
 They are therefore not platform-specific but their lowering may be if the semantics necessitate it or if the maintainer wants to provide a more efficient version.
 For example, the \gls{llvm} \gls{intrinsic} \code{llvm.vector.reduce.add.*} may be generically lowered to a series of vector operations at the \gls{ir} level, or, if the \gls{isa} provides a reduction instruction, it could be lowered more efficiently by the backend.
 
-Many compilers use \gls{builtin} as explained above, while others (\eg MSVC, ICC \bk{Do I need to add these to the list of acronyms?} \nelson{yes}) use \gls{intrinsic} in their documentation to refer to the same concept.
-\nelson{"This use" ??}
-This can, in some cases, be explained as part of the lowering process.
-What starts out as a call to a \gls{builtin}, a function declared in a header but without a definition, is \glslink{lowering}{lowered} by the frontend to a call to an intrinsic.
-For instance, \gls{llvm} provides \gls{mma} \glspl{builtin} for use at the source level, such as the \gls{mma} floating-point matrix-multiply intrinsic: \code{__builtin_mma_xvfger32pp}.
-\nelson{"This builtin"? Also, use the present tense instead of "will be"}
-This will be \glslink{lowering}{lowered} to the \gls{llvm} \gls{intrinsic} \code{llvm.ppc.mma.xvf32gerpp}.
-This \gls{lowering} allows the compiler to maintain a single optimised and canonical lowering without a library, thus enabling inlining of code without \gls{lto}, resulting in better scheduling.
-Optimisation passes can also then transparently generate calls to the intrinsic without loss of performance.
-
-\subsubsection{Intrinsic Format}
+\subsection{Intrinsic Format}
 Within \gls{llvm} \gls{ir}, \glspl{intrinsic} appear simply as external function declarations whose names are prefixed with ``\code{llvm.}''.
 Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} uses to \gls{mangle}  families of \glspl{intrinsic}.
 Families arise from the need to provide generic \glspl{intrinsic} to a strongly typed language where overloading is not allowed.
@@ -244,7 +211,7 @@ These constants in the compiler generalise the lowering and make it applicable t
   \label{alg:intrinsic}
   \begin{algorithmic}[1]
     \Function{\code{llvm.matrix.multiply}}{ATile, BTile, $N$, $K$, $M$}
-    \State MMABuiltIn~$\gets$~builtin chosen based on element type\label{chooseBuiltin}
+    \State MMAIntrinsic~$\gets$~intrinsic chosen based on element type\label{chooseIntrinsic}
     \State COutput~$\gets$~$N \times M$ empty array\label{createC}
     \State Accs~$\gets$~$V \times H$ ACCs assembled and initialised to zero\label{zeroAccs}
     \For{$\text{\code{k}}=0$ \textbf{to} $K-1$}\label{unrollLoopStart}
@@ -258,7 +225,7 @@ These constants in the compiler generalise the lowering and make it applicable t
       \EndFor
       \For{$\text{\code{v}}=0$ to $V-1$}\label{computeLoop1}
         \For{$\text{\code{h}}=0$ to $H-1$}\label{computeLoop2}
-          \State createCall(MMABuiltIn, {Accs[\code{v}][\code{h}], AOps[\code{v}], BOps[\code{h}]})\label{builtinCallCreate}
+          \State createCall(MMAIntrinsic, {Accs[\code{v}][\code{h}], AOps[\code{v}], BOps[\code{h}]})\label{intrinsicCallCreate}
         \EndFor
       \EndFor
     \EndFor\label{accLoopEnd}
@@ -268,7 +235,7 @@ These constants in the compiler generalise the lowering and make it applicable t
   \end{algorithmic}
 \end{algorithm}
 
-First, on line~\ref{chooseBuiltin}, a builtin is chosen based on the element type of the operation\footnotemark (\eg \code{float}, \code{i32}).
+First, on line~\ref{chooseIntrinsic}, an \gls{mma} intrinsic is chosen based on the element type of the operation\footnotemark (\eg \code{float}, \code{i32}).
 \footnotetext{
   This is an operation internal to the matrix multiplication meaning all negations have been applied prior to the intrinsic.
   Therefore, the positive multiply, positive accumulate variant is always chosen.
@@ -284,7 +251,7 @@ In \rfig{intrinsic} each operand is formed by four elements and, once extracted,
 Given constraints \fbox{1} and \fbox{2}, with the choice of $K = 5$, there are enough non-blocked \glspl{vsr} to contain all the thirty operands needed for the computation illustrated in \rfig{intrinsic}.
 Thus, laying out the accumulators in this $2 \times 4$ pattern maximises the reuse of values loaded into the \glspl{vsr}: operands extracted from \code{ATile} are reused four times and operands extracted from \code{BTile} are reused two times.
 
-Once this iteration's operands are extracted, the algorithm then iterates over the accumulators (lines~\ref{computeLoop1}-\ref{computeLoop2}) and creates a call to the \gls{mma} \gls{builtin}, computing a single accumulation in each.
+Once this iteration's operands are extracted, the algorithm then iterates over the accumulators (lines~\ref{computeLoop1}-\ref{computeLoop2}) and creates a call to the \gls{mma} \gls{intrinsic}, computing a single accumulation in each.
 Following constraint \fbox{3}, two outer-product instructions can be issued each cycle.
 Four pairs of accumulators can be scheduled before circling back to the first pair, thus satisfying constraint \fbox{4}.
 The assignment of a portion of \code{COutput} to a single accumulator eliminates the need to spill accumulators, thus increasing the performance according to constraint \fbox{5}.
