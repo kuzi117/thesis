@@ -30,7 +30,7 @@ for i=0 to M, j=0 to N, k=0 to D do
 
 The order in which the loops are executed does not affect the output of the algorithm on the condition that each combination of $i$, $j$, and $k$ is reached exactly once.
 However, mathematically speaking, choosing a certain order for the loops will produce functionality resembling certain common mathematical operations.
-A given order for the loops leads to the \emph{inner product}, which is the classic method taught in linear algebra courses for computing matrix multiplication, while a different order leads to the \emph{outer product}.
+A given order for the loops leads to matrix multiplication via the \emph{inner product} (or \emph{dot product}), which is the classic method taught in linear algebra courses, while a different order leads to matrix multiplication via the \emph{outer product}.
 While both choices arrive at the same final result, the efficacy with which they arrive can vary significantly, as is discussed later in \rsec{outerKernel} and \rsec{innerKernel}.
 
 \begin{figure}[t]
@@ -73,44 +73,46 @@ While both choices arrive at the same final result, the efficacy with which they
 \end{figure}
 
 \subsection{The Inner Product}
-\nelson{In this section, it seems that you are talking about the inner product of two matrices (you say that the inner product is the repeated application of the dot product). Is that what you mean?}
-As taught in the classroom, the inner product can be viewed as the repeated application of the \emph{dot product} to produce a matrix.
-The dot product takes two vectors and produces a single scalar value.
+As taught in the classroom, matrix multiplication can be computed by repeatedly applying the inner product.
+The inner product takes two vectors and produces a single scalar value.
 Specifically, it is defined as the summation of the pair-wise products of two vectors (\eg $v \cdot w=v_{1}w_{1} + v_{2}w_{2} + \ldots + v_{D}w_{D}$).
 
-Within the context of the inner product, the dot product is used to compute a single cell of $C$ from a row of $A$ and a column of $B$.
-More concretely, given the computation \matmul{M}{D}{N}, the inner product computes the cell $c_{i,j}$ by taking the dot product of the $i$th row of $A$ and the $j$th column of $B$ (\rfig{innerProduct}).
-In this way, the inner product is composed of one dot product for each cell of $C$.
+Within the context of matrix multiplication, the inner product is used to compute a single cell of $C$ from a row of $A$ and a column of $B$.
+More concretely, given the computation \matmul{M}{D}{N}, the inner product computes the cell $c_{i,j}$ by taking the inner product of the $i$th row of $A$ and the $j$th column of $B$ (\rfig{innerProduct}).
+In this way, matrix multiplication is composed of one inner product for each cell of $C$.
 
 We can see this process in the following implementation of matrix multiplication:
-\begin{lstlisting}[caption={[Basic inner product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
+\begin{lstlisting}[caption={[Basic matrix multiplicaion via inner product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
 for (uint64_t i = 0; i < M; ++i)|\label{innerILoop}|
   for (uint64_t j = 0; j < N; ++j)|\label{innerJLoop}|
       for (uint64_t k = 0; k < D; ++k)|\label{innerKLoop}|
         C[i][j] += A[i][k] * B[k][j];
 \end{lstlisting}
+
 Referring back to \rlst{basicMatMul}, the loop order has been concretised to $(i, j, k)$.
 In order to implement the mathematical process outlined above, the loops on lines~\ref{innerILoop} and \ref{innerJLoop} of \rlst{basicInner} select the cell from $C$, the row of $A$, and the column of $B$ that will be used.
-The innermost loop on line~\ref{innerKLoop} implements the dot product by multiplying elements from the chosen vectors in $A$ and $B$ and then reducing them into the chosen cell of $C$.
-One can thus view the implementation in \rlst{basicInner} as a loop over $i$ and $j$ that selects an output cell and repeatedly calls a dot product operation.
+The innermost loop on line~\ref{innerKLoop} implements the inner product by multiplying elements from the chosen vectors in $A$ and $B$ and then reducing them into the chosen cell of $C$.
+One can thus view the implementation in \rlst{basicInner} as a loop over $i$ and $j$ that selects an output cell and repeatedly calls an inner product function.
 Therefore, with the choice of loop order $(i, j, k)$, matrix multiplication can be conceptualised as shown in \rlst{basicInnerPseudo}.
-\begin{lstlisting}[caption={[Pseudocode for inner product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
+
+\begin{lstlisting}[caption={[Matrix multiplication pseudocode using inner product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
 for i=0 to M, j=0 to N do
-  C[i, j] = dotProduct(A.row(i), B.column(j))
+  C[i, j] = innerProduct(A.row(i), B.column(j))
 \end{lstlisting}
 
 \subsection{The Outer Product}
 \label{sec:outerProduct}
-The outer product, when seen in mathematics, is typically seen only when $D=1$, as in \matmul{M}{1}{N}, mimicking the diagram in \rfig{outerProduct}.
-\nelson{Please add a reference to the end of this sentence so that the reader can read more if she wishes.}
-Mathematicians prefer to view \matmul{M}{D}{N} with $D > 1$ as an inner product for simplicity, using the outer product only when $D=1$.
+Matrix multiplication can also be computed through repeated application of the outer product.
+In contrast to the inner product, the outer product takes two vectors and produces a matrix.
+Specifically, given $v$ and $w$ that have lengths $m$ and $n$ respectively, the outer product produces an $m \times n$ matrix where cell $(i, j)$ is the product of $v_i$ and $w_j$ (\rfig{outerProduct}).
 
-Given the same computation, \matmul{M}{D}{N}, the outer product is computed by multiplying a column of $A$ with a row of $B$ as in \rfig{outerProduct}, producing an output matrix.
 Where, given a vector from $A$ and $B$, the inner product fully computes a single cell, the outer product partially computes every cell of the output $C$.
-Because the dimension $D$ dictates both the number of columns in $A$ and the number of rows in $B$, the full matrix multiplication can be computed by performing $D$ outer products and summing the resulting partial products.
+Moreover, each vector of $A$ and $B$ are used only once.
+Specifically, given the computation \matmul{M}{D}{N}, matrix multiplication is computed by taking the outer product of column $k$ of $A$ and row $k$ of $B$ and summing the resulting partial matrices.
+Because the dimension $D$ dictates both the number of columns in $A$ and the number of rows in $B$, the full matrix multiplication can be computed by performing a total of $D$ outer products.
 
 Using \rlst{basicMatMul} as a model, this process implements matrix multiplication with a loop order of $(k, i, j)$:
-\begin{lstlisting}[caption={[Basic outer product]A basic matrix multiplication via outer product.},label=lst:basicOuter,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
+\begin{lstlisting}[caption={[Basic matrix multiplication via outer product]A basic matrix multiplication via outer product.},label=lst:basicOuter,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
 for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
   for (uint64_t i = 0; i < M; ++i)|\label{outerILoop}|
     for (uint64_t j = 0; j < N; ++j)|\label{outerJLoop}|
@@ -118,7 +120,7 @@ for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
 \end{lstlisting}
 Here, the loop on line~\ref{outerKLoop} selects a column from $A$ and a row from $B$ while the loops on lines~\ref{outerILoop} and \ref{outerJLoop} compute the outer product of those vectors.
 Thus, in a tranformation similar to the one between \rlst{basicInner} and \rlst{basicInnerPseudo}, \rlst{basicOuter} can be rewritten like so:
-\begin{lstlisting}[caption={[Basic outer product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
+\begin{lstlisting}[caption={[Matrix multiplication pseudocode using outer product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
 for k=0 to D do
   C += outerProduct(A.column(k), B.row(k))
 \end{lstlisting}
@@ -126,7 +128,7 @@ for k=0 to D do
 \subsubsection{Rank-\texorpdfstring{$r$}{r} Updates}
 Some mathematical operations, such as lower-upper factorization, depend on a changing data set, updating a model as new data points are added~\autocite{strange2007efficient}.
 This update process is performed by taking a matrix derived from the model and updating it with the outer product of two vectors.
-Because the result of the outer product of two vectors, a matrix, will always be of rank one\footnotemark, this is called a \emph{rank-one update}.
+Because the result of the outer product of two vectors, a matrix, will always be of rank one, this is called a \emph{rank-one update}.\footnotemark
 \footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
 Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), eventually arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
 With this model, the outer-product matrix multiplication in \rlst{basicOuterPseudo} is rewritten as such:
