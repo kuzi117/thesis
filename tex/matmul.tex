@@ -106,7 +106,7 @@ Matrix multiplication can also be computed through repeated application of the o
 In contrast to the inner product, the outer product takes two vectors and produces a matrix.
 Specifically, given $v$ and $w$ that have lengths $m$ and $n$ respectively, the outer product produces an $m \times n$ matrix where cell $(i, j)$ is the product of $v_i$ and $w_j$ (\rfig{outerProduct}).
 
-Where, given a vector from $A$ and $B$, the inner product fully computes a single cell, the outer product partially computes every cell of the output $C$.
+Where, given a vector from $A$ and and a vector from $B$, the inner product fully computes a single cell, the outer product partially computes every cell of the output $C$.
 Moreover, each vector of $A$ and $B$ are used only once.
 Specifically, given the computation \matmul{M}{D}{N}, matrix multiplication is computed by taking the outer product of column $k$ of $A$ and row $k$ of $B$ and summing the resulting partial matrices.
 Because the dimension $D$ dictates both the number of columns in $A$ and the number of rows in $B$, the full matrix multiplication can be computed by performing a total of $D$ outer products.

@@ -433,16 +433,20 @@ The bottom left shows $M$ mathematically transposed ($M_{RM}^T$) while the top r
 Examining the in-register representation of $M_{RM}^T$ and $M_{CM}$ shows that transposing the matrix and reorganising its underlying access order produce identical layouts in register.
 Furthermore, combining the two transformations to produce a transposed $M$ with column-major access order ($M_{CM}^T$) results in the original data order in register, as shown in the bottom right of \rfig{orderAndTranspose}.
 
-\rsec{registerArguments} shows how the first argument to an \gls{mma} outer-product instruction must be in row-major order while the second argument must be column major order.
+\rsec{registerArguments} shows how the first argument to an \gls{mma} outer-product instruction must be in row-major order while the second argument must be column-major order.
 Therefore, the original equation can be annotated with access orders like so: $Z = X_{RM} Y_{CM}$.
 Applying the theorem above produces $Z^T = Y^T_{CM} X^T_{RM}$.
 First, consider the right side of the equation.
-The first argument must still be in row-major order and the second must be in column major order.
+The first argument must still be in row-major order and the second must be in column-major order.
+\nelson{Say what you mean by "register-equivalent" because different readers may have different understanding of this. Also, there should be no hyphen.}
 By the example shown in \rfig{orderAndTranspose}, a transposed matrix of one access order is register-equivalent to the untransposed matrix in the opposing order.
+\nelson{There is more to what you are thinking than what you wrote. How does this simplification relates with data movement and where would such movement occur? Imagine that you are standing in front of a classroom and fully explaining what you mean. What would you say? That is what you need to write here.}
 Thus, the equation can be further simplified to $Z^T = Y_{RM}X_{CM}$, which proves that the operand registers to the \gls{mma} outer-product instruction do not require any data movement.
 Now, considering the left side of the equation, the end goal is to produce an untransposed $Z$ but in the opposing access order.
 From \rfig{orderAndTranspose}, it is known that a transposed matrix $M$ is register-equivalent to $M$ in the opposing access order (\ie $M_{CM} == M^T_{RM}$ or $M_{RM} = M^T_{CM}$).
 The left side is already in a transposed state and can simply be interpreted as a matrix in the opposing access order.
 This completes the proof that simply by swapping the order of the register operands to the \gls{mma} outer-product instruction, the data-access orientation of the accumulator is changed.
+
+\nelson{This Chapter needs a summarization subsection at the end.}
 
 \end{document}
