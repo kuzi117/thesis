@@ -74,36 +74,28 @@ During lowering, the \code{call} statement is replaced with a series of \gls{llv
 This version of the lowering is what is referred to as the default ``vectorisation'' method.
 Because the dimensions of the operation are known statically, the computation is completely unrolled: no loops will be generated.
 Such a lowering is ideal because it removes the need for loop analysis and allows later passes to further vectorise or pipeline the operation.
-This property makes it ideal for creating small and efficient kernels focused on efficient computation.
-\bk{I'm not sure I need to expand on the vectorisation lowering. It's laid out very simply here, but more info may help contrast more.}
+This property makes it ideal for creating small and efficient kernels focused on rapid computation.
 
-\nelson{kernels cannot be used with kernels....}
-These kernels, because fully unrolling them creates a large amount of code, cannot be used with large kernels.
+These kernels, because fully unrolling them creates a large amount of code, cannot be used to compute large matrix multiplications.
 For example, unrolling a kernel for \matmul{128}{128}{128} takes several minutes of compilation time and results in an \gls{ir} file slightly larger than a gigabyte with over 12 million lines.
-\nelson{"this"}
-Producing a binary from this has never been accomplished due to the inordinate compilation time.
+Producing a binary from such a large kernel has never been accomplished due to the inordinate compilation time.
 Therefore, wrapping the kernel in an outer kernel, which breaks down the operation while efficiently handling memory movement, is a necessity.
-For further discussion see \bk{PACT paper or section N}.
+For further discussion see \rsec{outerKernel} or for a functional implementation and deeper discussion see the work by Kuzma \etal~\autocite{kuzma2021fast}.
 
 \section{An Alternate Lowering Using MMA}
 \label{sec:alternateLowering}
 We look to implement an improvement to this lowering on the \gls{power} platform using \gls{mma}.
-Content in \rsec{baseCase}, \rsec{dataTypes}, and \rsec{arbitraryDims} is derived from work currently under revision~\autocite{kuzma2021fast}.
+Content in \rsec{baseCase}, \rsec{dataTypes}, and \rsec{arbitraryDims} is derived from work the work by Kuzma \etal~\autocite{kuzma2021fast}.
 
-\bk{
-  I'm not sure this is enough context for the upcoming section; it's not apparent why the output is $8 \times 16$.
-  I am, however, writing this before having finished the explanation of MMA which should be in a previous chapter.
-}
-\nelson{Preceding what?}
-This preceding work focused on a lowering for floating point values when computing \matmul{8}{5}{16}.
+\todo{Verify that enough context is given in previous sections.}
+This work focuses on a lowering for floating point values when computing \matmul{8}{5}{16}.
 The $8 \times 16$ output size is exactly the output dimensions produced when fully utilising the architecture's available accumulators.
-This property made it the ideal size for the intrinsic's role as a tight inner kernel.
+This property makes it the ideal size for the intrinsic's role as a tight inner kernel.
 Nevertheless, these restrictions create a simple scenario enabling a foundational understanding of this thesis' core algorithm; removing these restrictions is discussed in \rsec{dataTypes}, \rsec{arbitraryDims}, and \rsec{arbitraryOrder}.
 
 \subsection{Base Case}
 \label{sec:baseCase}
-\todo{Find a better title.}
-In addition to the software constraints described in \rsec{matMulInt}, an efficient MMA lowering must take into account the following hardware constraints:
+In addition to the software constraints described in \rsec{matMulInt}, an efficient \gls{mma} lowering must take into account the following hardware constraints:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\fbox{\arabic*}]
   \item eight accumulators are available per thread and for each accumulator that is used, the usage of four \glspl{vsr} are blocked;
   \item there are 64 \glspl{vsr}, thus if eight accumulators are used, there are 32 \glspl{vsr} remaining to contain data from input matrices;
@@ -186,8 +178,7 @@ In addition to the software constraints described in \rsec{matMulInt}, an effici
   \label{fig:intrinsic}
 \end{figure}
 
-\bk{Consider highlighting an argument register in different way now that the diagram is larger.}
-\rfig{intrinsic} illustrates how \code{COutput} is divided into portions that are assigned to the MMA accumulators.
+\rfig{intrinsic} illustrates how \code{COutput} is divided into portions that are assigned to the \gls{mma} accumulators.
 \code{ATile}, \code{BTile}, and \code{COutput} are represented in two dimensions to illustrate the position of the elements in the matrices.
 Each small square in the figure represents one 32-bit element of a matrix.
 A circled number indicates that the corresponding portion of \code{COutput} is assigned to that accumulator number.
@@ -198,7 +189,7 @@ Each outer-product computation needs two four-element operands, one from \code{A
 These operands are surrounded by dashed lines for the two accumulations highlighted in gray.
 The arrows indicate how the loop indices in \ralg{intrinsic} iterate for the example in the figure.
 
-\ralg{intrinsic} describes the lowering of the intrinsic computation for MMA.
+\ralg{intrinsic} describes the lowering of the intrinsic computation for \gls{mma}.
 This is the algorithm within the compiler that produces \gls{llvm} \gls{ir}, not the code executed on the target machine.
 The produced code and its complications are discussed in \rsec{unrolled}.
 
@@ -259,7 +250,6 @@ The assignment of a portion of \code{COutput} to a single accumulator eliminates
 
 \subsection{The Resulting IR}
 \label{sec:unrolled}
-\bk{Find a better section name.}
 As discussed in \rsec{matMulInt}, the fully unrolled \gls{ir} code for the \gls{lowering} of an \gls{intrinsic} can be extremely long.
 \rlst{unrolled} presents the code resulting from unrolling \matmul{8}{1}{16}.
 The result has been simplified but preserves the process presented in \ralg{intrinsic}.
@@ -329,25 +319,18 @@ In this first iteration, the zeroed out accumulator will be duplicated for each 
 In the next iteration of accumulations, the returned accumulators will be used as the first argument.
 This process continues with each accumulation, creating a chain of return values to arguments, effectively showing the accumulation process.
 
-\subsubsection{Complications}
-\label{sec:complications}
-\bk{Discuss code gen issues from assembly.}
-\bk{Discuss $K=5$ being incorrect.}
-\bk{Discuss ``correct'' operand access order.}
-
 \subsection{Other Data Types}
 \label{sec:dataTypes}
 \bk{Do I need to cut some of this out now that it's explained in \rsec{matMulMMA}?}
-The presentation so far has assumed 32-bit data types where each operand \gls{vsr} contains 4 elements and an MMA instruction computes a rank 1 update, computing and accumulating a single outer product.
-Halving the data-type size doubles the number of elements in each \gls{vsr} and doubles the rank of the update.
-For example, for a 16-bit data type, MMA computes a rank 2 update while an 8-bit data type computes a rank 4 update.
-The packing of more elements into a single \gls{vsr} and the accumulation of multiple outer products by a single MMA instruction requires changes \ralg{intrinsic}.
-Let $p$ be the number of outer products performed by an MMA instruction --- \ie the rank of the update.
-Now the step size of the loop on line~\ref{unrollLoopStart} must be $p$ because, in \rfig{intrinsic}, $p$ rows of a vertical section of \code{BTile} and $p$ columns of horizontal section of \code{ATile} are packed into each \gls{vsr}.
-The extraction of operands in lines~\ref{aOps} and \ref{bOps} is now a strided access.
-For instance, for $p=2$ (16-bit data types), four consecutive elements are extracted from row $k$ and four consecutive elements are extracted from row $k+1$ to form the 128-bit \gls{vsr}.
-The length of $K$ must increase by $p$ times to provide enough data to populate the \glspl{vsr}.
-The effect is that more partial-product accumulations can be computed per micro-kernel invocation given the same number of assemblies and disassemblies because the number of multiplications per outer product increases by $p$.
+The presentation so far has assumed 32-bit data types where each operand \gls{vsr} contains four elements and an \gls{mma} instruction computes a rank-one update, computing and accumulating a single outer product.
+As discussed in \rsec{matMulMMA}, halving the data-type size doubles the number of elements in each \gls{vsr} and therefore doubles the rank of the update.
+The packing of more elements into a single \gls{vsr} and the accumulation of multiple outer products by a single \gls{mma} instruction requires changes to \ralg{intrinsic}.
+Let $r$ be the number of outer products performed by an \gls{mma} instruction --- \ie the rank of the update.
+Now the step size of the loop on line~\ref{unrollLoopStart} must be $r$ because, in \rfig{intrinsic}, $r$ rows of a vertical section of \code{BTile} and $r$ columns of horizontal section of \code{ATile} are packed into each \gls{vsr}.
+The extraction of operands on lines~\ref{aOps} and \ref{bOps} is now a strided access.
+For instance, for $r=2$ (16-bit data types), four consecutive elements are extracted from row $k$ and four consecutive elements are extracted from row $k+1$ to form the 128-bit \gls{vsr}.
+The length of $K$ must increase by $r$ times to provide enough data to populate the \glspl{vsr}.
+The effect is that more partial-product accumulations can be computed per micro-kernel invocation given the same number of assemblies and disassemblies because the number of multiplications per outer product increases by $r$.
 
 For the double-precision floating-point data type, an accumulator contains $4 \times 2$ 64-bit elements.
 The operand extracted from \code{ATile} is placed into a combination of two \glspl{vsr} that each contain two elements, collectively four, while the operand extracted from \code{BTile}, now only two elements, is placed into a single 128-bit \gls{vsr}.
@@ -357,8 +340,6 @@ The extraction of operands into vector registers in lines~\ref{aOps} and~\ref{bO
 
 \subsection{Arbitrary Values for \texorpdfstring{$M$}{M}, \texorpdfstring{$K$}{K}, \texorpdfstring{$N$}{N}}
 \label{sec:arbitraryDims}
-\bk{Coutput created before K makes a lot more sense with the arbitrary dimensions}
-% For simplicity, the presentation of the algorithms assumed that $N$ and $K$ are selected so that a tile of matrix \code{A} and a tile of matrix \code{B} have the exact dimensions needed for the accumulator arrangement shown in \rfig{intrinsic}.
 Until now, the algorithms have used values of $M$ and $N$ selected such that a micro kernel with the accumulator arrangement shown in \rfig{intrinsic} could be computed with a single set of assemble and disassemble instructions.
 However, the implementation of \ralg{intrinsic} in LLVM must handle any \code{llvm.matrix.multiply} intrinsic created by any compilation path and thus must handle arbitrary values for $M$, $N$ and $K$.
 
