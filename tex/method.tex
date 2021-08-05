@@ -354,31 +354,95 @@ This data gathering adds additional code and may impact access locality if the t
 \label{sec:arbitraryOrder}
 The code-lowering algorithm also supports inputs and outputs in any access order through modifications to the functions that extract operands and store the results in the accumulators to memory.
 
-Operands in \gls{vsr} from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
+As shown in \rsec{registerArguments}, operands in \gls{vsr} from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
 Without loss of generality, consider extracting an operand from \code{Atile}.
-Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times p$ matrix.
-Given a column-major matrix argument to the intrinsic, we can extract $p$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
+Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times r$ matrix.
+Given a column-major matrix argument to the intrinsic, we can extract $r$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
 The interleaving essentially converts the data access order from column major to row major.
-If the operand matrix is row major, we can extract four length-$p$ vectors from the rows and then concatenate to produce the \gls{vsr}.
-In the case of 32- or 64-bit data types, these operations appear to the contrary, but the truth remains that an argument \gls{vsr} extracted from \code{ATile} is actually four one-element rows not one four-element column.
+If the operand matrix is row major, we can extract four length-$r$ vectors from the rows and then concatenate to produce the \gls{vsr}.
+Extracting from operands from \code{BTile} follows the same logic, except that arguments are column-major and the extraction logic for column-major and row-major matrices are exchanged.
 
-\bk{
-  I have a feeling that I'll need a diagram proving that transposition == access order change in regards to underlying element order.
-  Having this means I'll probably rewrite this entire paragraph, it feels pretty clumsy as is.
-}
-Accumulators can change orientations using a simple mathematical theorem: given matrices $A, B, C$, if $C = AB$ then $C^T=B^TA^T$.
-This fact coupled with the knowledge that transposition and access order change is the same operation regarding element movement in memory, we begin by adding data ordering information to the equations: if $C_{RM}=A_{RM}B_{CM}$ then $C^T_{RM}=B^T_{CM}A^T_{RM}$.
-Now, focusing on the second equation, we can reduce the transpositions to changes in the data ordering to produce $C_{CM}=B_{RM}A_{CM}$.
-This means that a column major version of $COutput$ can be produced simply by swapping the operand registers -- no further processing required.
+\begin{figure}[t]
+  \centering
+  \begin{tikzpicture}[scale=1]
+    % Left column matrices.
+    \node[] at (-5, 3.25) {Matrix};
+    \node at (-6.25, 2) {$M_{RM}$};
+    \draw[step=.5,shift={(-5.5, 1.5)}] (0, 0) grid +(1, 1);
+    \draw[ystep=.5,xstep=1,line width=1.3pt,shift={(-5.5, 1.5)}] (0, 0) grid +(1, 1);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(-5, 2)}]{
+      1 & 2\\
+      3 & 4\\
+    };
+    \node at (-6.25, 0.5) {$M_{RM}^T$};
+    \draw[step=.5,shift={(-5.5, 0)}] (0, 0) grid +(1, 1);
+    \draw[ystep=.5,xstep=1,line width=1.3pt,shift={(-5.5, 0)}] (0, 0) grid +(1, 1);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(-5, 0.5)}]{
+      1 & 3\\
+      2 & 4\\
+    };
 
-\subsection{restrictions}
-\label{sec:restrictions}
-acknowledge possible improvements:
-\begin{itemize}
-  \item Currently, inputs must have dimensions which are multiples of the values described in \rtab{mmaInsts}. This could be improved with masked instructions.
-  \item Currently, inputs must have constant dimensions due to the interface. This is a benefit and a restriction. We can unroll completely (good for vectorisation/pipelining), can't do generics (bad for large matrices). Can wrap in another set of loops to break down.
-  \item Can't do doubles.
-  \item Can't do operation fusion like Eigen.
-\end{itemize}
+    % Left column memory.
+    \node[anchor=center] at (-3, 3.22) {In register};
+    \draw[step=.5,shift={(-4, 1.75)}] (0, 0) grid +(2, .5);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(-3, 2)}]{
+      1 & 2 & 3 & 4\\
+    };
+    \draw[step=.5,shift={(-4, 0.25)}] (0, 0) grid +(2, .5);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(-3, 0.5)}]{
+      1 & 3 & 2 & 4\\
+    };
+
+    % Right column matrices.
+    \node[align=center] at (0.5, 3.25) {Matrix};
+    \node at (-.75, 2) {$M_{CM}$};
+    \draw[step=.5,shift={(0, 1.5)}] (0, 0) grid +(1, 1);
+    \draw[ystep=1,xstep=.5,line width=1.3pt,shift={(0, 1.5)}] (0, 0) grid +(1, 1);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(.5, 2)}]{
+      1 & 2\\
+      3 & 4\\
+    };
+    \node[align=center] at (0.5, 3.25) {Matrix};
+    \node at (-.75, 0.5) {$M_{CM}^T$};
+    \draw[step=.5,shift={(0, 0)}] (0, 0) grid +(1, 1);
+    \draw[ystep=1,xstep=.5,line width=1.3pt,shift={(0, 0)}] (0, 0) grid +(1, 1);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(.5, 0.5)}]{
+      1 & 3\\
+      2 & 4\\
+    };
+
+    % Right column in memory.
+    \node[align=center] at (2.5, 3.22) {In register};
+    \draw[step=.5,shift={(1.5, 1.75)}] (0, 0) grid +(2, .5);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(2.5, 2)}]{
+      1 & 3 & 2 & 4\\
+    };
+    \draw[step=.5,shift={(1.5, .25)}] (0, 0) grid +(2, .5);
+    \matrix[matrix of nodes,nodes={inner sep=0pt,text width=.5cm,align=center,minimum height=.5cm},shift={(2.5, 0.5)}]{
+      1 & 2 & 3 & 4\\
+    };
+  \end{tikzpicture}
+  \caption{Arguments for an \code{i16} matrix shown contextually.}
+  \label{fig:orderAndTranspose}
+\end{figure}
+
+Accumulators can change orientations using a simple mathematical theorem: given matrices $X, Y, Z$, if $Z = XY$ then $Z^T=Y^TX^T$.
+In order to apply this to \gls{mma}, first consider \rfig{orderAndTranspose}.
+The top left of the figure shows a matrix $M$ in row-major order ($M_{RM}$) as well as its data laid out in register ($1, 2, 3, 4$).
+The bottom left shows $M$ mathematically transposed ($M_{RM}^T$) while the top right shows $M$ laid out in memory in column-major order ($M_{CM}$).
+Examining the in-register representation of $M_{RM}^T$ and $M_{CM}$ shows that transposing the matrix and reorganising its underlying access order produce identical layouts in register.
+Furthermore, combining the two transformations to produce a transposed $M$ with column-major access order ($M_{CM}^T$) results in the original data order in register, as shown in the bottom right of \rfig{orderAndTranspose}.
+
+\rsec{registerArguments} shows how the first argument to an \gls{mma} outer-product instruction must be in row-major order while the second argument must be column major order.
+Therefore, the original equation can be annotated with access orders like so: $Z = X_{RM} Y_{CM}$.
+Applying the theorem above produces $Z^T = Y^T_{CM} X^T_{RM}$.
+First, consider the right side of the equation.
+The first argument must still be in row-major order and the second must be in column major order.
+By the example shown in \rfig{orderAndTranspose}, a transposed matrix of one access order is register-equivalent to the untransposed matrix in the opposing order.
+Thus, the equation can be further simplified to $Z^T = Y_{RM}X_{CM}$, which proves that the operand registers to the \gls{mma} outer-product instruction do not require any data movement.
+Now, considering the left side of the equation, the end goal is to produce an untransposed $Z$ but in the opposing access order.
+From \rfig{orderAndTranspose}, it is known that a transposed matrix $M$ is register-equivalent to $M$ in the opposing access order (\ie $M_{CM} == M^T_{RM}$ or $M_{RM} = M^T_{CM}$).
+The left side is already in a transposed state and can simply be interpreted as a matrix in the opposing access order.
+This completes the proof that simply by swapping the order of the register operands to the \gls{mma} outer-product instruction, the data-access orientation of the accumulator is changed.
 
 \end{document}
