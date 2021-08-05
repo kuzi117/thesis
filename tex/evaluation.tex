@@ -510,7 +510,6 @@ The \gls{power} \gls{isa} indicates that the two different outer product instruc
 Thus, given identical load, store, and shuffle schedules along with identical outer-product latencies, the performance of the two types should be identical in every instance.
 
 However, given the results in \rfig{accessOrder}, this is clearly not the case.
-\todo{Add table with numbers.}
 The most performant case for \code{half}, $\textrm{C} = \textrm{C} \times \textrm{C}$, still requires roughly three times the cycles of \code{i16}'s least performant cast, also $\textrm{C} = \textrm{C} \times \textrm{C}$.
 Results for \code{half} that do not follow the anticipated trend are a common thread in this chapter and are caused by a code length explosion due to extremely conservative assembly code generation (see \rsec{halfShuffle}).
 For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
