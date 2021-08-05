@@ -30,7 +30,7 @@ When not relying on an assembly kernel, their pass uses the default \gls{llvm} \
 The work in this thesis presents a compiler-only kernel that can replace Gareev \etal's SSE kernel or the default \gls{llvm} \glslink{vectorisation}{vectoriser} on \gls{power10}.
 Furthermore, this work is more modular and can be reused by new passes or other code generation paths as drop-in inner-kernel.
 
-Uday Bondhugula presents an implementation of the BLAS strategy within the emerging MLIR framework~\autocite{bondhugula2020high}.
+Uday Bondhugula presents an implementation of the \gls{blas} strategy within the emerging MLIR framework~\autocite{bondhugula2020high}.
 He demonstrates that blocking, packing, register tiling, and unroll/jam yields code that achieves 34\% of OpenBLAS' performance on Intel's Coffee Lake~\autocite{bondhugula2020high}.
 Bondhugula also implemented a custom \gls{vectorisation} pass to replace the default \gls{llvm} \glslink{vectorisation}{vectoriser} thus reaching 91\% of the performance of OpenBLAS.
 This work also shows the weakness of the default \gls{llvm} \glslink{vectorisation}{vectoriser}.
@@ -51,7 +51,7 @@ This thesis, in the same vein as Barnes \etal, focuses on bringing high performa
 
 \section{Other Matrix Engines}
 The advent of the ``general purpose'' \glspl{gpu} quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
-This evolved into implementations of matrix multiplications on \glspl{gpu}: manually~\autocite{li2011strassens}, through libraries like BLAS~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
+This evolved into implementations of matrix multiplications on \glspl{gpu}: manually~\autocite{li2011strassens}, through libraries like \gls{blas}~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
 Matrix multiplication is also central to the design of hardware for tensor-operation acceleration such as Google's Tensor Processing Unit~\autocite{jouppi2017datacenter}, Nvidia's Tensor Core~\autocite{markidis2018nvidia}, and Huawei's Cube Unit~\autocite{liao2019davinci}.
 Performance evaluations of GEMM in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\autocite{jouppi2017datacenter,wang2019benchmarking}.
 Matrix-multiplication acceleration in standalone accelerators is not the focus of this thesis.
@@ -73,7 +73,7 @@ Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix 
 \section{Performance Evaluation}
 Robust performance benchmarking is critical for the evaluation of vector extensions.
 While there is extensive performance evaluation of matrix multiplication on vector extensions for Intel architectures~\autocite{hassan20161performance,hemeida2020optimizing,alappat2020understanding}, to the best of the author's knowledge, similar studies do not exist for the PowerPC or ARM platforms.
-Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for AMX, SVE, or MMA~\autocite{poenaru2020evaluating,domke2021matrix}.
+Moreover, the introduction of matrix engines is recent in all platforms and therefore only simulated or theorized performance estimates exist for \gls{amx}, \gls{sve}, or \gls{mma}~\autocite{poenaru2020evaluating,domke2021matrix}.
 Therefore, this work is among the first to present performance evaluation of a matrix engine on actual hardware.
 
 \end{document}
