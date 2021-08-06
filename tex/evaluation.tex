@@ -784,12 +784,12 @@ Following this is a discussion of two important issues that must be addressed in
 These two issues pervade and influence each of the experiments that follow.
 
 The first two experiments investigate the optimal parameters for the \gls{mma} micro kernel.
-The experiments determine that a rectangular accumulator layout ($2 \times 4$, $4 \times 2$) coupled with an $A$ matrix in a column-major orientatino and an $B$ matrix in a row-major orientation are the most performant choices.
+The experiments determine that a rectangular accumulator layout ($2 \times 4$, $4 \times 2$) coupled with an $A$ matrix in a column-major orientation and an $B$ matrix in a row-major orientation are the most performant choices.
 Furthermore, as anticipated, the orientation of $C$ is shown to have no effect on performance
 
 Following these two experiments are two performance comparisons demonstrating the capabilities of the \gls{mma} \gls{lowering}.
 First, a comparison with the vectorised \gls{lowering} shows between a 3.1 and 15.8 times speedup for all supported types.
-A second experiment comparing with a human-crafted kernel shows that the performance of the \gls{mma} \gls{lowering} takes approximately double the cycle count that the handwritten kernel takes.
-However, after applying a load-sinking transformation, it is shown that the cycle counts are nearly identical, proving that, once the listed issues in the backend are resolved, the performance of the kernel will match that of an expert's handcrafted solution.
+A second experiment comparing the code lowered by the compiler with a human-crafted kernel shows that the performance of the \gls{mma} \gls{lowering} takes approximately double the cycle count that the handwritten kernel takes.
+After applying a load-sinking transformation the cycle counts are nearly identical, providing strong indication that, once the listed issues in the backend are resolved, the performance of the kernel will match that of an expert's handcrafted solution.
 
 \end{document}

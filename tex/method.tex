@@ -450,15 +450,16 @@ By the same lemma, the left side can be simplified to produce $Z_{CM} = Y_{RM}X_
 This completes the proof that simply by swapping the order of the register operands to the \gls{mma} outer-product instruction, the data-access orientation of the accumulator is changed without transposing the result matrix.
 
 \section{Summary}
-This section presents a compiler-only method for the code generation of a high-performance matrix-multiplication kernel.
-It begins by introducing \gls{llvm} intrinsics and their format with a specific focus on the \code{llvm.matrix.multiply} intrinsic.
-This particular intrinsic serves as the starting point for the generation of the matrix multiplication kernel.
+This chapter presented a compiler-only method for the code generation of a high-performance matrix-multiplication kernel.
+It first introduced \gls{llvm} intrinsics and their format with a specific focus on the \code{llvm.matrix.multiply} intrinsic.
+This particular intrinsic serves as the starting point for the generation of the matrix-multiplication kernel.
+As an example, the intrinsic's pre-existing vectorisation lowering serves to introduce the usage and constraints of the intrinsic.
 
-As an example, the intrinsic's preexisting vectorisation lowering serves to introduce the usage and constraints of the intrinsic.
-The remaining sections of the chapter discuss how the intrinsic can be made to produce code targetting a \gls{matrix engine}, specifically \gls{mma}.
-The examination of an $8 \times 16$ \code{float}-element kernel serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation result.
+Then the chapter discussed how the implementation of the intrinsic can produce code targeting a \gls{matrix engine}, specifically \gls{mma}.
+The examination of an $8 \times 16$ \code{float}-element kernel serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation results.
 The resulting \gls{ir} is briefly examined in order to show its effectiveness before examining the methods through which the limitations in the base case can be lifted.
 
-First, an method to extend the presented algorithm to each of the types natively supported by \gls{mma}.
+\nelson{There is a break in the flow of the text from the previous two paragraphs here.}
+First, a method to extend the presented algorithm to each of the types natively supported by \gls{mma}.
 Next, an approach to enable arbitrary dimension lengths, followed by discussion of how to handle arbitrary access orders in input and output matrices.
 \end{document}
