@@ -351,9 +351,9 @@ The rows of \code{ATile} and \code{BTile} shown in \rfig{intrinsic} are now a po
 This data gathering adds additional code and may impact access locality if the tiles are large enough.
 
 Arbitrary values for $K$ are implicitly handled in \ralg{intrinsic}.
-The loop on line~\ref{unrollLoopStart} will unroll the loop as many times as is necessary to perform all accumulations.
-Thus the number of loads and outer products performed will change automatically as $K$ increases or decreases.
-The only restriction to consider is that when smaller data types are used and the rank $r$ of the update does not perfectly divide $K$, the final accumulation will not have enough data to fill the argument registers.
+The loop on line~\ref{unrollLoopStart} unrolls the loop as many times as is necessary to perform all accumulations.
+Thus the number of loads and outer products performed changes automatically as $K$ increases or decreases.
+The only restriction is that when smaller data types are used and the rank $r$ of the update does not perfectly divide $K$, the final accumulation will not have enough data to fill the argument registers.
 In this case, a masked instruction (see \rsec{instVar}) must be used to disabled the unused ranks of the input arguments.
 
 \subsection{Arbitrary Access Order}
@@ -462,15 +462,15 @@ This particular intrinsic serves as the starting point for the generation of the
 As an example, the intrinsic's pre-existing vectorisation lowering serves to introduce the usage and constraints of the intrinsic.
 
 Then the chapter discussed how the implementation of the intrinsic can produce code targeting a \gls{matrix engine}, specifically \gls{mma}.
-The examination of an $8 \times 16$ \code{float}-element kernel serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation results.
+The examination of an $8 \times 16$ kernel formed by \code{float} elements serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation results.
 The resulting \gls{ir} is briefly examined in order to show its effectiveness before examining the methods through which the limitations in the base case can be lifted.
 
 The first limitation present in the base case is the lack of usage of the other types supported by \gls{mma}.
 This limitation is lifted through modifications to the loops that extract arguments as well as new logic to place multiple sets of elements into a single \gls{vsr}.
 Next, the chapter addressed the dependence on the $8 \times 16$ kernel output dimensions as well as an arbitrarily large $K$ dimension.
 Larger kernel outputs are handled simply by breaking up the problem into tiles that resemble the base case; all computation remains exactly the same.
-An arbitrarily large $K$ dimension is implicitly handled in the presented method; the only change is a larger number of loads and outer products being executed.
-Finally, the issue of arbitrary data access orders is resolved.
-For input matrices, this is simply a matter of extracting values from the correct place in the input data and using a shuffle instruction to create an argument which matches the outer product's expected input.
-For output matrices, after a small proof it is shown that simply exchanging the outer-product argument postions can change the data access order, allowing for no loss in performance when writing to the output matrix.
+An arbitrarily large $K$ dimension is implicitly handled in the presented method; the only change is that a larger number of loads and outer products are executed.
+Finally, the issue of arbitrary data access order is resolved.
+For input matrices, this is simply a matter of extracting values from the correct place in the input data and using a shuffle instruction to create an argument that matches the outer product's expected input.
+For output matrices, this chapter presented the argument that simply exchanging the outer-product argument positions can change the data access order, allowing the kernel to write the output matrix without loss in performance.
 \end{document}
