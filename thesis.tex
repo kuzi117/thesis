@@ -12,6 +12,18 @@
 \providecommand{\main}{.}
 \documentclass[12pt]{report}          % for default format
 
+% This patch needs to be loaded ahead of other packages which affect chpater markings.
+\usepackage{etoolbox}
+% Add space between chapter items in List of Algorithms.
+\makeatletter
+\patchcmd{\@chapter}% <cmd>
+  {\chaptermark{#1}}% <search>
+  {\chaptermark{#1}%
+   \addtocontents{loa}{\protect\addvspace{10\p@}}
+   \addtocontents{lol}{\protect\addvspace{10\p@}}}% replace
+  {}{}% <success><failure>
+\makeatother
+
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % Package dependencies  %
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -47,7 +59,7 @@
 
 % (Added by Braedy)
 % \usepackage{layouts}
-\usepackage{algorithm}
+\usepackage[chapter]{algorithm}
 \usepackage[noend]{algpseudocode}
 \usepackage{listings} % code listings
 \lstset{
