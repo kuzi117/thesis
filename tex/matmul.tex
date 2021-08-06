@@ -489,4 +489,20 @@ Issues such as new instructions added to an \gls{isa} that are impossible to sol
 Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
 It is for this reason that \rcha{method} presents a method built fully within a compiler without a hand-written kernel.
 
+\section{Summary}
+This chapter delves in-depth into the intricacies of matrix multiplication, an operation that seems quite simple at first glance.
+First to consider are the two main ways in which matrix multiplication can be computed: inner product and outer product.
+Both are implemented using the same set of loops and operations and arrive at the same answer, but their performance can vary drastically based on transformations applied when optimising.
+
+The modern approach to optimising matrix multiplication divides the operation into two levels of work.
+The first layer, the outer kernel, focuses on efficient manipulation of the memory hierarchy.
+This goal is achieved through the use of a blocking and packing strategy derived from seminal work by Goto and van de Geijn.
+
+The inner kernel focuses on optimising the computation of matrix multiplication given the small amount of data provided by the outer kernel at each invocation.
+Goto and van de Geijn's influence extends into this layer as well, where they state that the inner product is an inefficient method for computing matrix multiplication.
+Despite indications that an outer-product based method is superior, implementation within libraries must rely on emulation via \gls{simd} methods.
+However, this method of emulation contains a piece of the outer product in it.
+To improve upon the \gls{simd} method, a new hardware extension is required.
+\rcha{mma} presents an implementation of that improvement.
+
 \end{document}
