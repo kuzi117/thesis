@@ -350,6 +350,12 @@ For example, consider a 32-bit data multiplication as shown \rfig{intrinsic} but
 The rows of \code{ATile} and \code{BTile} shown in \rfig{intrinsic} are now a portion of the rows of larger tiles and the data extraction must gather the correct data into the vector registers that will be used by the accumulators.
 This data gathering adds additional code and may impact access locality if the tiles are large enough.
 
+Arbitrary values for $K$ are implicitly handled in \ralg{intrinsic}.
+The loop on line~\ref{unrollLoopStart} will unroll the loop as many times as is necessary to perform all accumulations.
+Thus the number of loads and outer products performed will change automatically as $K$ increases or decreases.
+The only restriction to consider is that when smaller data types are used and the rank $r$ of the update does not perfectly divide $K$, the final accumulation will not have enough data to fill the argument registers.
+In this case, a masked instruction (see \rsec{instVar}) must be used to disabled the unused ranks of the input arguments.
+
 \subsection{Arbitrary Access Order}
 \label{sec:arbitraryOrder}
 The code-lowering algorithm also supports inputs and outputs in any access order through modifications to the functions that extract operands and store the results in the accumulators to memory.
