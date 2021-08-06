@@ -243,7 +243,7 @@ This matrix size represents the best-case scenario for such an optimisation:
 Given such a perfect case, the runtime of the original version (labeled ``No Load Sinking'' in \rfig{floatSink}, first row in \rtab{floatSink}) is roughly quartered in the optimised version (``Load Sinking'', second row).
 If the operation were to have more accumulations, then this gap should continue to grow as more and more spills would be required in the unoptimised version.
 
-However, by examining the bars labeled ``$8 \times 8 \times 16$'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slow down (\rtab{floatSink}, rows 5 and 6).
+However, by examining the bars labeled ``$8 \times 8 \times 16$'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slowdown (\rtab{floatSink}, rows 5 and 6).
 This slowdown can be attributed to the invalidation of properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
 In fact, the assembly produced without load sinking is much closer to the handwritten version because it loads multiple vectors into a single register and uses this register as a source for multiple shuffle instructions.
 Loading multiple vectors into a single register is possible because the \gls{ir} of the version without load sinking has all of vectors being loaded simulataneously.
@@ -309,7 +309,7 @@ As with \code{float}, the increased number of memory operations explains the sig
 The next section investigates this discrepancy.
 
 \subsubsection{Smaller Types}
-While the issues affecting \code{float} matrices presented above remain roughly identical for \code{double}-typed operations, small data types have a separate source of slow down.
+While the issues affecting \code{float} matrices presented above remain roughly identical for \code{double}-typed operations, small data types have a separate source of slowdown.
 The difference in performance is actually an exacerbation of an already-discussed issue, namely the invalidation of properties \circled{1} and \circled{2}.
 For \code{i16}, in the load-sinking version, a single 64-bit double-word load instruction loads four \code{i16} elements at the same time, filling only half of a vector register.
 The original version loads 16 elements at a time using 256-bit vector-pair loads, meaning that the load-sinking version quadruples the number of loads required to load the values needed for the computation (excluding loads from the original spilling issue).
@@ -356,7 +356,7 @@ For \code{i8}, degradations arise from \glspl{spill} due to extra register press
 Despite these degradations, the generated code is fairly close to the ideal, handwritten assembly.
 The \gls{power10} \gls{isa} has instructions that merge vectors at a per-byte granularity, but not at a sub-byte granularity as is required for \code{i4} code generation.
 Therefore, to shuffle a vector of \code{i4} elements using the same \gls{ir} code generation, the backend generates significantly less performant code that includes vector rotations and scalarisation, with single bytes being moved individually to and from general purpose registers.
-The consequent slow down negates much of the speedup that could be achieved via the \gls{mma} rank-eight update.
+The consequent slowdown negates much of the speedup that could be achieved via the \gls{mma} rank-eight update.
 
 \subsection{Solutions}
 This section presents potential solutions to the performance degradations uncovered by the experimental evaluation.
@@ -554,7 +554,7 @@ However, the argument in \rsec{baseCase} is made under the assumption that the m
 In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
 If this is not the case, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effectively hidden.
 
-An important cause for slow down is also the difference in raw element count between linear and rectangular layouts.
+An important cause for slowdown is also the difference in raw element count between linear and rectangular layouts.
 A rectangular layout loads a total of $8 \times 32 + 16 \times 32 = 768$ elements while a linear layout loads a total of $4 \times 32 + 32 \times 32 = 1152$ elements.
 Both the rectangular and linear layouts result in 128 elements each with 32 accumulations applied, albeit in different orientations.
 This is an important consideration for an outer kernel which, when using a rectangular layout, can pack less elements to achieve the same throughput or pack the larger number of elements (if it can afford it) and receive 48 accumulations instead of 32.
