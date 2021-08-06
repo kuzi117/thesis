@@ -31,7 +31,7 @@ The machine runs Linux with a 64-bit kernel at version 5.10.0-17496-g41bc5268c5e
     L1d cache & 32KiB\\
     Frequency & 4.00 GHz\\
   \end{tabular}
-  \caption{POWER10 machine info.}
+  \caption[POWER10 Machine Statistics]{POWER10 experimental environment machine statistics.}
   \label{tab:machineInfo}
 \end{table}
 
@@ -51,7 +51,7 @@ The framework implements a method of measuring a kernel by placing it in a loop 
 \ralg{benchmark} summarises the algorithm for determining the iteration count.
 
 \begin{algorithm}[t]
-  \caption[Algorithm for creating a cycle measurement]{Algorithm for dynamically determining a statistically stable kernel timing loop iteration count.}
+  \caption[Algorithm for Creating a Cycle Measurement]{Algorithm for dynamically determining a statistically stable kernel timing loop iteration count.}
   \label{alg:benchmark}
   \begin{algorithmic}[1]
     \State minTime = 1e9 \Comment{\SI{1e9}{\textit{\nano\second}} \textrightarrow \SI{1}{\second}}
@@ -126,7 +126,7 @@ The final iteration count used in this process is named $n$ for future reference
       }
     }
   \end{tikzpicture}
-  \caption{Experiment execution process.}
+  \caption[Experiment Measurement Methodology]{Experiment measurement production methodology.}
   \label{fig:execution}
 \end{figure}
 
@@ -202,7 +202,7 @@ Memory operations are considerably slower than \gls{mma} operations, even though
 \begin{figure}[t]
   \centering
   \input{tex/figures/sinkFloats.pgf}
-  \caption{The effect of load sinking on \code{float} and \code{i16} matrix multiplications.}
+  \caption[Effects of Load Sinking on Performance]{The effect of load sinking on \code{float} and \code{i16} matrix multiplications.}
   \label{fig:floatSink}
 \end{figure}
 \begin{table}[t]
@@ -219,7 +219,7 @@ Memory operations are considerably slower than \gls{mma} operations, even though
     \code{i16} & large & no & $3.4 \pm 0.02$ & $415.63 \pm 2.21$ & $1660.53 \pm 8.85$ \\
     \code{i16} & large & yes & $2.2 \pm 0.00$ & $627.73 \pm 2.19$ & $2507.92 \pm 8.75$ \\\hline
   \end{tabular}
-  \caption{
+  \caption[Effects of Load Sinking on Performance]{
     The effect of load sinking on \code{float} and \code{i16} matrix multiplications.
     See \rfig{floatSink} for graphical presentation.
   }
@@ -283,7 +283,7 @@ The larger kernel, however, must use the value again in computing the second set
     \draw[xstep=8, ystep=4, shift={(3, 0)}] (0, 0) grid +(16, 8);
     \draw[decorate, decoration={brace, mirror}] (0, -0.3) -- node[below=2] {$K$} +(2, 0);
   \end{tikzpicture}
-  \caption{Demonstration of operand reuse.}
+  \caption[Large Kernel Operand Reuse]{Demonstration of operand reuse in large kernels.}
   \label{fig:opReuse}
 \end{figure}
 
@@ -458,7 +458,7 @@ Thus, either access order can be used for $C$ without loss of performance.
 \begin{figure}[t]
   \centering
   \input{tex/figures/accessOrder.pgf}
-  \caption{The effect of matrix access order on performance.}
+  \caption[Effects of Matrix Access Order on Performance]{The effect of matrix access order on performance.}
   \label{fig:accessOrder}
 \end{figure}
 \begin{table}[t]
@@ -483,7 +483,7 @@ Thus, either access order can be used for $C$ without loss of performance.
     \code{i8} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.19$ & $33.50 \pm 0.15$ & $133.82 \pm 0.61$ \\
     \code{i8} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.20$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\\hline
   \end{tabular}
-  \caption{
+  \caption[Effects of Matrix Access Order on Performance]{
     The effect of matrix access order on performance.
     See \rfig{accessOrder} for graphical presentation.
   }
@@ -565,7 +565,7 @@ In this experiment, the lower number of total loads should result in a smaller e
 \begin{figure}[t]
   \centering
   \input{tex/figures/tightAccLayouts.pgf}
-  \caption{The effect of accumulator layout on performance.}
+  \caption[Effects of Accumulator Layout on Performance]{The effect of accumulator layout on performance.}
   \label{fig:tightAccLayout}
 \end{figure}
 \begin{table}[t]
@@ -590,7 +590,7 @@ In this experiment, the lower number of total loads should result in a smaller e
     \code{i8} & $1 \times 8$ & $25.3 \pm 0.01$ & $55.31 \pm 0.02$ & $220.98 \pm 0.08$ \\
     \code{i8} & $8 \times 1$ & $24.8 \pm 0.02$ & $56.50 \pm 0.05$ & $225.75 \pm 0.18$ \\\hline
   \end{tabular}
-  \caption{
+  \caption[Effects of Accumulator Layout on Performance]{
     The effect of accumulator layout on performance.
     See \rfig{tightAccLayout} for graphical presentation.
   }
@@ -656,7 +656,7 @@ The \gls{lowering} decouples operations from each other as best as possible, ena
 \begin{figure}[t]
   \centering
   \input{tex/figures/mmaVsx.pgf}
-  \caption{Comparison of MMA and vectorised lowerings of \code{llvm.matrix.multiply}.}
+  \caption[Performance of MMA vs Vectorisation Kernels]{Comparison of MMA and vectorised lowerings of \code{llvm.matrix.multiply}.}
   \label{fig:mmaVsx}
 \end{figure}
 \begin{table}[t]
@@ -677,7 +677,7 @@ The \gls{lowering} decouples operations from each other as best as possible, ena
     \code{i8} & VSX, Columns & $2.5 \pm 0.00$ & $555.32 \pm 0.70$ & $2218.66 \pm 2.81$ \\
     \code{i8} & VSX, Rows & $2.6 \pm 0.01$ & $530.25 \pm 1.56$ & $2118.45 \pm 6.23$ \\\hline
   \end{tabular}
-  \caption{
+  \caption[Performance of MMA vs Vectorisation Kernels]{
     Comparison of MMA and vectorised lowerings of \code{llvm.matrix.multiply}.
     See \rfig{mmaVsx} for graphical presentation.
   }
@@ -739,7 +739,7 @@ Therefore, the intrinsic \gls{lowering} with load sinking should be very close i
 \begin{figure}[t]
   \centering
   \input{tex/figures/intrHand.pgf}
-  \caption{Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.}
+  \caption[Performance of Handwritten vs Inrtrinsic Kernels]{Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.}
   \label{fig:intrHand}
 \end{figure}
 \begin{table}[t]
@@ -751,7 +751,7 @@ Therefore, the intrinsic \gls{lowering} with load sinking should be very close i
     Load Sinking & $35.1 \pm 0.04$ & $39.89 \pm 0.01$ & $159.36 \pm 0.05$ \\
     Handwritten & $31.5 \pm 0.05$ & $41.15 \pm 0.07$ & $164.39 \pm 0.27$ \\\hline
   \end{tabular}
-  \caption{
+  \caption[Performance of Handwritten vs Inrtrinsic Kernels]{
     Comparison of default and load-sinking lowerings of \code{llvm.matrix.multiply} with a handwritten MMA kernel.
     See \rfig{intrHand} for graphical presentation.
   }

@@ -141,7 +141,7 @@ This enables simple circuit pathways where, for a rank-$r$ update, element $(i, 
     \label{fig:registerArgumentsVSR}
   \end{subfigure}
   \hfill
-  \caption{Element ordering in types smaller than \code{float} demonstrated using \code{i16}.}
+  \caption[Small Data Type Element Order In Register]{Element ordering in types smaller than \code{float} demonstrated using \code{i16}.}
   \label{fig:registerArguments}
 \end{figure}
 
@@ -162,7 +162,7 @@ The dot product of these two two-element vectors, from $A$ at offset $0 \times 2
     \code{p-} & $C' = C + AB$ & $C' = -C + AB$\\\hline
     \code{n-} & $C' = C - AB$ & $C' = -C - AB$\\\hline
   \end{tabular}
-  \caption[MMA Accumulation Suffix Computations]{MMA accumulation computations by instruction suffix. $C$ is the accumulator before accumulation while $C'$ is the accumulator after accumulation.}
+  \caption[MMA Instruction Suffixes and Associated Computation]{MMA accumulation computations by instruction suffix. $C$ is the accumulator before accumulation while $C'$ is the accumulator after accumulation.}
   \label{tab:accSign}
 \end{table}
 

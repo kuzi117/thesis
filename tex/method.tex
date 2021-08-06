@@ -199,7 +199,7 @@ The only other configuration with full accumulator usage (\code{V = 1}, \code{H 
 These constants in the compiler generalise the lowering and make it applicable to future architectures where the ideal arrangement to increase data reuse may be different from the $2 \times 4$ arrangement in the \gls{power10} processor.
 
 \begin{algorithm}[t]
-  \caption[Algorithm for lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with \gls{mma}.}
+  \caption[Algorithm for Lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with \gls{mma}.}
   \label{alg:intrinsic}
   \begin{algorithmic}[1]
     \Function{\code{llvm.matrix.multiply}}{ATile, BTile, $N$, $K$, $M$}
@@ -422,7 +422,7 @@ Extracting from operands from \code{BTile} follows the same logic, except that a
       1 & 2 & 3 & 4\\
     };
   \end{tikzpicture}
-  \caption{Arguments for an \code{i16} matrix shown contextually.}
+  \caption[Effects of Transposition and Access-Order Modification]{Demonstration of transposition access-order modification on data in register..}
   \label{fig:orderAndTranspose}
 \end{figure}
 

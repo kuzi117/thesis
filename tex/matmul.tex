@@ -23,7 +23,7 @@ Understanding matrix multiplication and how it is implemented is critical to ach
 In the most abstract sense, matrix multiplication is a very simple operation to implement.
 As long as each element of $A$ is multiplied with the correct element of $B$ and the result is accumulated to the correct element of $C$, the order in which these operations happen does not matter.
 Thus, the simplest implementation of matrix multiplication can be written as in \rlst{basicMatMul}.
-\begin{lstlisting}[caption={[Pseudocode for matrix multiplication]Pseudocode implementing matrix multiplication as simply as possible.},label=lst:basicMatMul,columns=flexible]
+\begin{lstlisting}[caption={[Pseudocode for Matrix Multiplication]Pseudocode implementing matrix multiplication as simply as possible.},label=lst:basicMatMul,columns=flexible]
 for i=0 to M, j=0 to N, k=0 to D do
   C[i, j] += A[i, k] * B[k, j]
 \end{lstlisting}
@@ -67,7 +67,7 @@ While both choices arrive at the same final result, the efficacy with which they
     \label{fig:outerProduct}
   \end{subfigure}
   \hfill
-  \caption{Example matrix-matrix multiplication computation styles.}
+  \caption[Matrix-Matrix Computation Styles]{Example matrix-matrix multiplication computation styles.}
   \label{fig:product}
   \vspace{-0.15cm}
 \end{figure}
@@ -82,7 +82,7 @@ More concretely, given the computation \matmul{M}{D}{N}, the inner product compu
 In this way, matrix multiplication is composed of one inner product for each cell of $C$.
 
 We can see this process in the following implementation of matrix multiplication:
-\begin{lstlisting}[caption={[Basic matrix multiplicaion via inner product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
+\begin{lstlisting}[caption={[Basic Matrix Multiplicaion via Inner Product]A basic matrix multiplication via inner product.},label=lst:basicInner,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
 for (uint64_t i = 0; i < M; ++i)|\label{innerILoop}|
   for (uint64_t j = 0; j < N; ++j)|\label{innerJLoop}|
       for (uint64_t k = 0; k < D; ++k)|\label{innerKLoop}|
@@ -95,7 +95,7 @@ The innermost loop on line~\ref{innerKLoop} implements the inner product by mult
 One can thus view the implementation in \rlst{basicInner} as a loop over $i$ and $j$ that selects an output cell and repeatedly calls an inner product function.
 Therefore, with the choice of loop order $(i, j, k)$, matrix multiplication can be conceptualised as shown in \rlst{basicInnerPseudo}.
 
-\begin{lstlisting}[caption={[Matrix multiplication pseudocode using inner product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
+\begin{lstlisting}[caption={[Matrix Multiplication Pseudocode Using Inner Product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
 for i=0 to M, j=0 to N do
   C[i, j] = innerProduct(A.row(i), B.column(j))
 \end{lstlisting}
@@ -112,7 +112,7 @@ Specifically, given the computation \matmul{M}{D}{N}, matrix multiplication is c
 Because the dimension $D$ dictates both the number of columns in $A$ and the number of rows in $B$, the full matrix multiplication can be computed by performing a total of $D$ outer products.
 
 Using \rlst{basicMatMul} as a model, this process implements matrix multiplication with a loop order of $(k, i, j)$:
-\begin{lstlisting}[caption={[Basic matrix multiplication via outer product]A basic matrix multiplication via outer product.},label=lst:basicOuter,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
+\begin{lstlisting}[caption={[Basic Matrix Multiplication via Outer Product]A basic matrix multiplication via outer product.},label=lst:basicOuter,language=C++,columns=flexible,morekeywords=uint64_t,escapechar=|]
 for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
   for (uint64_t i = 0; i < M; ++i)|\label{outerILoop}|
     for (uint64_t j = 0; j < N; ++j)|\label{outerJLoop}|
@@ -120,7 +120,7 @@ for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
 \end{lstlisting}
 Here, the loop on line~\ref{outerKLoop} selects a column from $A$ and a row from $B$ while the loops on lines~\ref{outerILoop} and \ref{outerJLoop} compute the outer product of those vectors.
 Thus, in a tranformation similar to the one between \rlst{basicInner} and \rlst{basicInnerPseudo}, \rlst{basicOuter} can be rewritten like so:
-\begin{lstlisting}[caption={[Matrix multiplication pseudocode using outer product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
+\begin{lstlisting}[caption={[Matrix Multiplication Pseudocode Using Outer Product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
 for k=0 to D do
   C += outerProduct(A.column(k), B.row(k))
 \end{lstlisting}
@@ -132,7 +132,7 @@ Because the result of the outer product of two vectors, a matrix, will always be
 \footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
 Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), eventually arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
 With this model, the outer-product matrix multiplication in \rlst{basicOuterPseudo} is rewritten as such:
-\begin{lstlisting}[caption={[Matrix multiplication via rank-one update]Matrix multiplication using rank-one update.},label=lst:rankOne,language=C++,columns=flexible,morekeywords=uint64_t]
+\begin{lstlisting}[caption={[Matrix Multiplication via Rank-One Update]Matrix multiplication using rank-one update.},label=lst:rankOne,language=C++,columns=flexible,morekeywords=uint64_t]
 for k=0 to D do
   rankOneUpdate(C, A.column(k), B.row(k));
 \end{lstlisting}
@@ -146,7 +146,7 @@ This same logic extends to creating updates with greater ranks, giving rise to t
 \footnotetext{Common notation is rank-$k$ update; it is changed to rank-$r$ update in this work so as to avoid confusion with $k$ in other uses.}
 Revisiting the process in \rlst{rankOne}, this repeated rank-one update process is apparent.
 The loop simply performs $D$ rank-one updates, implying that the algorithm can be once again reinterpreted in the form of one rank-$D$ update like so:
-\begin{lstlisting}[caption={[Matrix multiplication via rank-$r$ update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
+\begin{lstlisting}[caption={[Matrix Multiplication Via Rank-\texorpdfstring{$r$}{r} Update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
 // Assumption: A, B are arrays of D vectors
 rankRUpdate(C, A, B, /*rank*/ D);
 \end{lstlisting}
@@ -306,7 +306,7 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
     \label{fig:gepbMath}
   \end{subfigure}
   \hfill
-  \caption[Inner kernel impelmentations viewed mathematically]{The two possible implementations for the inner kernel viewed mathematically.}
+  \caption[Inner Kernel Implementations, Mathematically]{The two possible implementations for the inner kernel viewed mathematically.}
   \label{fig:gebp}
 \end{figure}
 
@@ -380,7 +380,7 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
     \label{fig:gepbSimd}
   \end{subfigure}
   \hfill
-  \caption[Inner kernel impelmentations viewed in register]{The two possible implementations for the inner kernel as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.}
+  \caption[Inner Kernel Implementations, In Register]{The two possible implementations for the inner kernel as computed by \glslink{broadcast}{broadcasting} and \acrshort{fma}.}
   \label{fig:gepb}
   \vspace{-0.15cm}
 \end{figure}
@@ -394,7 +394,7 @@ Therefore, a ``short'' dimension is typically a single element and a ``long'' di
 
 Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product followed by a presentation of a method to resolve these flaws through an improved version of the outer product.
 
-\subsubsection{Emulating Outer-Product with SIMD instructions in Libraries}
+\subsubsection{Emulating the Outer Product with SIMD Instructions in Libraries}
 \label{sec:emulateProduct}
 \rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
@@ -455,7 +455,7 @@ Furthermore, the kernel should also use resources as effectively as possible, ho
     \label{fig:extGepb}
   \end{subfigure}
   \hfill
-  \caption[Extending inner kernels to outer product]{Extending Goto and van de Geijn's inner kernel techniques to outer product.}
+  \caption[Extending Inner Kernels to Outer Product]{Extending Goto and van de Geijn's inner kernel techniques to outer product.}
   \label{fig:extGoto}
 \end{figure}
 
