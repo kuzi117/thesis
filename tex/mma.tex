@@ -63,12 +63,12 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
     \code{xvf32ger}  & \code{float}  & \code{float}  & $4 \times 1$ & \matmul{4}{1}{4} \\\hline
     \code{xvf64ger}  & \code{double} & \code{double} & $4 \times 1$ & \matmul{4}{1}{2} \\\hline
   \end{tabular}
-  \caption[MMA Instruction Description]{A description of \gls{mma} instructions investigated. Input dimension is transposed for second argument.}
+  \caption[MMA Instruction Description]{A description of MMA instructions investigated. Input dimension is transposed for second argument.}
   \label{tab:mmaInsts}
 \end{table}
 \footnotetext{Google's Brain floating point format~\autocite{wang2019bfloat16}.}
 
-\rtab{mmaInsts} shows all seven of the datatypes usable with \gls{mma}.
+\rtab{mmaInsts} shows all seven of the data types usable with \gls{mma}.
 Instructions are given three arguments: an accumulator and two \glspl{vsr}.
 Considering the simplest example, single-precision floating point, a four-element row or column fills the entire \gls{vsr} ($32\text{bits} \times 4 = 128\text{bits}$).
 Thus, two length-four vectors are multiplied in an outer product, creating the computation \matmul{4}{1}{4}.
@@ -168,7 +168,7 @@ The dot product of these two two-element vectors, from $A$ at offset $0 \times 2
 \end{table}
 
 An instruction without a suffix (first column of \rtab{mmaInsts}) will both assemble the given accumulator and overwrite it with the outer product of the two \glspl{vsr}.
-Afterward, to accumulate into the accumulator, each datatype has a ``family'' of instructions offering different semantics.
+Afterward, to accumulate into the accumulator, each data type has a ``family'' of instructions offering different semantics.
 Four instruction suffixes are available: \code{pp}, \code{pn}, \code{np}, \code{nn}.
 The \code{p} and \code{n} stand for positive and negative respectfully.
 The first character specifies the sign of multiplication (\ie $\pm AB$) while the second specifies the sign of the accumulator (\ie $\pm C$).

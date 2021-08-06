@@ -199,7 +199,7 @@ The only other configuration with full accumulator usage (\code{V = 1}, \code{H 
 These constants in the compiler generalise the lowering and make it applicable to future architectures where the ideal arrangement to increase data reuse may be different from the $2 \times 4$ arrangement in the \gls{power10} processor.
 
 \begin{algorithm}[t]
-  \caption[Algorithm for Lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with \gls{mma}.}
+  \caption[Algorithm for Lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with MMA.}
   \label{alg:intrinsic}
   \begin{algorithmic}[1]
     \Function{\code{llvm.matrix.multiply}}{ATile, BTile, $N$, $K$, $M$}

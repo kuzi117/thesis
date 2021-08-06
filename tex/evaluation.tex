@@ -301,7 +301,7 @@ In the case of floats, producing the operand is a simple load and therefore, if 
 Thus, the compiler's choice to spill the operand is incorrect and, because spills are saved on the stack, not only is it wasting memory by duplicating the value, it is also potentially evicting values from the cache.
 Regardless, the larger kernel's execution, optimised or not, is significantly influenced by memory operations, though the gains from reducing the initial spills still have significant impact.
 
-For smaller datatypes, however, spilling is the correct choice.
+For smaller data types, however, spilling is the correct choice.
 Materialising an \code{i16} involves two loads and at least one instruction to shuffle the loaded data together.
 Rematerialising the value in the future becomes a simple load, significantly reducing register pressure and required memory bandwidth.
 Both the original version and the load-sinking version correctly choose to spill their values instead of \glslink{rematerialisation}{rematerialising} them.
@@ -309,7 +309,7 @@ As with \code{float}, the increased number of memory operations explains the sig
 The next section investigates this discrepancy.
 
 \subsubsection{Smaller Types}
-While the issues affecting \code{float} matrices presented above remain roughly identical for \code{double}-typed operations, small datatypes have a separate source of slow down.
+While the issues affecting \code{float} matrices presented above remain roughly identical for \code{double}-typed operations, small data types have a separate source of slow down.
 The difference in performance is actually an exacerbation of an already-discussed issue, namely the invalidation of properties \circled{1} and \circled{2}.
 For \code{i16}, in the load-sinking version, a single 64-bit double-word load instruction loads four \code{i16} elements at the same time, filling only half of a vector register.
 The original version loads 16 elements at a time using 256-bit vector-pair loads, meaning that the load-sinking version quadruples the number of loads required to load the values needed for the computation (excluding loads from the original spilling issue).
@@ -328,8 +328,8 @@ The issue worsens for \code{i8} and \code{i4} where the eight consecutive vertic
 For larger kernels, the smaller data types thus imply a increasing number of loads, further diluting the speedup gained from \gls{mma}.
 
 \subsection{Shuffling}
-For datatypes smaller than 32 bits, producing the appropriate operand for a rank-$r$ update requires several vectors be merged via shuffling.
-The \gls{power} \gls{isa} offers several methods to move vector elements, ranging from register shifting and rotating combined with masking to efficient vector upper and lower half merges based on datatype size.
+For data types smaller than 32 bits, producing the appropriate operand for a rank-$r$ update requires several vectors be merged via shuffling.
+The \gls{power} \gls{isa} offers several methods to move vector elements, ranging from register shifting and rotating combined with masking to efficient vector upper and lower half merges based on data type size.
 Transforming \gls{ir} statements in an efficient code for shuffling is an involved design process.
 
 There are a multitude ways to express the same shuffling operation in \gls{ir}, each depending on multiple implementation choices made throughout the process.
@@ -337,7 +337,7 @@ Certain variants are interpreted by the backend and translated to efficient code
 This discrepancy in translation can be the difference between an idiomatic assembly of several instructions, often close to Moreira \etal's handwritten version, and the same process being expressed in hundreds or thousands of instructions, often with \glspl{spill} throughout.
 Several factors that lead shuffling to cause performance degradation are discussed below.
 
-\subsubsection{Datatype: \texorpdfstring{\code{half}}{half}}
+\subsubsection{Data Type: \texorpdfstring{\code{half}}{half}}
 \label{sec:halfShuffle}
 The \code{i16} and \code{half} types have identical widths: a halfword.
 Because \glspl{cpu} and their accompanying \glspl{isa} are type-agnostic and sensitive only to the width of a data element when implementing vector shuffles, shuffle code in the \gls{ir} that differs only in choice of 16-bit type should produce identical assembly.
@@ -351,12 +351,12 @@ Concatenation is also achieved through shuffling and therefore experiences the s
 The added truncation operation worsens the effect.
 All told, in the assembly code currently generated for \code{half}, the epilogue is roughly ten times the length of the same operation for \code{i16}.
 
-\subsubsection{Datatype: \texorpdfstring{\code{i4}}{i4}}
+\subsubsection{Data Type: \texorpdfstring{\code{i4}}{i4}}
 For \code{i8}, degradations arise from \glspl{spill} due to extra register pressure but also from needing to merge four separate vectors (rank-four update).
 Despite these degradations, the generated code is fairly close to the ideal, handwritten assembly.
 The \gls{power10} \gls{isa} has instructions that merge vectors at a per-byte granularity, but not at a sub-byte granularity as is required for \code{i4} code generation.
 Therefore, to shuffle a vector of \code{i4} elements using the same \gls{ir} code generation, the backend generates significantly less performant code that includes vector rotations and scalarisation, with single bytes being moved individually to and from general purpose registers.
-The consequent slow down negates much of the speed up that could be achieved via the \gls{mma} rank-eight update.
+The consequent slow down negates much of the speedup that could be achieved via the \gls{mma} rank-eight update.
 
 \subsection{Solutions}
 This section presents potential solutions to the performance degradations uncovered by the experimental evaluation.
@@ -421,8 +421,8 @@ With this possibility enabled, two cases are added to the comparison: both use t
 
 Each kernel uses a $2 \times 4$ accumulator setup and, therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
 The inner most dimension of the kernel is 32, making the overall computation \matmul{8}{32}{16}.
-An inner dimension of 32 requires 32 accumulations but smaller datatypes perform rank-$r$ updates, effectively reducing the number of operations required to compute the kernel.
-It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
+An inner dimension of 32 requires 32 accumulations but smaller data types perform rank-$r$ updates, effectively reducing the number of operations required to compute the kernel.
+It may seem that 32 accumulations is relatively large, but work by Kuzma \etal~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speedup, with performance plateauing with any more accumulations.
 Given the discussion in \rsec{orderExpectation}, more accumulations implies more opportunities for a ``good'' orientation to outperform a bad orientation, effectively highlighting differences in performance.
 
 \subsection{Expectation}

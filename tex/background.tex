@@ -91,7 +91,7 @@ Intuitively, the main property of a program in \gls{ssa} form is that each varia
 \noindent
 \begin{minipage}[t]{0.45\linewidth}
 \centering
-\begin{lstlisting}[caption={[Example C Program, Pre-SSA Conversion.]An simple example C program, pre-conversion to \gls{ssa}.},
+\begin{lstlisting}[caption={[Example C Program, Pre-SSA Conversion.]An simple example C program, pre-conversion to SSA.},
       label=lst:cSSA,numbers=none,language=c,columns=flexible]
 int foo(int a) {
   int x = a + 2;
@@ -105,7 +105,7 @@ int foo(int a) {
 \noindent
 \begin{minipage}[t]{0.45\linewidth}
 \centering
-\begin{lstlisting}[caption={[Example LLVM IR Program, Post-SSA Conversion.]The same simple program, converted to \gls{llvm} \gls{ir} in \gls{ssa} format.},
+\begin{lstlisting}[caption={[Example LLVM IR Program, Post-SSA Conversion.]The same simple program, converted to LLVM IR in SSA format.},
       label=lst:llSSA,numbers=none,language=llvm,columns=flexible]
 define i32 @foo(i32 %a) {
 entry:
@@ -117,7 +117,7 @@ entry:
 \end{lstlisting}
 \end{minipage}
 
-A simple C program, shown in \rlst{cSSA} is converted to the SSA format in \rlst{llSSA} via a simple renaming scheme.
+A simple C program, shown in \rlst{cSSA} is converted to the \gls{ssa} format in \rlst{llSSA} via a simple renaming scheme.
 The first reference to a variable is suffixed with a one, and all future references increment the counter by one.
 This process continues for the entirety of a function body, regardless of any control flow.
 There are further complications in the construction algorithm in the presence of control flow but because the process presented in this thesis functions within a single \gls{basic block}, this explanation is left to Cytron \etal's work.
