@@ -61,8 +61,7 @@ def generatePlot():
   ax.set_xlabel('Data Type', fontsize=8)
   ax.set_ylabel('Cycles')
   ax.legend(loc='upper right', fontsize='small')
-
-  fig.suptitle('MMA vs Vectorisation for Different Types')
+  ax.set_title('MMA vs Vectorisation for Different Types')
   # fig.legend(['MMA', 'Vector'], loc='lower right')
   # fig.legend(['MMA', 'Vector'])
   fig.set_size_inches(tu.textWidth, 3)
