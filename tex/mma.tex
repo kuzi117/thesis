@@ -221,4 +221,11 @@ ARM's NEON and \gls{sve} do not focus on matrix multiplication, providing them i
 The facility is implemented on-core and does not provide any new registers, relying on the architecture's already-present vector registers.
 These two factors, combined with an inner-product style computation mean relatively small computation sizes when compared with \gls{mma} or \gls{amx}.
 NEON, like \gls{amx}, supports \code{i8} and \code{bfloat16} while \gls{sve} adds support for \code{float} and \code{double}.
+
+\section{Summary}
+This chapter presented the new \gls{mma} extension in \gls{power10}.
+The extension adds a new type of register called an accumulator which can be used to compute matrix multiplication using the outer product.
+Moreover, a total of seven types are supported, several of which perform mulitiple outer products in a single instruction, increasing efficiency
+Finally, \gls{mma} is compared with the \gls{matrix engine} available in other \glspl{isa}.
+
 \end{document}
