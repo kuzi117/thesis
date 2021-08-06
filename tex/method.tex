@@ -459,7 +459,12 @@ Then the chapter discussed how the implementation of the intrinsic can produce c
 The examination of an $8 \times 16$ \code{float}-element kernel serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation results.
 The resulting \gls{ir} is briefly examined in order to show its effectiveness before examining the methods through which the limitations in the base case can be lifted.
 
-\nelson{There is a break in the flow of the text from the previous two paragraphs here.}
-First, a method to extend the presented algorithm to each of the types natively supported by \gls{mma}.
-Next, an approach to enable arbitrary dimension lengths, followed by discussion of how to handle arbitrary access orders in input and output matrices.
+The first limitation present in the base case is the lack of usage of the other types supported by \gls{mma}.
+This limitation is lifted through modifications to the loops that extract arguments as well as new logic to place multiple sets of elements into a single \gls{vsr}.
+Next, the chapter addressed the dependence on the $8 \times 16$ kernel output dimensions as well as an arbitrarily large $K$ dimension.
+Larger kernel outputs are handled simply by breaking up the problem into tiles that resemble the base case; all computation remains exactly the same.
+An arbitrarily large $K$ dimension is implicitly handled in the presented method; the only change is a larger number of loads and outer products being executed.
+Finally, the issue of arbitrary data access orders is resolved.
+For input matrices, this is simply a matter of extracting values from the correct place in the input data and using a shuffle instruction to create an argument which matches the outer product's expected input.
+For output matrices, after a small proof it is shown that simply exchanging the outer-product argument postions can change the data access order, allowing for no loss in performance when writing to the output matrix.
 \end{document}
