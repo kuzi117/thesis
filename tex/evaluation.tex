@@ -776,4 +776,20 @@ While the slight advantage in \rtab{intrHand} remains a significant and promisin
 It is possible that different register choices may save several cycles by removing output or write-after-read dependences, but it is far more likely that the side effects of calling a function have not been fully accounted for and are adding cycles to the handwritten kernel's average cycle count.
 Overall, the proposed method can produce a matrix-multiplication kernel that is as performant as a human-crafted assembly, and that is a great accomplishment in code generation.
 
+\section{Summary}
+This chapter presented an in-depth analysis and evaluation of the matrix-multiplication micro-kernel code-generation strategy presented in \rcha{method}.
+Beginning the chapter, details of the environment and methodology for each experiment, for example, creating a cycle measurement using the Google benchmark library, are explained.
+
+Following this is a discussion of two important issues that must be addressed in future versions of the assembly-code generator in the backend: spilling and shuffling.
+These two issues pervade and influence each of the experiments that follow.
+
+The first two experiments investigate the optimal parameters for the \gls{mma} micro kernel.
+The experiments determine that a rectangular accumulator layout ($2 \times 4$, $4 \times 2$) coupled with an $A$ matrix in a column-major orientatino and an $B$ matrix in a row-major orientation are the most performant choices.
+Furthermore, as anticipated, the orientation of $C$ is shown to have no effect on performance
+
+Following these two experiments are two performance comparisons demonstrating the capabilities of the \gls{mma} \gls{lowering}.
+First, a comparison with the vectorised \gls{lowering} shows between a 3.1 and 15.8 times speedup for all supported types.
+A second experiment comparing with a human-crafted kernel shows that the performance of the \gls{mma} \gls{lowering} takes approximately double the cycle count that the handwritten kernel takes.
+However, after applying a load-sinking transformation, it is shown that the cycle counts are nearly identical, proving that, once the listed issues in the backend are resolved, the performance of the kernel will match that of an expert's handcrafted solution.
+
 \end{document}
