@@ -234,7 +234,7 @@ Packing in this way results in only a single data copy and allows reads to regis
 \subsubsection{Practicality}
 Na\"ive matrix multiplication (\ie \rlst{basicInner}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
 Given small matrices as operands, this is often the correct choice.
-The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speed up gained from improved cache performance.
+The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speedup gained from improved cache performance.
 When input and output data are already small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
 
 However, given large matrices, lacking a blocking and packing layer is disastrous for performance.

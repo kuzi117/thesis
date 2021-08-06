@@ -356,7 +356,7 @@ For \code{i8}, degradations arise from \glspl{spill} due to extra register press
 Despite these degradations, the generated code is fairly close to the ideal, handwritten assembly.
 The \gls{power10} \gls{isa} has instructions that merge vectors at a per-byte granularity, but not at a sub-byte granularity as is required for \code{i4} code generation.
 Therefore, to shuffle a vector of \code{i4} elements using the same \gls{ir} code generation, the backend generates significantly less performant code that includes vector rotations and scalarisation, with single bytes being moved individually to and from general purpose registers.
-The consequent slow down negates much of the speed up that could be achieved via the \gls{mma} rank-eight update.
+The consequent slow down negates much of the speedup that could be achieved via the \gls{mma} rank-eight update.
 
 \subsection{Solutions}
 This section presents potential solutions to the performance degradations uncovered by the experimental evaluation.
@@ -421,8 +421,8 @@ With this possibility enabled, two cases are added to the comparison: both use t
 
 Each kernel uses a $2 \times 4$ accumulator setup and, therefore, in keeping with the suggestion in \rsec{spillSolution}, uses a small $8 \times 16$ output.
 The inner most dimension of the kernel is 32, making the overall computation \matmul{8}{32}{16}.
-It may seem that 32 accumulations is relatively large, but~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speed up, with performance plateauing with any more accumulations.
 An inner dimension of 32 requires 32 accumulations but smaller data types perform rank-$r$ updates, effectively reducing the number of operations required to compute the kernel.
+It may seem that 32 accumulations is relatively large, but work by Kuzma \etal~\autocite{kuzma2021fast} determines that, even given the poor load scheduling, up to 128 accumulations per kernel gives good speedup, with performance plateauing with any more accumulations.
 Given the discussion in \rsec{orderExpectation}, more accumulations implies more opportunities for a ``good'' orientation to outperform a bad orientation, effectively highlighting differences in performance.
 
 \subsection{Expectation}
