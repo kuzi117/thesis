@@ -269,7 +269,7 @@ Computing a partial result in this manner reduces the effectiveness of \gls{simd
 \Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
 
-\subsection{Goto's and van de Geijn's Methodology in the Inner Kernel}
+\subsection{Goto and van de Geijn's Methodology in the Inner Kernel}
 \label{sec:gotoInner}
 
 \begin{figure}[t]
