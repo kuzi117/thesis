@@ -275,7 +275,7 @@ The matter of storing vectors to memory is easily addressed and so is left out f
   %ACCDis.1_3 = call { <4 x float>, <4 x float>, <4 x float>, <4 x float> } @llvm.ppc.mma.disassemble.acc(<512 x i1> %ACCProd.1_3.0)|\label{dissEnd}|
 \end{lstlisting}
 
-First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intrinsic} \code{xxsetaccz}\footnotemark.
+First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intrinsic} \code{xxsetaccz}.\footnotemark
 \footnotetext{
   The latest version of the algorithm begins from a non-accumulating outer-product instruction (\rsec{matMulMMA}) instead of a \code{xxmtacc} or \code{xxsetaccz} (\rsec{assDis}).
   The \code{xxsetaccz} remains in this listing to connect with \ralg{intrinsic}.
@@ -294,7 +294,7 @@ Thus, all operations begin from the ``same'' zeroed out accumulator, at least wi
 
 The \code{<512 x i1>} return type of \code{xxsetaccz} normally refers to a 512-length vector of one-bit integers.
 However, backend developers have co-opted the type to represent an \gls{mma} accumulator when certain flags are set.
-There also exists a separate type which represents a \gls{vsr} for use with \gls{mma} \glspl{intrinsic} but its use was removed from \rlst{unrolled} to facilitate reading\footnotemark.
+There also exists a separate type which represents a \gls{vsr} for use with \gls{mma} \glspl{intrinsic} but its use was removed from \rlst{unrolled} to facilitate reading.\footnotemark
 \footnotetext{
   \glspl{vsr} are represented by \code{<16 x i8>}, a 16-element vector of bytes.
   In the true result \gls{ir}, shuffles produce four-element vectors of floats which are bit-casted (same bit-width) to the \gls{vsr} type which is then consumed by the intrinsics.

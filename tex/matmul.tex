@@ -191,7 +191,7 @@ When blocking, each new blocking loop breaks up a single dimension of the matrix
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
 Further dividing a panel produces a section with two short dimensions called a \emph{block}.
 Only two of the three dimensions ($M$, $D$, $N$) are blocked while the third is the inner most loop's iteration variable.
-This process produces $\binom{3}{2}=3$ different choices\footnotemark for the innermost loops.
+This process produces $\binom{3}{2}=3$ different choices for the innermost loops.\footnotemark
 \footnotetext{``Three choose two''.}
 Different combinations of blocking orders also induce different packing choices that change which of $A$, $B$, and $C$ are packed into L1 and L2 cache.
 

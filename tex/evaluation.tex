@@ -44,7 +44,7 @@ Because support for \gls{power10} was not available in mainstream \gls{llvm} whe
 This variant contains several platform-specific optimisations to improve \gls{power} code; all of these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
-Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library\footnotemark~\autocite{googlebench}.
+Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library~\autocite{googlebench}.\footnotemark
 \footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
 A single measurement is the result of timing the execution of a kernel many times until statistical stability is obtained.
 The framework implements a method of measuring a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
@@ -607,7 +607,7 @@ It is true that the code generator found a better schedule, though not in the wa
 Instead, the changed arguments have simplified the backend code generator's analysis, likely its \glslink{live}{liveness} analysis, allowing it to find ways to reduce register interference and better manage the \gls{live} values in order to create a simpler load schedule.
 This simplification has resulted in the removal of the initial spills present in every test case presented so far.
 In fact, given the kernel laid out for it, the assembly is very close to the handwritten assembly from Moreira \etal, lacking only the small code transformations to combine 128-bit vector loads which use consecutive addresses into a paired-vector 256-bit load.
-For comparison's sake, activating the load-sinking code transformation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts\footnotemark.
+For comparison's sake, activating the load-sinking code transformation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts.\footnotemark
 \footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to a code-transformation pass ordering issue, not deliberate choice.}
 By examining the assembly for the rectangular test case with load sinking, however, it is easy to see that the total number of vectors loaded between accumulations is less than that in the linear layout.
 In both cases the only instructions present are the loads and the outer products which means there are no instructions with which to hide a stall due to load latency.

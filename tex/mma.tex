@@ -32,8 +32,11 @@ Accumulators may be assembled (initialised) in three manners:
   \item constructed from four consecutive \glspl{vsr} (\code{xxmtacc}, Move To Acc)
   \item a multiplication instruction that does not accumulate (see \rsec{matMulMMA})
 \end{enumerate*}
-When constructing from \glspl{vsr}, each \gls{vsr} is moved into the ACC and becomes one row\footnotemark of the resulting accumulator.
-\footnotetext{Viewing the vectors as rows is intuitively convenient, but relatively arbitrary in reality. See \rsec{arbitraryOrder} for use as columns.}
+When constructing from \glspl{vsr}, each \gls{vsr} is moved into the ACC and becomes one row of the resulting accumulator.\footnotemark
+\footnotetext{
+  Viewing the vectors as rows is intuitively convenient, but relatively arbitrary in reality.
+  See \rsec{arbitraryOrder} for use as columns.
+}
 
 In its current iteration, accumulator $n$ is the logical grouping of four 128-bit \glspl{vsr} (\code{VSR[4n:4n+3]}) into a single register.
 As such, the four underlying registers used to construct the accumulator are unavailable for use while the accumulator is in an assembled state.
@@ -84,7 +87,7 @@ The same logic applies for eight- and four-bit types, computing rank-four and ra
 \label{sec:registerArguments}
 Once the instruction is performing a rank-two update or greater, the order of the elements in the register must be considered.
 The \gls{power} \gls{isa} specifies that the first argument must have elements in row-major order while the second argument must have elements in column-major order.
-This enables simple circuit pathways where, for a rank-$r$ update, element $(i, j)$\footnotemark in $C$ accumulates with the dot product of the $r$-length group of elements in $A$ at offset $i \times r$ and in $B$ at $j \times r$.
+This enables simple circuit pathways where, for a rank-$r$ update, element $(i, j)$ in $C$ accumulates with the dot product of the $r$-length group of elements in $A$ at offset $i \times r$ and in $B$ at $j \times r$.\footnotemark
 \footnotetext{Typical matrix notation uses one-indexing; this example uses zero-indexing.}
 
 \begin{figure}[t]
