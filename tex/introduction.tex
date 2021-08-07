@@ -16,10 +16,10 @@ While multithreading reduces these functions' contribution to overall runtime si
 
 At the center of our capability to handle these expanding workloads is the \gls{matrix engine}.
 \Glspl{matrix engine} are a new accelerator facility, found in the most recent generation of \glspl{cpu}, that focuses on accelerating matrix multiplication.
-Currently, acceleration is done via external accelerators or via vector extensions to an \gls{isa}.
-An external accelerators may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a \glspl{gpu}, or an \glspl{fpga}.
+Currently, acceleration is done via external accelerators or via vector extensions to an \gls{isa}.''
+An external accelerator may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a \gls{gpu}, or \ifglsused{fpga}{an}{a} \gls{fpga}.
 Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used and produced by a single instruction (see \rsec{simd}).
-An advantage of vector extensions in relation to external accelerators is that a vector extension can access data through the same memory hierarchy used by the CPU while most external accelerators require data transfer over the slower PCIe connection.
+An advantage of vector extensions in relation to external accelerators is that a vector extension can access data through the same memory hierarchy used by the \gls{cpu} while most external accelerators require data transfer through an interconnect with slower transfer speeds.
 
 The current state of the art when working with matrix operations is to choose one of several libraries that implement the \gls{blas} interface (\eg OpenBLAS~\autocite{xianyi2012model}, IBM's ESSL~\autocite{ibm2021engineering}, Intel's MKL~\autocite{wang2014intel,intel2021accelerate}, Nvidia's cuBLAS~\autocite{nvidia2021cublas}).
 These libraries can provide incredible speedups and, in parallel architectures, automatic parallelisation: a very attractive feature for large workloads.
@@ -49,7 +49,8 @@ In the backend, improvements to processes such as register allocation and instru
 
 Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm of library function calls.
 Mathematically, consecutive matrix operations (\eg $D = ABC$) can be fused so as to perform both computations at once instead of producing a temporary result (\ie $\text{T}=AB;D=TC$).
-Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload the whole-matrix temporary value. That temporary matrix is likely to have been removed from cache if the matrices are large.
+Fusing operations in this manner significantly reduces the memory movements required by removing the need to store and reload the whole-matrix temporary value.
+Moreover, given sufficiently large matrices, it is likely that portions of the matrix have already been forced out of the cache.
 A compiler has the foresight and tools to fuse these operations and then further optimise the resulting code.
 
 A compiler-only solution for matrix multiplication, while benefitting from preexisting features of a compiler, nevertheless requires
@@ -59,8 +60,8 @@ A compiler-only solution for matrix multiplication, while benefitting from preex
   \item an actionable design built from this forethought
 \end{enumerate*}
 As in a hand-written solution, required knowledge includes an understanding of the matrix engine and vector extensions of the target architecture as well as how they interact with each other and with the memory hierarchy.
-However, because the kernel is written at a higher level within the compiler it counters many of the issues associated with the hand-written version.
-Authors are now more productive by only having to focus on writing the kernel; registes and the data in them are now automatically managed, the instruction schedule can be optimised by the compiler to hide latencies, loops are unrolled according to architecture capacity, and more.
+However, because the kernel is written at a higher level within the compiler it counters many of the issues associated with the hand-written assembly version.
+Authors are now more productive by only having to focus on writing the kernel; registers and the data in them are now automatically managed, the instruction schedule can be optimised by the compiler to hide latencies, loops are unrolled according to architecture capacity, and more.
 The produced kernels are more portable, functioning on \glspl{cpu} with the same \gls{isa} (in some cases cross-\gls{isa}) with much of the infrastructure being portable between architectures.
 Finally, maintenance is also easier: higher level languages are more readable with less expertise required to interact with them.
 
