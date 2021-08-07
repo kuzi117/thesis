@@ -14,14 +14,14 @@ Due to its implementation in the LLVM compiler framework, the method has immedia
 \section{Intrinsics in LLVM}
 An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available in higher-level languages.
 Select \glspl{intrinsic} are available in higher-level languages in the form of a \gls{builtin}, though no \glspl{builtin} are used in this work.\footnotemark
-\footnotetext{Some compilers use this terminology differently; these are the definitions according to \gls{llvm}.}
+\footnotetext{Some compilers use this terminology differently; the definitions given here are the definitions according to \gls{llvm}.}
 These functions' most important role is to symbolise the concept of a common operation in a representation that must lowered to many disparate forms while maintaining efficiency and correctness.
 They are therefore not platform-specific but their lowering may be if the semantics necessitate it or if the maintainer wants to provide a more efficient version.
 For example, the \gls{llvm} \gls{intrinsic} \code{llvm.vector.reduce.add.*} may be generically lowered to a series of vector operations at the \gls{ir} level, or, if the \gls{isa} provides a reduction instruction, it could be lowered more efficiently by the backend.
 
 \subsection{Intrinsic Format}
 Within \gls{llvm} \gls{ir}, \glspl{intrinsic} appear simply as external function declarations whose names are prefixed with ``\code{llvm.}''.
-Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} uses to \gls{mangle}  families of \glspl{intrinsic}.
+Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} uses to \gls{mangle} families of \glspl{intrinsic}.
 Families arise from the need to provide generic \glspl{intrinsic} to a strongly typed language where overloading is not allowed.
 For instance, consider the \code{llvm.smax.*} \gls{intrinsic} which takes two signed integers of the same type and returns the largest.
 The \gls{llvm} documentation uses the ``\code{.*}'' suffix to represent the \glslink{mangle}{mangled} portion of the name.
@@ -307,7 +307,7 @@ For example, with two four-length vectors as arguments and a mask of \code{<i32 
 Furthermore, the special value \code{undef} can be used to replace one of the input vectors to allow easily manipulation of the elements of a single vector.
 Selecting an element from the \code{undef} vector results in undefined behaviour.
 
-With this we can see that line~\ref{aShuffle1} combines \code{ATile} and \code{undef} and extracts the first four elements of \code{ATile}; the result variable is named \code{ATile.0_0} indicating the vector starts at $(0, 0)$.
+Thus, using a shuffle, line~\ref{aShuffle1} combines \code{ATile} and \code{undef} and extracts the first four elements of \code{ATile}; the result variable is named \code{ATile.0_0} indicating the vector starts at $(0, 0)$.
 The next four elements are extracted on line~\ref{aShuffle2} for the second operand vector.
 All four operand vectors are extracted from \code{BTile} in a similar process on lines~\ref{bShuffle1}-\ref{bShuffle2}.
 
@@ -363,9 +363,9 @@ The code-lowering algorithm also supports inputs and outputs in any access order
 As shown in \rsec{registerArguments}, operands in \gls{vsr} from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
 Without loss of generality, consider extracting an operand from \code{Atile}.
 Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times r$ matrix.
-Given a column-major matrix argument to the intrinsic, we can extract $r$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
+Given a column-major matrix argument to the intrinsic, one can extract $r$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
 The interleaving essentially converts the data access order from column major to row major.
-If the operand matrix is row major, we can extract four length-$r$ vectors from the rows and then concatenate to produce the \gls{vsr}.
+If the operand matrix is row major, one can also extract four length-$r$ vectors from the rows and then concatenate to produce the \gls{vsr}.
 Extracting from operands from \code{BTile} follows the same logic, except that arguments are column-major and the extraction logic for column-major and row-major matrices are exchanged.
 
 \begin{figure}[t]
@@ -433,7 +433,7 @@ Extracting from operands from \code{BTile} follows the same logic, except that a
 \end{figure}
 
 Accumulators can change orientations using a simple mathematical theorem: given matrices $X, Y, Z$, if $Z = XY$ then $Z^T=Y^TX^T$.
-In order to apply this to \gls{mma}, first consider \rfig{orderAndTranspose}.
+In order to apply this theorem to \gls{mma}, first consider \rfig{orderAndTranspose}.
 The top left of the figure shows a matrix $M$ in row-major order ($M_{RM}$) as well as its data laid out in register ($1, 2, 3, 4$).
 The bottom left shows $M$ mathematically transposed ($M_{RM}^T$) while the top right shows $M$ laid out in memory after changing to a column-major access order ($M_{CM}$).
 Examining the in-register representation of $M_{RM}^T$ and $M_{CM}$ shows that either transposing the matrix or reorganising its underlying access order produce identical data layouts in register ($1, 3, 2, 4$).
@@ -471,6 +471,6 @@ Next, the chapter addressed the dependence on the $8 \times 16$ kernel output di
 Larger kernel outputs are handled simply by breaking up the problem into tiles that resemble the base case; all computation remains exactly the same.
 An arbitrarily large $K$ dimension is implicitly handled in the presented method; the only change is that a larger number of loads and outer products are executed.
 Finally, the issue of arbitrary data access order is resolved.
-For input matrices, this is simply a matter of extracting values from the correct place in the input data and using a shuffle instruction to create an argument that matches the outer product's expected input.
+For input matrices, handling a different access order is simply a matter of extracting values from the correct place in the input data and using a shuffle instruction to create an argument that matches the outer product's expected input.
 For output matrices, this chapter presented the argument that simply exchanging the outer-product argument positions can change the data access order, allowing the kernel to write the output matrix without loss in performance.
 \end{document}

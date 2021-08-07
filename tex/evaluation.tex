@@ -156,7 +156,7 @@ The kernels used for comparison in this thesis are updated and improved versions
 \subsection{Types Missing From Analysis}
 The performance analysis in this section does not include the types \code{i4} and \code{bfloat} because of limitations in the backend code generator and the microkernel code generation for \code{double} is not within the scope of this thesis.
 The \code{i4} and \code{bfloat} types use the same \gls{ir} code-generation code paths and the same logic as every other type except \code{double}.
-Thus, the code generated for them is  likely to be functional and as performant as the code for these other types.
+Thus, the code generated for them is likely to be functional and as performant as the code for these other types.
 However, while translating to assembly, the backend produces incorrect code for \code{i4} or an error when using \code{bfloat}.
 Both issues have been acknowledged by the developer team and will be fixed in future versions of \gls{llvm}.
 
@@ -172,7 +172,7 @@ The unexpected performance is caused either by issues in the backend code genera
 Before presenting the results, this section discusses some of the causes for the unexpected performance results.
 These issues are addressable in the future and the performance study in this thesis uncovered opportunities for improving code generation for the entire \gls{power} software stack.
 The presented \gls{mma} kernel is a new type of kernel never before seen by the backend and therefore the assembly code generation has not been as tuned as other kernels have been.
-Only after stripping away certain bottlenecks present in the naive kernel can we learn about new issues that are still to be addressed by the backend design team.
+Only after stripping away certain bottlenecks present in the naive kernel can one learn about new issues that are still to be addressed by the backend design team.
 
 \subsection{Spilling}
 In compiler terminology, a \gls{live} value is a value that may be used by a statement in the future.
@@ -243,14 +243,14 @@ This matrix size represents the best-case scenario for such an optimisation:
 Given such a perfect case, the runtime of the original version (labeled ``No Load Sinking'' in \rfig{floatSink}, first row in \rtab{floatSink}) is roughly quartered in the optimised version (``Load Sinking'', second row).
 If the operation were to have more accumulations, then this gap should continue to grow as more and more spills would be required in the unoptimised version.
 
-However, by examining the bars labeled ``$8 \times 8 \times 16$'' for \code{i16} (right) in \rfig{floatSink} we can see that for smaller types load sinking actually causes a slight slowdown (\rtab{floatSink}, rows 5 and 6).
+However, by examining the bars labeled ``$8 \times 8 \times 16$'' for \code{i16} (right) in \rfig{floatSink} one can see that for smaller types load sinking actually causes a slight slowdown (\rtab{floatSink}, rows 5 and 6).
 This slowdown can be attributed to the invalidation of properties \circled{1} and \circled{2}: loading an \code{i16} operand no longer fills an entire register and two loads are necessary to create an operand for \code{i16} (rank-two update).
 In fact, the assembly produced without load sinking is much closer to the handwritten version because it loads multiple vectors into a single register and uses this register as a source for multiple shuffle instructions.
 Loading multiple vectors into a single register is possible because the \gls{ir} of the version without load sinking has all of vectors being loaded simulataneously.
 When lowered by the backend, this single contiguous load is automatically broken into register-sized pieces that are then, importantly, also spilled in the same format.
 Thus when the \glspl{vsr} are reloaded, they contain two \code{i16} vectors.
 The load-sinking version avoids spills by breaking the single contiguous load into individual vector loads, removing the \gls{ir} opportunity to have the loads merged.
-It is possible for the backend to recombine the loads but this has yet to be observed in any kernel compilation.
+It is possible for the backend to recombine the loads but this recombination has yet to be observed in any kernel compilation.
 These individual vector loads increase register pressure and each loaded \gls{vsr} is used in a single shuffle instruction.
 The performance degradation because of load-sinking in this case is small only because the overall register pressure has been decreased by halving the element width.
 
@@ -321,7 +321,7 @@ For example, where, for \code{i16}, the load-sinking version takes roughly 114\%
 
 A more complicated load breaking and sinking strategy may counteract this slowdown, but only to a certain degree.
 Combining certain loads -- for example two four-element \code{i16} column loads, making a full \gls{vsr} -- would decrease register pressure because the upper and lower halves of the register can be used in separate shuffles.
-However, this still does not quite match the 256-bit paired-vector load in terms of memory-request efficiency.
+However, this load combination still does not quite match the 256-bit paired-vector load in terms of memory-request efficiency.
 It is impossible for smaller types to use this 256-bit load because the columns of $A$ are consecutive: the paired-vector load would load values that are not used until the second row of accumulator blocks, inevitably introducing new spills.
 
 The issue worsens for \code{i8} and \code{i4} where the eight consecutive vertical elements fill less and less of a \gls{vsr}.
@@ -395,7 +395,7 @@ For \code{half} vectors, it may be possible for the compiler to generate code in
 The cast is not a conversion, simply a reinterpretation of the bits in a register and it is meaningful only within the \gls{llvm} framework.
 Such casting produces no new instructions.
 The data can be casted back to \code{half} at no cost when it needs to be used in a computation.
-In theory, this produces much better assembly but may also trigger a very conservative response in the back-end of the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
+In theory, this casting produces much better assembly but may also trigger a very conservative response in the back-end of the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
 
 The sub-byte granularity of \code{i4} vectors poses a different problem.
 Performant shuffling code for \code{i4} in the same style as the larger types is an impossibility.
@@ -466,22 +466,22 @@ Thus, either access order can be used for $C$ without loss of performance.
   \begin{tabular}{| c | c | c | c | c |}
     \hline
     Type & Order & \parbox[t][26pt][t]{50pt}{\centering$n$\\(millions)} & \parbox[t][28pt][t]{60pt}{\centering CPU Time\\(\SI{}{\textit{\nano\second}})} & Cycles\\\hline
-    \code{float} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $10.7 \pm 0.04$ & $130.96 \pm 0.47$ & $523.21 \pm 1.86$ \\
-    \code{float} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $13.8 \pm 0.33$ & $100.21 \pm 0.33$ & $400.36 \pm 1.32$ \\
-    \code{float} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $17.6 \pm 0.33$ & $79.64 \pm 1.50$ & $318.18 \pm 6.01$ \\
-    \code{float} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $18.0 \pm 0.30$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\
-    \code{i16} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $22.0 \pm 0.04$ & $63.79 \pm 0.14$ & $254.86 \pm 0.57$ \\
-    \code{i16} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $27.7 \pm 0.06$ & $50.64 \pm 0.12$ & $202.32 \pm 0.49$ \\
-    \code{i16} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.10$ & $44.48 \pm 0.15$ & $177.70 \pm 0.59$ \\
-    \code{i16} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.08$ & $44.44 \pm 0.11$ & $177.57 \pm 0.44$ \\
-    \code{half} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $11.6 \pm 0.00$ & $120.50 \pm 0.03$ & $481.41 \pm 0.11$ \\
-    \code{half} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $5.5 \pm 0.00$ & $256.06 \pm 0.18$ & $1023.01 \pm 0.71$ \\
-    \code{half} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $2.0 \pm 0.01$ & $691.33 \pm 4.31$ & $2762.04 \pm 17.23$ \\
-    \code{half} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $3.2 \pm 0.03$ & $438.00 \pm 4.54$ & $1749.89 \pm 18.12$ \\
-    \code{i8} &  $\textrm{C} = \textrm{C} \times \textrm{C}$ & $37.9 \pm 0.03$ & $36.98 \pm 0.02$ & $147.75 \pm 0.10$ \\
-    \code{i8} &  $\textrm{R} = \textrm{R} \times \textrm{R}$ & $40.8 \pm 0.44$ & $34.38 \pm 0.39$ & $137.36 \pm 1.57$ \\
-    \code{i8} &  $\textrm{C} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.19$ & $33.50 \pm 0.15$ & $133.82 \pm 0.61$ \\
-    \code{i8} &  $\textrm{R} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.20$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\\hline
+    \code{float} & $\textrm{C} = \textrm{C} \times \textrm{C}$ & $10.7 \pm 0.04$ & $130.96 \pm 0.47$ & $523.21 \pm 1.86$ \\
+    \code{float} & $\textrm{R} = \textrm{R} \times \textrm{R}$ & $13.8 \pm 0.33$ & $100.21 \pm 0.33$ & $400.36 \pm 1.32$ \\
+    \code{float} & $\textrm{C} = \textrm{C} \times \textrm{R}$ & $17.6 \pm 0.33$ & $79.64 \pm 1.50$ & $318.18 \pm 6.01$ \\
+    \code{float} & $\textrm{R} = \textrm{C} \times \textrm{R}$ & $18.0 \pm 0.30$ & $77.92 \pm 1.31$ & $311.31 \pm 5.21$ \\
+    \code{i16} & $\textrm{C} = \textrm{C} \times \textrm{C}$ & $22.0 \pm 0.04$ & $63.79 \pm 0.14$ & $254.86 \pm 0.57$ \\
+    \code{i16} & $\textrm{R} = \textrm{R} \times \textrm{R}$ & $27.7 \pm 0.06$ & $50.64 \pm 0.12$ & $202.32 \pm 0.49$ \\
+    \code{i16} & $\textrm{C} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.10$ & $44.48 \pm 0.15$ & $177.70 \pm 0.59$ \\
+    \code{i16} & $\textrm{R} = \textrm{C} \times \textrm{R}$ & $31.5 \pm 0.08$ & $44.44 \pm 0.11$ & $177.57 \pm 0.44$ \\
+    \code{half} & $\textrm{C} = \textrm{C} \times \textrm{C}$ & $11.6 \pm 0.00$ & $120.50 \pm 0.03$ & $481.41 \pm 0.11$ \\
+    \code{half} & $\textrm{R} = \textrm{R} \times \textrm{R}$ & $5.5 \pm 0.00$ & $256.06 \pm 0.18$ & $1023.01 \pm 0.71$ \\
+    \code{half} & $\textrm{C} = \textrm{C} \times \textrm{R}$ & $2.0 \pm 0.01$ & $691.33 \pm 4.31$ & $2762.04 \pm 17.23$ \\
+    \code{half} & $\textrm{R} = \textrm{C} \times \textrm{R}$ & $3.2 \pm 0.03$ & $438.00 \pm 4.54$ & $1749.89 \pm 18.12$ \\
+    \code{i8} & $\textrm{C} = \textrm{C} \times \textrm{C}$ & $37.9 \pm 0.03$ & $36.98 \pm 0.02$ & $147.75 \pm 0.10$ \\
+    \code{i8} & $\textrm{R} = \textrm{R} \times \textrm{R}$ & $40.8 \pm 0.44$ & $34.38 \pm 0.39$ & $137.36 \pm 1.57$ \\
+    \code{i8} & $\textrm{C} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.19$ & $33.50 \pm 0.15$ & $133.82 \pm 0.61$ \\
+    \code{i8} & $\textrm{R} = \textrm{C} \times \textrm{R}$ & $41.8 \pm 0.20$ & $33.49 \pm 0.16$ & $133.79 \pm 0.64$ \\\hline
   \end{tabular}
   \caption[Effects of Matrix Access Order on Performance]{
     The effect of matrix access order on performance.
@@ -509,7 +509,7 @@ The only difference in their generated assembly should be the outer-product inst
 The \gls{power} \gls{isa} indicates that the two different outer product instructions also have identical latencies.
 Thus, given identical load, store, and shuffle schedules along with identical outer-product latencies, the performance of the two types should be identical in every instance.
 
-However, given the results in \rfig{accessOrder}, this is clearly not the case.
+However, given the results in \rfig{accessOrder}, it is clearly not the case that \code{i16} and \code{float} are identical in terms of performance.
 The most performant case for \code{half}, $\textrm{C} = \textrm{C} \times \textrm{C}$, still requires roughly three times the cycles of \code{i16}'s least performant cast, also $\textrm{C} = \textrm{C} \times \textrm{C}$.
 Results for \code{half} that do not follow the anticipated trend are a common thread in this chapter and are caused by a code length explosion due to extremely conservative assembly code generation (see \rsec{halfShuffle}).
 For this reason, performance can be expected to drastically increase and trends expected to follow that of \code{i16} when this issue is resolved.
@@ -552,7 +552,7 @@ With 32 registers available, using only six of these registers per accumulation 
 
 However, the argument in \rsec{baseCase} is made under the assumption that the most efficient schedule for outer-product instructions is a large set of loads followed by as many outer products as possible.
 In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
-If this is not the case, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effectively hidden.
+If it is not the case the case a group of loads followed by outer products is not the most performant option, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effectively hidden.
 
 An important cause for slowdown is also the difference in raw element count between linear and rectangular layouts.
 A rectangular layout loads a total of $8 \times 32 + 16 \times 32 = 768$ elements while a linear layout loads a total of $4 \times 32 + 32 \times 32 = 1152$ elements.
@@ -630,7 +630,7 @@ Using the knowledge gained from the previous experiments, this experimental eval
   Despite the results for \code{float} in \rsec{layoutAnalysis}, the analysis indicates that $2 \times 4$ is optimal.
   Choosing $2 \times 4$ also ensures that all types are equally disadvantaged by spilling.
 }
-This accumulator layout implies an  $8 \times 16$ kernel output.
+This accumulator layout implies an $8 \times 16$ kernel output.
 For consistency, 32 accumulations are performed, making the overall computation once again \matmul{8}{32}{16}.
 
 While the vectorisation method performs the same computation, some elements must be changed.
@@ -648,7 +648,7 @@ Therefore, any code-improvement opportunity is either present or missing in both
 
 The change in data access order in the vectorised version is not necessarily a disadvantage.
 The \gls{lowering} is already set up to extract vectors from $A$, scalars from $B$, and insert results in to $C$.
-All of this is done with the vectoriser in mind.
+All extractions and operations are created with the vectoriser in mind.
 The \gls{lowering} decouples operations from each other as best as possible, enabling the vectoriser to effectively combine operations into a single vector operation.
 
 \subsection{Analysis}
@@ -780,7 +780,7 @@ Overall, the proposed method can produce a matrix-multiplication kernel that is 
 This chapter presented an in-depth analysis and evaluation of the matrix-multiplication micro-kernel code-generation strategy presented in \rcha{method}.
 Beginning the chapter, details of the environment and methodology for each experiment, for example, creating a cycle measurement using the Google benchmark library, are explained.
 
-Following this is a discussion of two important issues that must be addressed in future versions of the assembly-code generator in the backend: spilling and shuffling.
+Following the experimental setup is a discussion of two important issues that must be addressed in future versions of the assembly-code generator in the backend: spilling and shuffling.
 These two issues pervade and influence each of the experiments that follow.
 
 The first two experiments investigate the optimal parameters for the \gls{mma} micro kernel.

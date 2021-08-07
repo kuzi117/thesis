@@ -55,13 +55,13 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
   \begin{tabular}{| c | c | c | c | c |}
     \hline
     Instruction & Input Type & Output Type & Input Dim. & Smallest Computation \\\hline
-    \code{xvi4ger8}  & \code{i4}     & \code{i32}    & $4 \times 8$ & \matmul{4}{8}{4} \\\hline
-    \code{xvi8ger4}  & \code{i8}     & \code{i32}    & $4 \times 4$ & \matmul{4}{4}{4} \\\hline
-    \code{xvi16ger2} & \code{i16}    & \code{i32}    & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
-    \code{xvf16ger2} & \code{half}   & \code{float}  & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
-    \code{xvbf16ger2} & \code{bfloat16}\footnotemark & \code{float}  & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
-    \code{xvf32ger}  & \code{float}  & \code{float}  & $4 \times 1$ & \matmul{4}{1}{4} \\\hline
-    \code{xvf64ger}  & \code{double} & \code{double} & $4 \times 1$ & \matmul{4}{1}{2} \\\hline
+    \code{xvi4ger8} & \code{i4} & \code{i32} & $4 \times 8$ & \matmul{4}{8}{4} \\\hline
+    \code{xvi8ger4} & \code{i8} & \code{i32} & $4 \times 4$ & \matmul{4}{4}{4} \\\hline
+    \code{xvi16ger2} & \code{i16} & \code{i32} & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
+    \code{xvf16ger2} & \code{half} & \code{float} & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
+    \code{xvbf16ger2} & \code{bfloat16}\footnotemark & \code{float} & $4 \times 2$ & \matmul{4}{2}{4} \\\hline
+    \code{xvf32ger} & \code{float} & \code{float} & $4 \times 1$ & \matmul{4}{1}{4} \\\hline
+    \code{xvf64ger} & \code{double} & \code{double} & $4 \times 1$ & \matmul{4}{1}{2} \\\hline
   \end{tabular}
   \caption[MMA Instruction Description]{A description of MMA instructions investigated. Input dimension is transposed for second argument.}
   \label{tab:mmaInsts}
@@ -72,7 +72,7 @@ Therefore, as before, the first row of \code{ACC[0]} is placed into \code{VSR[0]
 Instructions are given three arguments: an accumulator and two \glspl{vsr}.
 Considering the simplest example, single-precision floating point, a four-element row or column fills the entire \gls{vsr} ($32\text{bits} \times 4 = 128\text{bits}$).
 Thus, two length-four vectors are multiplied in an outer product, creating the computation \matmul{4}{1}{4}.
-Recalling \rsec{outerProduct}, this is a rank-one update to the accumulator.
+Recalling \rsec{outerProduct}, this operation is a rank-one update to the accumulator.
 
 Halving the size of the type to 16 bits means the argument \glspl{vsr} are underutilised at half capacity.
 Accumulators cannot be expanded and are always $4 \times 4$ matrices of 32-bit elements.

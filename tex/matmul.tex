@@ -128,7 +128,7 @@ for k=0 to D do
 \subsubsection{Rank-\texorpdfstring{$r$}{r} Updates}
 Some mathematical operations, such as lower-upper factorization, depend on a changing data set, updating a model as new data points are added~\autocite{strange2007efficient}.
 This update process is performed by taking a matrix derived from the model and updating it with the outer product of two vectors.
-Because the result of the outer product of two vectors, a matrix, will always be of rank one, this is called a \emph{rank-one update}.\footnotemark
+Because the result of the outer product of two vectors, a matrix, will always be of rank one, this operation is called a \emph{rank-one update}.\footnotemark
 \footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
 Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), eventually arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
 With this model, the outer-product matrix multiplication in \rlst{basicOuterPseudo} is rewritten as such:
@@ -233,7 +233,7 @@ Packing in this way results in only a single data copy and allows reads to regis
 
 \subsubsection{Practicality}
 Na\"ive matrix multiplication (\ie \rlst{basicInner}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
-Given small matrices as operands, this is often the correct choice.
+Given small matrices as operands, this lack of blocking and packing is often the correct choice.
 The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speedup gained from improved cache performance.
 When input and output data are already small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
 
@@ -269,7 +269,7 @@ Computing a partial result in this manner reduces the effectiveness of \gls{simd
 \Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
 
-\subsection{Goto's and van de Geijn's  methodology in the Inner Kernel}
+\subsection{Goto's and van de Geijn's Methodology in the Inner Kernel}
 \label{sec:gotoInner}
 
 \begin{figure}[t]
@@ -392,11 +392,11 @@ While for the outer kernel a short dimension is optimally several hundred elemen
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
 \rfig{gebpMath} and \rfig{gepbMath} show, in the mathematical sense, what both combinations of block and panel multiplication look like if a vector register can hold four elements.
 
-Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer-product followed by a presentation of a method to resolve these flaws through an improved version of the outer product.
+Next is a discussion of the typical library implementation of these concepts using \gls{simd} techniques in a simple but flawed outer product followed by a presentation of a method to resolve these flaws through an improved version of the outer product.
 
 \subsubsection{Emulating the Outer Product with SIMD Instructions in Libraries}
 \label{sec:emulateProduct}
-\rfig{gebpSimd} and \rfig{gepbSimd} show how this is computed using an architecture's \gls{simd} capabilties.
+\rfig{gebpSimd} and \rfig{gepbSimd} show how the outer product is emulated using an architecture's \gls{simd} capabilties.
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
 The elements of the panel are then loaded into a different vector register.
 Once both registers are ready, \ifglsused{fma}{an}{a} \gls{fma} instruction multiplies the two vector registers together and accumulates the result into a third vector register representing a panel in $C$.
@@ -468,7 +468,7 @@ The duplication issue can be resolved by replacing the duplicated values with un
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
 A dashed box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
 Given a register that could contain the much larger output data in the dot-dashed boxes, the overhead of broadcasting can be completely removed and the computational throughput of the operation quadrupled.
-\rcha{mma} shows how this is possible using \gls{power10}'s \gls{mma}.
+\rcha{mma} shows how this improvement is possible using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
 Having looked at which kernel to implement, discussion can turn towards actual implementation.

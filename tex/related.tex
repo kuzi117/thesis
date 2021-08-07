@@ -36,11 +36,11 @@ Bondhugula also implemented a custom \gls{vectorisation} pass to replace the def
 This work also shows the weakness of the default \gls{llvm} \glslink{vectorisation}{vectoriser}.
 As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} \gls{ir} \glspl{intrinsic} is inherently an accessible method of implementing an inner kernel in MLIR.
 
-Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace these with library calls~\autocite{carvalho2021kernelfarer}.
+Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace the matrix multiplication with library calls~\autocite{carvalho2021kernelfarer}.
 While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the integration of libraries into a computer system that may not have it.
 Moreover, their experimental results, as in this work, indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
 The solution in this thesis is orthogonal to KernelFaRer.
-The pattern recognition in  KernelFaRer can identify GEMM kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
+The pattern recognition in KernelFaRer can identify GEMM kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
 
 \section{Code Generation for New Hardware}
 When presenting the ILLIAC IV, one of the first SIMD machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
@@ -67,7 +67,7 @@ This work presented in this thesis aims to improve matrix-matrix multiplication 
 Pal \etal introduce an outer product accelerator designed for sparse-matrix mutliplication~\autocite{pal2018outerspace}.
 Their design, called OuterSPACE, is an external accelerator focused on alleviating the memory issues associated with sparse matrix-matrix multiplication.
 The algorithm presented in this thesis uses \gls{mma} as an accelerator for dense matrix-matrix multiplication.
-Despite this, \gls{mma} is not at all limited to dense operations.
+Despite the focus of this thesis on matrix multiplication, \gls{mma} is not at all limited to dense operations.
 Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix multiplication using the outer product that may prove to be an excellent match with \gls{mma}.
 
 \section{Performance Evaluation}

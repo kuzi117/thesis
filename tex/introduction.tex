@@ -24,7 +24,7 @@ An advantage of vector extensions in relation to external accelerators is that a
 The current state of the art when working with matrix operations is to choose one of several libraries that implement the \gls{blas} interface (\eg OpenBLAS~\autocite{xianyi2012model}, IBM's ESSL~\autocite{ibm2021engineering}, Intel's MKL~\autocite{wang2014intel,intel2021accelerate}, Nvidia's cuBLAS~\autocite{nvidia2021cublas}).
 These libraries can provide incredible speedups and, in parallel architectures, automatic parallelisation: a very attractive feature for large workloads.
 It has been a natural extension of these libraries to include the usage of matrix engines when targeting \glspl{cpu}.
-However, the development of most of these libraries rely on difficult-to-maintain assembly programs and their usage imposes  extra requirements on systems.
+However, the development of most of these libraries rely on difficult-to-maintain assembly programs and their usage imposes extra requirements on systems.
 
 All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
 Nevertheless, each of these kernels must be produced and hand tuned for each new \gls{cpu} that the library needs to support.
@@ -40,7 +40,7 @@ Therefore, as a counterpoint, a method of transparently accelerating matrix mult
 When a matrix-multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
 Relaxing this requirement means that kernels become \emph{\gls{cpu} agnostic} rather than \emph{\gls{cpu} dependent}.
 It will not be \emph{\gls{isa} agnostic} because a kernel, to obtain best performance, will still need to be written in terms of an \gls{isa}'s vector extension, tying it to the architecture, but it will not be tied to a specific version of the \gls{isa}.
-The change to \gls{cpu} agnostic does, however, mean that  optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
+The change to \gls{cpu} agnostic does, however, mean that optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
 This automation means that an appropriately written and parameterised kernel will also still be optimal in future hardware iterations.
 
 Kernels written as part of a compiler are also implicitly subject to all of the optimisations available in the compiler, now and in the future.
