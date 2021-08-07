@@ -13,7 +13,7 @@ It is also possible to simulate quantum computing processes using matrix multipl
 Moreover, many neural-network operations are based on matrix-matrix or vector-matrix multiplication~\autocite{rojas1996neural,blue1992training}.
 
 Due to its simple structure, tight loop layout, but potentially long execution time, matrix multiplication is well positioned for improvements through modifications to both software and hardware.
-Seminal research, such as that by Goto and van de Geijn~\autocite{goto2008anatomy}, has resulted in high-performance software implementations, including the extensively used linear-algebra libraries EIGEN~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
+Seminal research, such as that by Goto and van de Geijn~\autocite{goto2008anatomy}, has resulted in high-performance software implementations, including the extensively used linear-algebra libraries Eigen~\autocite{guennebaud2021eigen} and OpenBLAS~\autocite{xianyi2012model}.
 These implementations often outperform na\"ive versions of matrix multiplication by hundreds or thousands of times, turning hours of work into seconds or less.
 This speedup is possible through the use of hardware features, such as \gls{simd}, and code transformations, such as loop blocking and data packing.
 Understanding matrix multiplication and how it is implemented is critical to achieving these improvements.
@@ -67,7 +67,7 @@ While both choices arrive at the same final result, the efficacy with which they
     \label{fig:outerProduct}
   \end{subfigure}
   \hfill
-  \caption[Matrix-Matrix Computation Styles]{Example matrix-matrix multiplication computation styles.}
+  \caption[Matrix-Matrix Multiplication Computation Styles]{Example matrix-matrix multiplication computation styles.}
   \label{fig:product}
   \vspace{-0.15cm}
 \end{figure}
@@ -95,7 +95,7 @@ The innermost loop on line~\ref{innerKLoop} implements the inner product by mult
 One can thus view the implementation in \rlst{basicInner} as a loop over $i$ and $j$ that selects an output cell and repeatedly calls an inner product function.
 Therefore, with the choice of loop order $(i, j, k)$, matrix multiplication can be conceptualised as shown in \rlst{basicInnerPseudo}.
 
-\begin{lstlisting}[caption={[Matrix Multiplication Pseudocode Using Inner Product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
+\begin{lstlisting}[caption={[Pseudocode for Matrix Multiplication Using Inner Product]A basic matrix multiplication via inner product broken into logical concepts.},label=lst:basicInnerPseudo,columns=flexible]
 for i=0 to M, j=0 to N do
   C[i, j] = innerProduct(A.row(i), B.column(j))
 \end{lstlisting}
@@ -107,7 +107,7 @@ In contrast to the inner product, the outer product takes two vectors and produc
 Specifically, given $v$ and $w$ that have lengths $m$ and $n$ respectively, the outer product produces an $m \times n$ matrix where cell $(i, j)$ is the product of $v_i$ and $w_j$ (\rfig{outerProduct}).
 
 Where, given a vector from $A$ and and a vector from $B$, the inner product fully computes a single cell, the outer product partially computes every cell of the output $C$.
-Moreover, each vector of $A$ and $B$ are used only once.
+Moreover, each vector of $A$ and $B$ is used only once.
 Specifically, given the computation \matmul{M}{D}{N}, matrix multiplication is computed by taking the outer product of column $k$ of $A$ and row $k$ of $B$ and summing the resulting partial matrices.
 Because the dimension $D$ dictates both the number of columns in $A$ and the number of rows in $B$, the full matrix multiplication can be computed by performing a total of $D$ outer products.
 
@@ -120,7 +120,7 @@ for (uint64_t k = 0; k < D; ++k)|\label{outerKLoop}|
 \end{lstlisting}
 Here, the loop on line~\ref{outerKLoop} selects a column from $A$ and a row from $B$ while the loops on lines~\ref{outerILoop} and \ref{outerJLoop} compute the outer product of those vectors.
 Thus, in a tranformation similar to the one between \rlst{basicInner} and \rlst{basicInnerPseudo}, \rlst{basicOuter} can be rewritten like so:
-\begin{lstlisting}[caption={[Matrix Multiplication Pseudocode Using Outer Product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
+\begin{lstlisting}[caption={[Pseudocode for Matrix Multiplication Using Outer Product]A basic matrix multiplication via outer product broken into logical concepts.},label=lst:basicOuterPseudo,columns=flexible]
 for k=0 to D do
   C += outerProduct(A.column(k), B.row(k))
 \end{lstlisting}
@@ -129,7 +129,7 @@ for k=0 to D do
 Some mathematical operations, such as lower-upper factorization, depend on a changing data set, updating a model as new data points are added~\autocite{strange2007efficient}.
 This update process is performed by taking a matrix derived from the model and updating it with the outer product of two vectors.
 Because the result of the outer product of two vectors, a matrix, will always be of rank one, this operation is called a \emph{rank-one update}.\footnotemark
-\footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=xv^T$ all columns in $M$ are a multiple of $x$.}
+\footnotetext{All rows and columns are a linear combination of one vector. For example, given $M=vw^T$ all columns in $M$ are a multiple of $v$.}
 Matrix multiplication can be computed in the same way by updating a zeroed-out matrix with outer products (the rank-one update), eventually arriving at a fully computed multiplication: $C^1=0; C^{k+1}=C^k+A_{*,k}B_{k,*}$.
 With this model, the outer-product matrix multiplication in \rlst{basicOuterPseudo} is rewritten as such:
 \begin{lstlisting}[caption={[Matrix Multiplication via Rank-One Update]Matrix multiplication using rank-one update.},label=lst:rankOne,language=C++,columns=flexible,morekeywords=uint64_t]
@@ -146,7 +146,7 @@ This same logic extends to creating updates with greater ranks, giving rise to t
 \footnotetext{Common notation is rank-$k$ update; it is changed to rank-$r$ update in this work so as to avoid confusion with $k$ in other uses.}
 Revisiting the process in \rlst{rankOne}, this repeated rank-one update process is apparent.
 The loop simply performs $D$ rank-one updates, implying that the algorithm can be once again reinterpreted in the form of one rank-$D$ update like so:
-\begin{lstlisting}[caption={[Matrix Multiplication Via Rank-\texorpdfstring{$r$}{r} Update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
+\begin{lstlisting}[caption={[Matrix Multiplication via Rank-\texorpdfstring{$r$}{r} Update]Matrix multiplication using rank-$r$ update.},label=lst:rankR,language=C++,columns=flexible,morekeywords=uint64_t]
 // Assumption: A, B are arrays of D vectors
 rankRUpdate(C, A, B, /*rank*/ D);
 \end{lstlisting}
@@ -200,7 +200,7 @@ Different combinations of blocking orders also induce different packing choices 
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
 This breakdown is affiliated with the inner product because it multiplies two panels, which resemble vectors, while producing a block, which resembles a cell.
-According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
+According to Goto and van de Geijn's proposed method, with this breakdown, $C$ will be packed in L2 cache.
 Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache, accumulated into, and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, there are only read operations from the L2 cache.
 Therefore, the inner-product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
@@ -245,10 +245,10 @@ Therefore, while a single, optimised inner kernel is always critical to performa
 \section{The Inner Kernel}
 \label{sec:innerKernel}
 The inner kernel is focused on maximising performance.
-Whether the computation itself has small dimensions or a larger computation has been blocked and packed by an outer kernel, the inner kernel is meant to be as tight and as efficient as possible.
+Whether the computation itself has small dimensions or a larger computation has been blocked and packed, the inner kernel should be as tight and as efficient as possible.
 Therefore, the implementation of the inner kernel must consider optimisations such as loop unrolling and instruction rescheduling to improve operation pipelining.
-The instruction cache capacity, instruction issue rate, register pressure, and functional unit availability must also be taken into account.
-First, however, the product that implements the inner kernel must be chosen.
+The instruction cache capacity, instruction issue rate, and functional unit availability must also be taken into account.
+First, however, the product operation used to implement the inner kernel must be carefully chosen.
 
 \subsection{Inner Product vs Outer Product}
 \label{sec:productsVs}
@@ -261,7 +261,7 @@ However, in a practical machine, it is impossible to load the entirety of a long
 
 Long dimension lengths make tiling a necessity.
 Tiling, as discussed in \rsec{blockPack}, breaks the overall multiplication into smaller, more manageable computations.
-As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a inner-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the outer kernel.
+As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that an inner-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the outer kernel.
 
 When considering the inner kernel, the inner-product approach also makes poor use of \gls{simd} capabilities.
 Computing the inner product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
@@ -386,7 +386,7 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
 \end{figure}
 
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
-As in the outer kernel, rather than implementing matrix multiplication in terms of the inner product, which some \glspl{isa} have directly supported for years\footnotemark, in this methodology matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
+As in the outer kernel, rather than implementing matrix multiplication in terms of the inner product, which some \glspl{isa} have directly supported for years\footnotemark, matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
 \footnotetext{For example, the DPPS or DPPD instructions that were introduced in x86 SSE 4.1 in 2008.}
 While for the outer kernel a short dimension is optimally several hundred elements wide and a long dimension is the full extent of one of the matrix dimensions, the inner kernel must operate with registers.
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
@@ -468,7 +468,7 @@ The duplication issue can be resolved by replacing the duplicated values with un
 Doing so stacks more of these operations, as shown in \rfig{extGoto}.
 A dashed box represents one vector register, with each element therein being a distinct element from the matrix rather than a single \glslink{broadcast}{broadcasted} element.
 Given a register that could contain the much larger output data in the dot-dashed boxes, the overhead of broadcasting can be completely removed and the computational throughput of the operation quadrupled.
-\rcha{mma} shows how this improvement is possible using \gls{power10}'s \gls{mma}.
+\rcha{mma} shows how this improvement can be implemented using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
 Having looked at which kernel to implement, discussion can turn towards actual implementation.
@@ -484,8 +484,8 @@ Future iterations that would load the same data can also be moved such that the 
 However, all of these optimisations, and others, are readily available in a compiler, often implemented generically and with great care regarding applicability and benefit analysis.
 For example, the kernel can be written in terms of scalars, allowing the compiler to vectorise the kernel automatically.
 Automatic vectorisation means obvious optimisations such as using the best available vector load and store instructions as well as unrolling to allow for pipelining of loads.
-Less obvious issues are also solved automatically: handling operations that may have dimensions that are not a multiple of vector register automatically creates additional code pathways that vectors at half width, reducing down to scalar computation.
-Issues such as new instructions added to an \gls{isa} that are impossible to solve for handwritten kernels without writing an entirely new kernel, are also immediately solved because the compiler knows which architecture to compile for and can use any instruction available on that architecture.
+Less obvious issues are also solved automatically: handling operations that may have dimensions that are not a multiple of vector register automatically creates additional code pathways that make use of vectors at half width or less, eventually reducing down to scalar computation.
+Issues that are impossible to solve for handwritten kernels without writing an entirely new kernel, such as new instructions added to an \gls{isa}, are also immediately solved because the compiler knows which architecture to compile for and can use any instruction available on that architecture.
 Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
 It is for this reason that \rcha{method} presents a method built fully within a compiler without a hand-written kernel.
 
