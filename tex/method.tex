@@ -15,21 +15,21 @@ Due to its implementation in the LLVM compiler framework, the method has immedia
 An \gls{intrinsic} is a function available in an \gls{ir} and is therefore not directly available in higher-level languages.
 Select \glspl{intrinsic} are available in higher-level languages in the form of a \gls{builtin}, though no \glspl{builtin} are used in this work.\footnotemark
 \footnotetext{Some compilers use this terminology differently; the definitions given here are the definitions according to \gls{llvm}.}
-These functions' most important role is to symbolise the concept of a common operation in a representation that must lowered to many disparate forms while maintaining efficiency and correctness.
+These functions' most important role is to symbolise the concept of a common operation in a representation that must be \glslink{lowering}{lowered} to many disparate forms while maintaining efficiency and correctness.
 They are therefore not platform-specific but their lowering may be if the semantics necessitate it or if the maintainer wants to provide a more efficient version.
 For example, the \gls{llvm} \gls{intrinsic} \code{llvm.vector.reduce.add.*} may be generically lowered to a series of vector operations at the \gls{ir} level, or, if the \gls{isa} provides a reduction instruction, it could be lowered more efficiently by the backend.
 
 \subsection{Intrinsic Format}
 Within \gls{llvm} \gls{ir}, \glspl{intrinsic} appear simply as external function declarations whose names are prefixed with ``\code{llvm.}''.
-Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} uses to \gls{mangle} families of \glspl{intrinsic}.
+Names within \gls{llvm} are permitted to contain periods, a feature that \glspl{intrinsic} use to \gls{mangle} families of \glspl{intrinsic}.
 Families arise from the need to provide generic \glspl{intrinsic} to a strongly typed language where overloading is not allowed.
 For instance, consider the \code{llvm.smax.*} \gls{intrinsic} which takes two signed integers of the same type and returns the largest.
 The \gls{llvm} documentation uses the ``\code{.*}'' suffix to represent the \glslink{mangle}{mangled} portion of the name.
 An actual definition will replace the asterisk with a type name; if the function is generic in multiple places (return value, arguments) then the other type names will be appended and separated with more periods.
 The \code{llvm.smax.*} \gls{intrinsic} only has one generic type.
-\rlst{intrinsics} shows a declaration for a scalar 32-bit integer, typed and \glslink{mangle}{mangled} as \code{i32}, as well as for a length-four vector of 32-bit integers, typed as \code{<4 x i32>} and \glslink{mangle}{mangled} as \code{v4i32}.
+\rlst{intrinsics} shows a declaration that uses a scalar 32-bit integer, typed and \glslink{mangle}{mangled} as \code{i32}, as well as one that uses a length-four vector of 32-bit integers, typed as \code{<4 x i32>} and \glslink{mangle}{mangled} as \code{v4i32}.
 
-\begin{lstlisting}[caption={[Example Inrinsic Declarations]A set of basic intrinsic declarations~\autocite{llvmLangref}.},
+\begin{lstlisting}[caption={[Example Intrinsic Declarations]A set of basic intrinsic declarations~\autocite{llvmLangref}.},
       label=lst:intrinsics,numbers=none,language=llvm,float,columns=flexible]
 declare i32 @llvm.smax.i32(i32 %a, i32 %b)
 declare <4 x i32> @llvm.smax.v4i32(<4 x i32> %a, <4 x i32> %b)
@@ -46,12 +46,12 @@ As well, those familiar with the analogous \gls{blas} routines may notice that a
 The original interface assumes that all input matrices have a column-major access order.
 Users may include a specific flag in their compiler invocation to change this setting to row-major order.
 
-The original implementation also includes one other significant constraint: the intrinsic must be called with the input matrices already loaded from memory into a virtual register and does not use pointers.
+The original implementation also includes one other significant constraint: the \gls{intrinsic} must be called with the input matrices already loaded from memory into a virtual register and does not use pointers.
 Each value in \gls{llvm}'s \gls{ssa} \gls{ir} exists in a virtual register; there is an infinite number of virtual registers and each virtual register has infinite width.
 Values which are loaded from memory into a virtual register will be broken up by the backend code generator to fit the available hardware registers.
-Thus it is possible to load a matrix with a certain access order from memory and then implement a process to reorder the elements to the opposite access order, though the process will add considerable overhead.
-Hence, while it is possible to use matrices with different access orders in memory, they must be transformed to have matching access orders before calling the \code{llvm.matrix.multiply} \gls{intrinsic}.
-\rlst{matMulIntr} provides an example declaration and invocation of the intrinsic which computes \matmul{8}{5}{16}.
+Thus it is possible to load a matrix with a certain access order from memory and then implement a process to reorder the elements to the opposite access order before calling the \gls{intrinsic}, though the process will add considerable overhead.
+Hence, while it is possible to use matrices with different access orders in memory, they must be transformed to have matching access orders before calling the \code{llvm.matrix.multiply.*} \gls{intrinsic}.
+\rlst{matMulIntr} provides an example declaration and invocation of the \gls{intrinsic} which computes \matmul{8}{5}{16}.
 
 \begin{lstlisting}[caption={[Example Declaration and Use of \code{llvm.matrix.multiply.*}]An example declaration and usage of the \code{llvm.matrix.multiply.*} intrinsic.},
       label=lst:matMulIntr,language=llvm,float,columns=flexible]
@@ -87,10 +87,9 @@ For further discussion see \rsec{outerKernel} or for a functional implementation
 We look to implement an improvement to this lowering on the \gls{power} platform using \gls{mma}.
 Content in \rsec{baseCase}, \rsec{dataTypes}, and \rsec{arbitraryDims} is derived from work the work by Kuzma \etal~\autocite{kuzma2021fast}.
 
-\todo{Verify that enough context is given in previous sections.}
 This work focuses on a lowering for floating point values when computing \matmul{8}{5}{16}.
 The $8 \times 16$ output size is exactly the output dimensions produced when fully utilising the architecture's available accumulators.
-This property makes it the ideal size for the intrinsic's role as a tight inner kernel.
+This property makes it the ideal size for the \gls{intrinsic}'s role as a tight inner kernel.
 Nevertheless, these restrictions create a simple scenario enabling a foundational understanding of this thesis' core algorithm; removing these restrictions is discussed in \rsec{dataTypes}, \rsec{arbitraryDims}, and \rsec{arbitraryOrder}.
 
 \subsection{Base Case}
@@ -182,29 +181,29 @@ In addition to the software constraints described in \rsec{matMulInt}, an effici
 \code{ATile}, \code{BTile}, and \code{COutput} are represented in two dimensions to illustrate the position of the elements in the matrices.
 Each small square in the figure represents one 32-bit element of a matrix.
 A circled number indicates that the corresponding portion of \code{COutput} is assigned to that accumulator number.
-When the intrinsic is executed each accumulator computes $K$ outer products using a multiply-and-add operation.
+When the \gls{intrinsic} is executed each accumulator computes $K$ outer products using a \gls{mma} outer-product instruction.
 The two tones of gray colour in \rfig{intrinsic} illustrate that a strip of \code{ATile} and a strip of \code{BTile} are used for the accumulation of each portion of \code{COutput}.
-Each strip is reused for all the accumulations in the same row or column of accumulators.
+Each strip is reused for all of the accumulations in the same row or column of accumulators.
 Each outer-product computation needs two four-element operands, one from \code{ATile} and one from \code{BTile}.
 These operands are surrounded by dashed lines for the two accumulations highlighted in gray.
 The arrows indicate how the loop indices in \ralg{intrinsic} iterate for the example in the figure.
 
-\ralg{intrinsic} describes the lowering of the intrinsic computation for \gls{mma}.
+\ralg{intrinsic} describes the lowering of the \gls{intrinsic} computation for \gls{mma}.
 This is the algorithm within the compiler that produces \gls{llvm} \gls{ir}, not the code executed on the target machine.
-The produced code and its complications are discussed in \rsec{unrolled}.
+The produced code is discussed in \rsec{unrolled}.
 
 The compile-time constants \code{V} and \code{H} (used on lines~\ref{VextractLoop}, \ref{HextractLoop}, \ref{computeLoop1}, \ref{computeLoop2}) specify the layout of the accumulators for the computation.
 Given constraint \fbox{1}, the largest amount of data reuse can be obtained when \code{V = 2} and \code{H = 4} or vice versa (see \rfig{intrinsic}).
-The only other configuration with full accumulator usage (\code{V = 1}, \code{H = 8}) uses more operand registers for a single accumulation -- nine instead of six -- and demonstrates reuse along only a single axis.
+The only other configuration with full accumulator usage (\code{V = 1}, \code{H = 8} or vice versa) uses more operand registers for a single accumulation -- nine instead of six -- and demonstrates reuse along only a single axis.
 These constants in the compiler generalise the lowering and make it applicable to future architectures where the ideal arrangement to increase data reuse may be different from the $2 \times 4$ arrangement in the \gls{power10} processor.
 
 \begin{algorithm}[t]
-  \caption[Algorithm for Lowering \code{llvm.matrix.multiply}]{Algorithm for lowering \code{llvm.matrix.multiply} with MMA.}
+  \caption[Algorithm for Lowering \code{llvm.matrix.multiply.*}]{Algorithm for lowering \code{llvm.matrix.multiply.*} with MMA.}
   \label{alg:intrinsic}
   \begin{algorithmic}[1]
-    \Function{\code{llvm.matrix.multiply}}{ATile, BTile, $N$, $K$, $M$}
+    \Function{\code{llvm.matrix.multiply.*}}{ATile, BTile, $N$, $K$, $M$}
     \State MMAIntrinsic~$\gets$~intrinsic chosen based on element type\label{chooseIntrinsic}
-    \State COutput~$\gets$~$N \times M$ empty array\label{createC}
+    \State COutput~$\gets$~$M \times N$ empty array\label{createC}
     \State Accs~$\gets$~$V \times H$ ACCs assembled and initialised to zero\label{zeroAccs}
     \For{$\text{\code{k}}=0$ \textbf{to} $K-1$}\label{unrollLoopStart}
       \State AOps~$\gets$~$V$ empty vector operands
@@ -227,9 +226,9 @@ These constants in the compiler generalise the lowering and make it applicable t
   \end{algorithmic}
 \end{algorithm}
 
-First, on line~\ref{chooseIntrinsic}, an \gls{mma} intrinsic is chosen based on the element type of the operation\footnotemark (\eg \code{float}, \code{i32}).
+First, on line~\ref{chooseIntrinsic}, an \gls{mma} \gls{intrinsic} is chosen based on the element type of the operation (\eg \code{float}, \code{i32}).\footnotemark
 \footnotetext{
-  This is an operation internal to the matrix multiplication meaning all negations have been applied prior to the intrinsic.
+  This is an operation internal to the matrix multiplication meaning all negations have been applied prior to the \gls{intrinsic}.
   Therefore, the positive multiply, positive accumulate variant is always chosen.
 }
 Next, an array is created to contain the eventual output (line~\ref{createC}) followed by assembling zeroed-out accumulators (line~\ref{zeroAccs}).
@@ -281,10 +280,10 @@ First, on line~\ref{accz} of \rlst{unrolled}, a call to the \gls{ppc} \gls{intri
   The \code{xxsetaccz} remains in this listing to connect with \ralg{intrinsic}.
 }
 Only a single assembly is required in the \gls{ir} because the \gls{ir} is in \gls{ssa} form.
-Because the intrinsic takes no arguments and is functionally pure\footnotemark within the \gls{ir}, the result of multiple repeated calls are seen by the optimiser as identical and will be removed by a \gls{cse} pass.
+Because the \gls{intrinsic} takes no arguments and is functionally pure\footnotemark within the \gls{ir}, the result of multiple repeated calls are seen by the optimiser as identical and will be removed by a \gls{cse} pass.
 \footnotetext{
 A pure function is one which:
-  \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
+  \begin{enumerate*}[itemjoin*={{ and }}, label=(\arabic*), after={.}]
     \item has no side effects (e.g. writes to memory)
     \item returns the same output given the same input
   \end{enumerate*}
@@ -297,12 +296,12 @@ However, backend developers have co-opted the type to represent an \gls{mma} acc
 There also exists a separate type which represents a \gls{vsr} for use with \gls{mma} \glspl{intrinsic} but its use was removed from \rlst{unrolled} to facilitate reading.\footnotemark
 \footnotetext{
   \glspl{vsr} are represented by \code{<16 x i8>}, a 16-element vector of bytes.
-  In the true result \gls{ir}, shuffles produce four-element vectors of floats which are bit-casted (same bit-width) to the \gls{vsr} type which is then consumed by the intrinsics.
+  In the true result \gls{ir}, shuffles produce four-element vectors of floats which are bit-casted (same bit-width) to the \gls{vsr} type which is then consumed by the \glspl{intrinsic}.
 }
 
 Line~\ref{aShuffle1} shows the extraction of the first operand from \code{ATile} via a shuffle instruction.
 Conceptually, the shuffle instruction takes two equally sized vector operands, logically concatenates them, and labels each element from $0$ to $2N$.
-A third argument, the shuffle mask, is a vector of labels defining which element from the concatenation should be in the output vector's same position.
+A third argument, the shuffle mask, is a vector of integers corresponding to labels defining which element from the concatenation should be in the output vector's same position.
 For example, with two four-length vectors as arguments and a mask of \code{<i32 7, i32 3, i32 0>}, a shuffle would produce a three-element vector starting with the second vector's final element followed by the first vector's final and first elements.
 Furthermore, the special value \code{undef} can be used to replace one of the input vectors to allow easily manipulation of the elements of a single vector.
 Selecting an element from the \code{undef} vector results in undefined behaviour.
@@ -313,7 +312,7 @@ All four operand vectors are extracted from \code{BTile} in a similar process on
 
 Outer products and accumulations begin on line~\ref{accsBegin} and end on line~\ref{accsEnd}.
 Each operation takes an accumulator as the first argument and multiplies the two extracted operands found in the second and third arguments.
-The \code{xvf32gerpp} intrinsic returns a value with type \code{<512 x i1>}, the accumulator type.
+The \code{xvf32gerpp} \gls{intrinsic} returns a value with type \code{<512 x i1>}, the accumulator type.
 This represents the inputted accumulator with the operation accumulated on top.
 In this first iteration, the zeroed out accumulator will be duplicated for each operation.
 In the next iteration of accumulations, the returned accumulators will be used as the first argument.
@@ -340,13 +339,13 @@ The extraction of operands into vector registers in lines~\ref{aOps} and~\ref{bO
 
 \subsection{Arbitrary Values for \texorpdfstring{$M$}{M}, \texorpdfstring{$K$}{K}, \texorpdfstring{$N$}{N}}
 \label{sec:arbitraryDims}
-Until now, the algorithms have used values of $M$ and $N$ selected such that a micro kernel with the accumulator arrangement shown in \rfig{intrinsic} could be computed with a single set of assemble and disassemble instructions.
-However, the implementation of \ralg{intrinsic} in LLVM must handle any \code{llvm.matrix.multiply} intrinsic created by any compilation path and thus must handle arbitrary values for $M$, $N$ and $K$.
+Until now, the algorithms have used values of $M$, $N$, and $K$ selected such that a micro kernel with the accumulator arrangement shown in \rfig{intrinsic} could be computed with a single set of assemble and disassemble instructions.
+However, the implementation of \ralg{intrinsic} in LLVM must handle any \code{llvm.matrix.multiply.*} \gls{intrinsic} created by any compilation path and thus must handle arbitrary values for $M$, $N$ and $K$.
 
 To handle larger values of $M$ and $N$, the micro-level code-lowering algorithm has an additional outer double-nested loop that logically divides the \code{CVec} tile into $8 \times 16$-element sections as shown in \rfig{intrinsic}.
 Each of these sections can then be handled as shown in \ralg{intrinsic}.
 The disadvantage of an input size that spans multiple accumulator sections is that the extraction of data into vector registers becomes more complex.
-For example, consider a 32-bit data multiplication as shown \rfig{intrinsic} but with the values of $N$ and $M$ double of what is shown in the figure.
+For example, consider a 32-bit data multiplication as shown in \rfig{intrinsic} but with the values of $N$ and $M$ double of what is shown in the figure.
 The rows of \code{ATile} and \code{BTile} shown in \rfig{intrinsic} are now a portion of the rows of larger tiles and the data extraction must gather the correct data into the vector registers that will be used by the accumulators.
 This data gathering adds additional code and may impact access locality if the tiles are large enough.
 
@@ -363,10 +362,10 @@ The code-lowering algorithm also supports inputs and outputs in any access order
 As shown in \rsec{registerArguments}, operands in \gls{vsr} from \code{ATile} must always be in row-major order while operands from \code{BTile} must always be in column-major order.
 Without loss of generality, consider extracting an operand from \code{Atile}.
 Using the notation from \rsec{dataTypes}, the final operand \gls{vsr} must be a row-major $4 \times r$ matrix.
-Given a column-major matrix argument to the intrinsic, one can extract $r$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
+Given a column-major matrix argument to the \gls{intrinsic}, one can extract $r$ length-four vectors from the columns and then interleave (also called zip) them to produce the \gls{vsr}.
 The interleaving essentially converts the data access order from column major to row major.
 If the operand matrix is row major, one can also extract four length-$r$ vectors from the rows and then concatenate to produce the \gls{vsr}.
-Extracting from operands from \code{BTile} follows the same logic, except that arguments are column-major and the extraction logic for column-major and row-major matrices are exchanged.
+Extracting operands from \code{BTile} follows the same logic, except that arguments are column-major and the extraction logic for column-major and row-major matrices are exchanged.
 
 \begin{figure}[t]
   \centering
@@ -436,7 +435,7 @@ Accumulators can change orientations using a simple mathematical theorem: given 
 In order to apply this theorem to \gls{mma}, first consider \rfig{orderAndTranspose}.
 The top left of the figure shows a matrix $M$ in row-major order ($M_{RM}$) as well as its data laid out in register ($1, 2, 3, 4$).
 The bottom left shows $M$ mathematically transposed ($M_{RM}^T$) while the top right shows $M$ laid out in memory after changing to a column-major access order ($M_{CM}$).
-Examining the in-register representation of $M_{RM}^T$ and $M_{CM}$ shows that either transposing the matrix or reorganising its underlying access order produce identical data layouts in register ($1, 3, 2, 4$).
+Examining the in-register representation of $M_{RM}^T$ and $M_{CM}$ shows that either transposing the matrix or reorganising its underlying access order produces identical data layouts in register ($1, 3, 2, 4$).
 Furthermore, combining the two transformations to produce a transposed $M$ with column-major access order ($M_{CM}^T$) results in the original data layout in register, as shown in the bottom right of \rfig{orderAndTranspose}.
 This proves the lemma that $M_{RM}$ is equivalent to $M^T_{CM}$ and that $M_{CM}$ is equivalent to $M^T_{RM}$ in regards to data in register.
 
@@ -457,11 +456,11 @@ This completes the proof that simply by swapping the order of the register opera
 
 \section{Summary}
 This chapter presented a compiler-only method for the code generation of a high-performance matrix-multiplication kernel.
-It first introduced \gls{llvm} intrinsics and their format with a specific focus on the \code{llvm.matrix.multiply} intrinsic.
-This particular intrinsic serves as the starting point for the generation of the matrix-multiplication kernel.
-As an example, the intrinsic's pre-existing vectorisation lowering serves to introduce the usage and constraints of the intrinsic.
+It first introduced \gls{llvm} \glspl{intrinsic} and their format with a specific focus on the \code{llvm.matrix.multiply.*} \gls{intrinsic}.
+This particular \gls{intrinsic} serves as the starting point for the generation of the matrix-multiplication kernel.
+As an example, the \gls{intrinsic}'s pre-existing vectorisation lowering serves to introduce the usage and constraints of the \gls{intrinsic}.
 
-Then the chapter discussed how the implementation of the intrinsic can produce code targeting a \gls{matrix engine}, specifically \gls{mma}.
+Then the chapter discussed how the implementation of the \gls{intrinsic} can produce code targeting a \gls{matrix engine}, specifically \gls{mma}.
 The examination of an $8 \times 16$ kernel formed by \code{float} elements serves as the computation's base case, demonstrating how arguments are extracted from input matrices and how accumulators can be used to efficiently produce the computation results.
 The resulting \gls{ir} is briefly examined in order to show its effectiveness before examining the methods through which the limitations in the base case can be lifted.
 
