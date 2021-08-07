@@ -24,7 +24,7 @@ The layered strategy features two stages:
 Kuzma \etal~\autocite{kuzma2021fast} is the first work to create a compiler-only code generation for the layered approach and adapts blocking, tiling, and packing to create a data layout that is suitable for computing with \gls{mma} and to also improve utilization of the L3 cache.
 This thesis is an in-depth presentation of the method behind \textbf{(2)}.
 
-Gareev et al.~\autocite{gareev2018high} implement tiling and packing within Polly~\autocite{grosser2011polly,grosser2012polly} without the need for an external library or automatic tuning.
+Gareev \etal~\autocite{gareev2018high} implement tiling and packing within Polly~\autocite{grosser2011polly,grosser2012polly} without the need for an external library or automatic tuning.
 Their approach with a hand-optimized SSE kernel reports performance on par with BLIS on Intel Sandy Bridge.
 When not relying on an assembly kernel, their pass uses the default \gls{llvm} \glslink{vectorisation}{vectoriser} that delivers only a small speedup over naive code.
 The work in this thesis presents a compiler-only kernel that can replace Gareev \etal's SSE kernel or the default \gls{llvm} \glslink{vectorisation}{vectoriser} on \gls{power10}.
