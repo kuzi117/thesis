@@ -12,9 +12,9 @@ The sections below present work related to separate facets of this thesis.
 Each of the sections contains text derived from work currently under revision~\autocite{kuzma2021fast}.
 
 \section{Matrix Multiplication}
-In a seminal work, Goto and Van D. Geijn detail a layered approach to improve cache and vector-register utilization on \glspl{cpu}~\autocite{goto2008anatomy}.
+In a seminal work, Goto and van de Geijn detail a layered approach to improve cache and vector-register utilization on \glspl{cpu}~\autocite{goto2008anatomy}.
 Using this approach, modern linear-algebra libraries, such as Eigen and OpenBLAS, achieve high performance on \gls{hpc} workloads.
-Goto and Van D. Geijn show that modelling both L2 cache and \gls{tlb} --- and not only L1 cache as considered earlier --- is crucial for cache performance.
+Goto and van de Geijn show that modelling both L2 cache and \gls{tlb} --- and not only L1 cache as considered earlier --- is crucial for cache performance.
 Their work is seminal because it publicly explained practical strategies for optimal cache and vector register utilization on \glspl{cpu}; these strategies were previously only available in proprietary libraries.
 The layered strategy features two stages:
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=\textbf{(\arabic*)}, after={.}]
@@ -25,7 +25,7 @@ Kuzma \etal~\autocite{kuzma2021fast} is the first work to create a compiler-only
 This thesis is an in-depth presentation of the method behind \textbf{(2)}.
 
 Gareev \etal~\autocite{gareev2018high} implement tiling and packing within Polly~\autocite{grosser2011polly,grosser2012polly} without the need for an external library or automatic tuning.
-Their approach with a hand-optimized SSE kernel reports performance on par with BLIS on Intel Sandy Bridge.
+Their approach with a hand-optimized x86 SSE kernel reports performance on par with BLIS on Intel Sandy Bridge.
 When not relying on an assembly kernel, their pass uses the default \gls{llvm} \glslink{vectorisation}{vectoriser} that delivers only a small speedup over naive code.
 The work in this thesis presents a compiler-only kernel that can replace Gareev \etal's SSE kernel or the default \gls{llvm} \glslink{vectorisation}{vectoriser} on \gls{power10}.
 Furthermore, this work is more modular and can be reused by new passes or other code generation paths as drop-in inner-kernel.
@@ -37,10 +37,10 @@ This work also shows the weakness of the default \gls{llvm} \glslink{vectorisati
 As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} \gls{ir} \glspl{intrinsic} is inherently an accessible method of implementing an inner kernel in MLIR.
 
 Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace the matrix multiplication with library calls~\autocite{carvalho2021kernelfarer}.
-While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the integration of libraries into a computer system that may not have it.
-Moreover, their experimental results, as in this work, indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
+While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the use of libraries into a computer system that may not have them installed.
+Moreover, their experimental results indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
 The solution in this thesis is orthogonal to KernelFaRer.
-The pattern recognition in KernelFaRer can identify GEMM kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
+The pattern recognition in KernelFaRer can identify \gls{gemm} kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
 
 \section{Code Generation for New Hardware}
 When presenting the ILLIAC IV, one of the first SIMD machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
@@ -53,10 +53,10 @@ This thesis, in the same vein as Barnes \etal, focuses on bringing high performa
 The advent of the ``general purpose'' \glspl{gpu} quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
 This evolved into implementations of matrix multiplications on \glspl{gpu}: manually~\autocite{li2011strassens}, through libraries like \gls{blas}~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
 Matrix multiplication is also central to the design of hardware for tensor-operation acceleration such as Google's Tensor Processing Unit~\autocite{jouppi2017datacenter}, Nvidia's Tensor Core~\autocite{markidis2018nvidia}, and Huawei's Cube Unit~\autocite{liao2019davinci}.
-Performance evaluations of GEMM in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\autocite{jouppi2017datacenter,wang2019benchmarking}.
+Performance evaluations of \gls{gemm} in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\autocite{jouppi2017datacenter,wang2019benchmarking}.
 Matrix-multiplication acceleration in standalone accelerators is not the focus of this thesis.
 
-It is difficult to find works explicitly discussing the outer product as kernels are often described in terms of Goto and van de Geijn's work.
+It is difficult to find works explicitly discussing the outer product because kernels are often described in terms of Goto and van de Geijn's work.
 However, a work by Naohito Nakasato~\autocite{nakasato2011fast} and another by Wu Jing and Joseph Jaja~\autocite{wu2016achieving} both explicitly mention the use of the outer product to compute matrix multiplication.
 Both of these works use a \gls{gpu} for their implementation while this work focuses on the emerging field of on-chip matrix engines.
 
@@ -64,11 +64,11 @@ Yu \etal implement a rank-one update algorithm on the \gls{gpu}, but their resea
 Their work aims to replace another method of singular value decomposition via an iterative method requiring many matrix-matrix multiplications by using the outer product.
 This work presented in this thesis aims to improve matrix-matrix multiplication on the \gls{cpu} using rank-$r$ updates.
 
-Pal \etal introduce an outer product accelerator designed for sparse-matrix mutliplication~\autocite{pal2018outerspace}.
+Pal \etal introduce an outer product accelerator designed for sparse-matrix multiplication~\autocite{pal2018outerspace}.
 Their design, called OuterSPACE, is an external accelerator focused on alleviating the memory issues associated with sparse matrix-matrix multiplication.
 The algorithm presented in this thesis uses \gls{mma} as an accelerator for dense matrix-matrix multiplication.
 Despite the focus of this thesis on matrix multiplication, \gls{mma} is not at all limited to dense operations.
-Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix multiplication using the outer product that may prove to be an excellent match with \gls{mma}.
+Work by Gu \etal develops a memory-efficient algorithm for sparse matrix-matrix multiplication using the outer product that may prove to be an excellent match with \gls{mma}~\autocite{gu2020bandwidth}.
 
 \section{Performance Evaluation}
 Robust performance benchmarking is critical for the evaluation of vector extensions.
