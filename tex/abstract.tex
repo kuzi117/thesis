@@ -34,7 +34,7 @@ For these reasons, external library function calls disable a profitable code tra
 The solution to these issues is to provide an alternative for the computation of matrix-multiplication, with competitive performance, directly within the compiler.
 An implementation in this style automatically generates a matrix-multiplication kernel that benefits from all applicable code transformations available in the compiler.
 This thesis addresses the lack of an efficient compiler-only path to generate code for \gls{gemm} by investigating and implementing a high-performance matrix-multiplication kernel implementation directly within the \gls{llvm} compiler framework.
-Furthermore, the proposed solution integrates emerging technologies, namely the \gls{matrix engine} that provides hardware assistance for the computation of matrix multiplication.
+Furthermore, the proposed solution integrates emerging technologies, namely the \gls{matrix engine}, that provide hardware assistance for the computation of matrix multiplication.
 
 \Glspl{matrix engine} are new facilities added in several architectures as part of the most recent \gls{cpu} generation.
 These extensions focus on enabling matrix operations by extending the preexisting \gls{simd} capabilities of the \gls{isa}.
@@ -47,7 +47,7 @@ The central ideas for the macro-kernel code generation are \textit{blocking} to 
 The focus of the micro-kernel code generation is to make efficient use of the \gls{simd} functional units in the processor and to reduce the memory-register data-transfer requirements by increasing the reuse of data that has been transferred to the vector registers.
 This thesis focuses on the micro-kernel code generation, though an implementation of a compiler-only macro-kernel code generation developed in collaboration with other members of the same research team is available.
 
-This thesis also contributes a detailed performance study that indicates that this new code-generation strategy results in speed improvements between 3.1 and 12.9 times when compared with the closest alternative compiler-only code-generation implementation for some data types.
+This thesis also contributes a detailed performance study that indicates that this new code-generation strategy results in speed improvements between 3.1 and 15.8 times when compared with the closest alternative compiler-only code-generation implementation for some data types.
 There is also strong indication that, given several improvements in the compiler assembly-code generation, the compiler-generated kernel can match the performance of an expert's hand-crafted solution.
 The thesis also features a detailed analysis of the experimental results --- especially for some data types for which the performance is surprising or lower than expected --- that reveals opportunities for changes in the compiler that have the potential to lead to improvements in the entire \gls{power} compilation stack.
 
