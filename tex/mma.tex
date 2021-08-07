@@ -87,7 +87,7 @@ The same logic applies for eight- and four-bit types, computing rank-four and ra
 \label{sec:registerArguments}
 Once the instruction is performing a rank-two update or greater, the order of the elements in the register must be considered.
 The \gls{power} \gls{isa} specifies that the first argument must have elements in row-major order while the second argument must have elements in column-major order.
-This enables simple circuit pathways where, for a rank-$r$ update, element $(i, j)$ in $C$ accumulates with the dot product of the $r$-length group of elements in $A$ at offset $i \times r$ and in $B$ at $j \times r$.\footnotemark
+This enables simple circuit pathways where, for a rank-$r$ update, element $(i, j)$ in $C$ accumulates with the inner product of the $r$-length group of elements in $A$ at offset $i \times r$ and in $B$ at $j \times r$.\footnotemark
 \footnotetext{Typical matrix notation uses one-indexing; this example uses zero-indexing.}
 
 \begin{figure}[t]
@@ -154,7 +154,7 @@ The first two elements of the operand from $A$, highlighted by diagonal lines, f
 
 In \rfig{registerArgumentsVSR}, the arguments are shown laid out in a \gls{vsr}.
 The \gls{vsr} is divided using dark and light lines in the same way as \rfig{registerArgumentsMatrix} to show how the element positions are translated to a \gls{vsr}.
-The dot product of these two two-element vectors, from $A$ at offset $0 \times 2 = 0$ and from $B$ at $2 \times 2 = 4$ in their respective \glspl{vsr}, are accumulated with the value in $C$ at $(0, 2)$, highlighted in a crosshatch pattern.
+The inner product of these two two-element vectors, from $A$ at offset $0 \times 2 = 0$ and from $B$ at $2 \times 2 = 4$ in their respective \glspl{vsr}, are accumulated with the value in $C$ at $(0, 2)$, highlighted in a crosshatch pattern.
 
 \subsection{Instruction Variants}
 \label{sec:instVar}

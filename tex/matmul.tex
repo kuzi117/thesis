@@ -30,7 +30,7 @@ for i=0 to M, j=0 to N, k=0 to D do
 
 The order in which the loops are executed does not affect the output of the algorithm on the condition that each combination of $i$, $j$, and $k$ is reached exactly once.
 However, mathematically speaking, choosing a certain order for the loops will produce functionality resembling certain common mathematical operations.
-A given order for the loops leads to matrix multiplication via the \emph{inner product} (or \emph{dot product}), which is the classic method taught in linear algebra courses, while a different order leads to matrix multiplication via the \emph{outer product}.
+A given order for the loops leads to matrix multiplication via the \emph{inner product}, which is the classic method taught in linear algebra courses, while a different order leads to matrix multiplication via the \emph{outer product}.
 While both choices arrive at the same final result, the efficacy with which they arrive can vary significantly, as is discussed later in \rsec{outerKernel} and \rsec{innerKernel}.
 
 \begin{figure}[t]
@@ -199,11 +199,11 @@ Different combinations of blocking orders also induce different packing choices 
 \label{sec:blockPack}
 The primary concern when blocking and packing for cache is optimising L2 cache bandwidth.
 When dimensions $M$ and $N$ are blocked, the innermost loop multiplies a panel by another panel, producing a block.
-This breakdown is affiliated with the dot product because it multiplies two panels, which resemble a vector, while producing a block, which resembles a cell.
+This breakdown is affiliated with the inner product because it multiplies two panels, which resemble vectors, while producing a block, which resembles a cell.
 According to their proposed method, with this breakdown, $C$ will be packed in L2 cache.
 Unfortunately, because \gls{gemm} is an accumulating operation (\eg $C \mathrel{+}= AB$), $C$ must be read from cache, accumulated into, and then written back.
 When either $A$ or $B$ are packed into L2 cache, as is the case in the other breakdowns, there are only read operations from the L2 cache.
-Therefore, the dot product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
+Therefore, the inner-product method is less bandwidth efficient because it requires both a read and a write from L2 cache.
 
 An implementer can choose between the remaining two methods (blocking $M$ and $D$ or blocking $D$ and $N$) based on the storage order of $C$.
 Within each of these methods, the order in which $D$ and the second dimension are blocked creates two options.
@@ -261,10 +261,10 @@ However, in a practical machine, it is impossible to load the entirety of a long
 
 Long dimension lengths make tiling a necessity.
 Tiling, as discussed in \rsec{blockPack}, breaks the overall multiplication into smaller, more manageable computations.
-As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a dot-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the outer kernel.
+As discussed in that same section, on the macro scale, Goto and van de Geijn conclude that a inner-product-based tiling results in more costly data movement, making it a poor choice for the implementation of the outer kernel.
 
-When considering the inner kernel, the dot-product approach also makes poor use of \gls{simd} capabilities.
-Computing the dot product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
+When considering the inner kernel, the inner-product approach also makes poor use of \gls{simd} capabilities.
+Computing the inner product requires a horizontal reduction (or tree reduction): the reduction of all the \glspl{lane} of a vector register into a single scalar element.
 Computing a partial result in this manner reduces the effectiveness of \gls{simd} by creating a scalar value.
 \Gls{simd} was created specifically to alleviate the bottleneck associated with working with scalar values; reverting to scalars should therefore be avoided when possible.
 The outer product, on the other hand, uses a vertical reduction (or element-wise reduction) that allows partial products to be accumulated simultaneously in all \glspl{lane} of the destination vector register.
@@ -386,7 +386,7 @@ The outer product, on the other hand, uses a vertical reduction (or element-wise
 \end{figure}
 
 Goto and van de Geijn's methodology continues to be present within the inner kernel of libraries.
-As in the outer kernel, rather than implementing matrix multiplication in terms of the dot product, which some \glspl{isa} have directly supported for years\footnotemark, in this methodology matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
+As in the outer kernel, rather than implementing matrix multiplication in terms of the inner product, which some \glspl{isa} have directly supported for years\footnotemark, in this methodology matrix multiplication is implemented through the multiplication of a combination of a block and a panel.
 \footnotetext{For example, the DPPS or DPPD instructions that were introduced in x86 SSE 4.1 in 2008.}
 While for the outer kernel a short dimension is optimally several hundred elements wide and a long dimension is the full extent of one of the matrix dimensions, the inner kernel must operate with registers.
 Therefore, a ``short'' dimension is typically a single element and a ``long'' dimension is the length of the vector register.
@@ -400,7 +400,7 @@ Next is a discussion of the typical library implementation of these concepts usi
 First, the block's single element is \glslink{broadcast}{broadcasted} to each \gls{lane} of a vector register.
 The elements of the panel are then loaded into a different vector register.
 Once both registers are ready, \ifglsused{fma}{an}{a} \gls{fma} instruction multiplies the two vector registers together and accumulates the result into a third vector register representing a panel in $C$.
-This process is more effective than using the dot product because multiple output values are accumulated at the same time in each \gls{lane} of the vector.
+This process is more effective than using the inner product because multiple output values are accumulated at the same time in each \gls{lane} of the vector.
 However, in a kernel that is supposed to be as tight as possible, cycles are lost to duplicating values.
 Furthermore, the kernel should also use resources as effectively as possible, however, the duplicated values use all \glspl{lane} of a vector, effectively reducing a vector register back to a single scalar, nullifying the benefits of \gls{simd}.
 
