@@ -40,7 +40,7 @@ All binaries are compiled with Clang version 13.0.0\footnotemark at the highest 
 \footnotetext{At time of writing this is a development version.}
 All executions are also single threaded; parallelism exists only in the form of \gls{simd} instructions.
 
-Because support for \gls{power10} was not available in mainstream \gls{llvm} when this work began, it has been implemented as part of \glslink{ibm}{IBM's} variant of \gls{llvm} which did have support for \gls{mma} instructions.
+Because support for \gls{power10} was not available in mainstream \gls{llvm} when this work began, it has been implemented as part of \gls{ibm}'s variant of \gls{llvm} which did have support for \gls{mma} instructions.
 This variant contains several platform-specific optimisations to improve \gls{power} code; all of these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
@@ -694,7 +694,7 @@ Fixing the code generation issues for \code{half} should bring these results to 
 As for the three remaining types, the large difference in cycle counts between \gls{mma} and the vectorised \gls{lowering} is due to inefficiencies in the vectorised \gls{lowering} rather than exceptional performance increases from \gls{mma}.
 The results presented by Moreira \etal are likely at, or near, the theoretical peak performance for \gls{mma} and these results do not match them due, in large part, to the spilling issue.
 Thus, if these results do not improve upon Moreira \etal, the difference certainly must come from suboptimal code generation for the vectorised method.
-Indeed, examining the vectorised \glslink{lowering}{lowering's} assembly code reveals a spill or a reload between nearly every calculation, roughly every three instructions, even with the load-sinking transformation enabled.
+Indeed, examining the vectorised \gls{lowering}'s assembly code reveals a spill or a reload between nearly every calculation, roughly every three instructions, even with the load-sinking transformation enabled.
 The only improvement, which is inherent to the method and not a result of code-generation improvement, is the lack of shuffling instructions for the smaller types.
 
 Regardless of the reason for a particularly slow vectorised schedule, the results presented here represent the current best intrinsic \gls{lowering} possible by the \gls{power10} code generation backend.

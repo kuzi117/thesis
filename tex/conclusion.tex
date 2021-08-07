@@ -10,7 +10,7 @@
 \label{cha:conclusion}
 Beginning by highlighting code-improvement opportunities that are unrealisable while using an external library for computation, this thesis presents a performant solution to the attractive alternative of a compiler-only path to generate code to compute matrix-multiplication.
 A comprehensive review of state-of-the-art matrix-multiplication micro-kernel implementation strategies in \rcha{matmul} reveals an opportunity for significant performance improvements in the inner kernel.
-This improvement comes in the form of extending operation dimensions in order to perform a full $4 \times 4$ outer-product, an operation that is supported by \glslink{power10}{POWER10's} \gls{mma} extension, as discussed in \rcha{mma}.
+This improvement comes in the form of extending operation dimensions in order to perform a full $4 \times 4$ outer-product, an operation that is supported by \gls{power10}'s \gls{mma} extension, as discussed in \rcha{mma}.
 The \gls{matrix engine} offers significant speedup for matrix multiplication when compared with previous \gls{simd} methods using \gls{vsx}.
 Further insight in the form of the use of the \code{llvm.matrix.multiply} intrinsic enables the proposed method to be well positioned to enter common use as a standardised \gls{lowering} for any frontend that compiles matrix-multiplication operations.
 

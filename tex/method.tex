@@ -47,7 +47,7 @@ The original interface assumes that all input matrices have a column-major acces
 Users may include a specific flag in their compiler invocation to change this setting to row-major order.
 
 The original implementation also includes one other significant constraint: the intrinsic must be called with the input matrices already loaded from memory into a virtual register and does not use pointers.
-Each value in \glslink{llvm}{llvm's} \gls{ssa} \gls{ir} exists in a virtual register; there is an infinite number of virtual registers and each virtual register has infinite width.
+Each value in \gls{llvm}'s \gls{ssa} \gls{ir} exists in a virtual register; there is an infinite number of virtual registers and each virtual register has infinite width.
 Values which are loaded from memory into a virtual register will be broken up by the backend code generator to fit the available hardware registers.
 Thus it is possible to load a matrix with a certain access order from memory and then implement a process to reorder the elements to the opposite access order, though the process will add considerable overhead.
 Hence, while it is possible to use matrices with different access orders in memory, they must be transformed to have matching access orders before calling the \code{llvm.matrix.multiply} \gls{intrinsic}.
