@@ -41,7 +41,7 @@ Initially, the \gls{power} architecture implemented its \gls{simd} capabilities 
 \Gls{altivec} was designed through a collaboration between \gls{ibm}, Apple, and Motorola and described a \gls{simd} instruction set for floating-point and integer values.
 This implementation, presented under the name \gls{vmx}, was first instantiated by \gls{ibm} as part of \gls{power}6 (\gls{power} \gls{isa} v2.03) in 2007~\autocite{eisen2007ibm} despite the standard being presented in 1999~\autocite{tyler1999altivec}.
 
-Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
+Improvements for \gls{power}7 (\gls{power} \gls{isa} v2.06) added a new facility, called the \gls{vsx}, designed to add even further manipulation capabilities when dealing with vectors.
 This included support for up to 64 vector registers, 64-bit integers, and double-precision floating point values.
 Both \gls{vmx} and \gls{vsx} exist to this day in the most recent version of the \gls{isa} (\gls{power} \gls{isa} v3.1), though many refer to them collectively under the second name, \gls{vsx}.
 
@@ -67,10 +67,10 @@ Lattner originally positions \gls{llvm} as a ``unique multi-stage optimisation s
 \Gls{llvm}, now a mononym, has evolved into a project covering a wide range of compilation-related tools including frontends for many languages, an optimiser, backends for many platforms, a \glslink{linking}{linker}, debugger, and several other projects.
 
 Frontends exist for a multitude of languages including C/C++ (\code{clang}), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
-Backends also exist for a wide variety of platforms, such as X86, ARM, PowerPC, and WebAssembly.
-The \gls{llvm} optimiser, named \code{opt}, is a popular target compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
+Backends also exist for a wide variety of platforms, such as x86, ARM, PowerPC, and WebAssembly.
+The \gls{llvm} optimiser, named \code{opt}, is a popular target for compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
 The framework has also been adopted by several large companies who have based their own products off the ever-improving set of open-source tools.
-These include \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
+Two examples of such products are \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
 
 \subsection{LLVM's Intermediate Representation}
 \label{sec:ir}
