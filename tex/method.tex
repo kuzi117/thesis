@@ -245,7 +245,7 @@ Thus, laying out the accumulators in this $2 \times 4$ pattern maximises the reu
 Once this iteration's operands are extracted, the algorithm then iterates over the accumulators (lines~\ref{computeLoop1}-\ref{computeLoop2}) and creates a call to the \gls{mma} \gls{intrinsic}, computing a single accumulation in each.
 Following constraint \fbox{3}, two outer-product instructions can be issued each cycle.
 Four pairs of accumulators can be scheduled before circling back to the first pair, thus satisfying constraint \fbox{4}.
-The assignment of a portion of \code{COutput} to a single accumulator eliminates the need to spill accumulators, thus increasing the performance according to constraint \fbox{5}.
+The assignment of a portion of \code{COutput} to a single accumulator eliminates the need to \gls{spill} accumulators, thus increasing the performance according to constraint \fbox{5}.
 
 \subsection{The Resulting IR}
 \label{sec:unrolled}
@@ -320,7 +320,6 @@ This process continues with each accumulation, creating a chain of return values
 
 \subsection{Other Data Types}
 \label{sec:dataTypes}
-\bk{Do I need to cut some of this out now that it's explained in \rsec{matMulMMA}?}
 The presentation so far has assumed 32-bit data types where each operand \gls{vsr} contains four elements and an \gls{mma} instruction computes a rank-one update, computing and accumulating a single outer product.
 As discussed in \rsec{matMulMMA}, halving the data-type size doubles the number of elements in each \gls{vsr} and therefore doubles the rank of the update.
 The packing of more elements into a single \gls{vsr} and the accumulation of multiple outer products by a single \gls{mma} instruction requires changes to \ralg{intrinsic}.
