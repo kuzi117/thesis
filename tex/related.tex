@@ -26,7 +26,7 @@ This thesis is an in-depth presentation of the method behind \textbf{(2)}.
 
 Gareev \etal~\autocite{gareev2018high} implement tiling and packing within Polly~\autocite{grosser2011polly,grosser2012polly} without the need for an external library or automatic tuning.
 Their approach with a hand-optimized x86 SSE kernel reports performance on par with BLIS on Intel Sandy Bridge.
-When not relying on an assembly kernel, their pass uses the default \gls{llvm} \glslink{vectorisation}{vectoriser} that delivers only a small speedup over naive code.
+When not relying on an assembly kernel, their pass uses the default \gls{llvm} \glslink{vectorisation}{vectoriser} that delivers only a small speedup over na\"ive code.
 The work in this thesis presents a compiler-only kernel that can replace Gareev \etal's SSE kernel or the default \gls{llvm} \glslink{vectorisation}{vectoriser} on \gls{power10}.
 Furthermore, this work is more modular and can be reused by new passes or other code generation paths as drop-in inner-kernel.
 
