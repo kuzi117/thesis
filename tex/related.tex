@@ -28,7 +28,7 @@ Gareev \etal~\autocite{gareev2018high} implement tiling and packing within Polly
 Their approach with a hand-optimized x86 SSE kernel reports performance on par with BLIS on Intel Sandy Bridge.
 When not relying on an assembly kernel, their pass uses the default \gls{llvm} \glslink{vectorisation}{vectoriser} that delivers only a small speedup over na\"ive code.
 The work in this thesis presents a compiler-only kernel that can replace Gareev \etal's SSE kernel or the default \gls{llvm} \glslink{vectorisation}{vectoriser} on \gls{power10}.
-Furthermore, this work is more modular and can be reused by new passes or other code generation paths as drop-in inner-kernel.
+Furthermore, this work is more modular and can be reused by new passes or other code generation paths as a drop-in inner-kernel.
 
 Uday Bondhugula presents an implementation of the \gls{blas} strategy within the emerging MLIR framework~\autocite{bondhugula2020high}.
 He demonstrates that blocking, packing, register tiling, and unroll/jam yields code that achieves 34\% of OpenBLAS' performance on Intel's Coffee Lake~\autocite{bondhugula2020high}.
@@ -37,20 +37,20 @@ This work also shows the weakness of the default \gls{llvm} \glslink{vectorisati
 As well, because \gls{llvm} \gls{ir} is a dialect within MLIR, using \gls{llvm} \gls{ir} \glspl{intrinsic} is inherently an accessible method of implementing an inner kernel in MLIR.
 
 Carvalho \etal introduce KernelFaRer, a robust pattern recognition system that can identify matrix-multiplication patterns in the \gls{llvm} \gls{ir} level and can replace the matrix multiplication with library calls~\autocite{carvalho2021kernelfarer}.
-While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the use of libraries into a computer system that may not have them installed.
+While this approach can lead to speedups on the order of 1000s in comparison with non-optimized code, it has the drawback of requiring the use of libraries in a computer system that may not have them installed.
 Moreover, their experimental results indicate that, for smaller matrices, the overhead of invoking functions in the libraries leads to performance degradations.
 The solution in this thesis is orthogonal to KernelFaRer.
 The pattern recognition in KernelFaRer can identify \gls{gemm} kernels at the intermediate-level representation and then replace the inner-most kernel with the solution presented here.
 
 \section{Code Generation for New Hardware}
-When presenting the ILLIAC IV, one of the first SIMD machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
+When presenting the ILLIAC IV, one of the first \gls{simd} machines, Barnes \etal advocated that data parallelism would be crucial for progress~\autocite{barnes1968illiac}, citing matrix operations as a critical target~\autocite{kuck1968illiac}.
 Nearly 50 years later, Barnes' direction culminated in the inclusion of vector extensions in all mainstream \glspl{cpu} such as \gls{ibm}'s \gls{vsx}~\autocite{PowerISA}, Intel's AVX-512~\autocite{IntelISA}, and ARM's NEON/\gls{sve}~\autocite{ArmISA}.
 Although fast \gls{vectorisation} is powerful, matrix-multiplication performance could be improved further with specialized hardware units.
 This possibility is now realized with the introduction of what Domke \etal have dubbed ``matrix engines''~\autocite{domke2021matrix}, now available in \gls{ibm}'s \gls{mma}~\autocite{PowerISA}, Intel's \gls{amx}~\autocite{IntelISA}, and ARM's NEON/\gls{sve}~\autocite{ArmISA}.
 This thesis, in the same vein as Barnes \etal, focuses on bringing high performance to new hardware facilities.
 
 \section{Other Matrix Engines}
-The advent of the ``general purpose'' \glspl{gpu} quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
+The advent of the ``general purpose'' \gls{gpu} quickly saw study and performance analysis of matrix computations~\autocite{larsen2001fast,fatahalian2004understanding}.
 This evolved into implementations of matrix multiplications on \glspl{gpu}: manually~\autocite{li2011strassens}, through libraries like \gls{blas}~\autocite{nath2011accelerating}, and through frameworks such as DistME~\autocite{han2019distme}.
 Matrix multiplication is also central to the design of hardware for tensor-operation acceleration such as Google's Tensor Processing Unit~\autocite{jouppi2017datacenter}, Nvidia's Tensor Core~\autocite{markidis2018nvidia}, and Huawei's Cube Unit~\autocite{liao2019davinci}.
 Performance evaluations of \gls{gemm} in tensor hardware are difficult to find because the studies of these devices focus on the benchmarking of various flavours of neural network~\autocite{jouppi2017datacenter,wang2019benchmarking}.
@@ -62,7 +62,7 @@ Both of these works use a \gls{gpu} for their implementation while this work foc
 
 Yu \etal implement a rank-one update algorithm on the \gls{gpu}, but their research focus is improving the performance of bilinear pooling~\autocite{yu2020toward}.
 Their work aims to replace another method of singular value decomposition via an iterative method requiring many matrix-matrix multiplications by using the outer product.
-This work presented in this thesis aims to improve matrix-matrix multiplication on the \gls{cpu} using rank-$r$ updates.
+The work presented in this thesis aims to improve matrix-matrix multiplication on the \gls{cpu} using rank-$r$ updates.
 
 Pal \etal introduce an outer product accelerator designed for sparse-matrix multiplication~\autocite{pal2018outerspace}.
 Their design, called OuterSPACE, is an external accelerator focused on alleviating the memory issues associated with sparse matrix-matrix multiplication.

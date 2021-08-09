@@ -22,7 +22,7 @@ Such implementations contain kernels painstakingly written by hand in assembly.
 Beyond a clear expertise barrier for porting each kernel to each iteration of a specific platform -- and thus a maintenance issue -- such a replacement creates a dependency on external code over which a developer has no control.
 Moreover, calls to an unknowable library function disables critical optimisations such as inlining that can enable further optimisations in the calling code.
 
-A less common, yet critical, opportunity for code tranformation is operation combination via loop fusion.
+A less common, yet critical, opportunity for code tranformation which depends on inlining is operation combination via loop fusion.
 When two matrix operations directly follow each other with the input data of one operation being the output of the previous, they can be combined in such a way that the results of one operation is immediately passed to the next.
 In this way, all operations over a single piece of input data can be computed before writing the overall result back to memory.
 
@@ -33,12 +33,12 @@ For these reasons, external library function calls disable a profitable code tra
 
 The solution to these issues is to provide an alternative for the computation of matrix-multiplication, with competitive performance, directly within the compiler.
 An implementation in this style automatically generates a matrix-multiplication kernel that benefits from all applicable code transformations available in the compiler.
-This thesis addresses the lack of an efficient compiler-only path to generate code for \gls{gemm} by investigating and implementing a high-performance matrix-multiplication kernel implementation directly within the \gls{llvm} compiler framework.
+This thesis addresses the lack of an efficient compiler-only path to generate code for \gls{gemm} by investigating and implementing a high-performance matrix-multiplication kernel implementation directly within the \gls{llvm}\texttrademark{} compiler framework.
 Furthermore, the proposed solution integrates emerging technologies, namely the \gls{matrix engine}, that provide hardware assistance for the computation of matrix multiplication.
 
 \Glspl{matrix engine} are new facilities added in several architectures as part of the most recent \gls{cpu} generation.
 These extensions focus on enabling matrix operations by extending the preexisting \gls{simd} capabilities of the \gls{isa}.
-The most recent processor in the \gls{power} architecture, \glslink{power10}{POWER10}, from \gls{ibm} features one such extension named \gls{mma}.
+The most recent processor in the \gls{power}\textsuperscript{\textregistered{}} architecture, \gls{power10}, from \gls{ibm}\textsuperscript{\textregistered{}} features one such extension named \gls{mma}.
 Its unique design choice to implement matrix multiplication through the computation of outer products presents new opportunities to improve the performance of computing a matrix-multiplication kernel.
 
 The generation of efficient code for matrix multiplication in the \gls{llvm} compiler framework is divided into two levels: the macro kernel and the micro kernel.
@@ -48,8 +48,8 @@ The focus of the micro-kernel code generation is to make efficient use of the \g
 This thesis focuses on the micro-kernel code generation, though an implementation of a compiler-only macro-kernel code generation developed in collaboration with other members of the same research team is available.
 
 This thesis also contributes a detailed performance study that indicates that this new code-generation strategy results in speed improvements between 3.1 and 15.8 times when compared with the closest alternative compiler-only code-generation implementation for some data types.
-There is also strong indication that, given several improvements in the compiler assembly-code generation, the compiler-generated kernel can match the performance of an expert's hand-crafted solution.
-The thesis also features a detailed analysis of the experimental results --- especially for some data types for which the performance is surprising or lower than expected --- that reveals opportunities for changes in the compiler that have the potential to lead to improvements in the entire \gls{power} compilation stack.
+There is also strong indication that, given several improvements in the compiler assembly-code generation, the compiler-generated kernel can match the performance of an expert's handcrafted solution.
+This thesis also features a detailed analysis of the experimental results --- especially for some data types for which the performance is surprising or lower than expected --- that reveals opportunities for changes in the compiler that have the potential to lead to improvements in the entire \gls{power} compilation stack.
 
 \end{abstract}
 

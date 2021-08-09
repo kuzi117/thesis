@@ -167,8 +167,8 @@ The surrounding layers are concerned with the optimisation of data movement and 
 
 Typically, the layered approach consists of two layers:
 \begin{enumerate*}[itemjoin={{; }}, itemjoin*={{; and }}, label=\textbf{(\arabic*)}, after={.}]
-  \item the blocking strategy responsible for breaking up the computation combined with the packing strategy responsible for optimising data movement between memory and cache as well as data layout within the cache (the \emph{outer kernel} or \emph{macro kernel})
-  \item the computation strategy responsible for data movement between cache and register as well as for producing the actual result (the \emph{inner kernel} or \emph{micro kernel})
+  \item the blocking strategy responsible for breaking up the computation combined with the packing strategy responsible for optimising data movement between memory and cache as well as data layout within the cache (called the \emph{outer kernel} or \emph{macro kernel})
+  \item the computation strategy responsible for data movement between cache and register as well as for producing the actual result (called the \emph{inner kernel} or \emph{micro kernel})
 \end{enumerate*}
 This work focuses on building a modular innermost layer and therefore the outer layer is explained only briefly for completeness.
 
@@ -178,15 +178,15 @@ There are two operations that are critical to the function of the outer kernel: 
 Blocking takes an operation and breaks it into smaller pieces, focusing on computing output in a piecewise manner rather than all at once.
 Division is necessary because matrix sizes found in applications are often much larger than what can fit in a cache memory.
 Even with this division, the distance between elements within different rows or columns can cause cache conflicts or \gls{tlb} misses.
-To increase the spatial locality of accesses, packing takes an operand matrix and makes a copy of a block of data into a smaller buffer where all elements fit in cache simultaneously, allowing faster access times.
+To increase the spatial locality of accesses, packing takes an operand matrix and copies a block of data into a smaller buffer where all elements fit in cache simultaneously, allowing for faster access times.
 Packing can also improve the data access pattern for a more efficient inner kernel, as discussed later in \rsec{blockPack}.
 
 The outer kernel is a delicate dance between blocking and packing.
-If the blocking factor is too large (\ie many small blocks) then there is an excessive amount of data movement, requiring packing more often with less reuse of each packed element.
+If the blocking factor is too large (\ie many small blocks) then there is an excessive amount of data movement, requiring packing more often and having less reuse of each packed element.
 However, when the blocking factor is too small (\ie few large blocks) then blocks no longer fit in cache -- in the worst case, causing page faults -- and packing is ineffective.
 The dimensions of the blocking, and therefore the packing, can be determined analytically~\autocite{low2016analytical} and are dependent on the sizes of all levels of the cache present on the target architecture (L1, L2, L3 on modern consumer machines, uncommonly L4).
 
-Goto and van de Geijn address blocking, caching, and \gls{tlb} issues in their work by devising three ways of breaking up both operands and output.
+Goto and van de Geijn address blocking, caching, and \gls{tlb} issues in their work by devising three ways of breaking up both operand and output matrices.
 When blocking, each new blocking loop breaks up a single dimension of the matrix multiplication.
 Dividing one dimension of a matrix produces a \emph{panel}: a section with one long dimension and one short dimension.
 Further dividing a panel produces a section with two short dimensions called a \emph{block}.
@@ -225,14 +225,14 @@ By virtue of the unpacking and merging of $C$ being a more complex operation, th
 The same logic can be applied to the method which blocks $D$ and $N$ by substituting $N$ for $M$ and swapping which of $A$ and $B$ are packed in L2 cache, arguing that packing $D$ then $N$ is superior.
 
 \subsubsection{Blocking and Packing for Registers}
-The dimensions chosen to maximise cache usage are likely to be too large for the registers to handle, thus a further set of loops can be added to block for registers.
+The dimensions chosen to maximise cache usage are likely to be too large for the registers to handle, thus an additional set of loops can be added to block for registers.
 These loops only block the pre-packed buffers in memory and do not perform any packing themselves.
 Instead, when packing for the cache, the order in which data is packed is modified.
 Rather than packing in the same order relative to the original data, data is organised such that these sub-matrix register arguments are contiguous.
-Packing in this way results in only a single data copy and allows reads to register for calculation to be contiguous in memory, improving hardware prefetching effects.
+Packing in this way results in only a single data copy and allows loads to register for calculation to be contiguous in memory, improving hardware prefetching effects.
 
 \subsubsection{Practicality}
-Na\"ive matrix multiplication (\ie \rlst{basicInner}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
+Na\"ive matrix multiplication (\ie \rlst{basicMatMul}) does not perform blocking nor packing; such a case can be viewed as a ``bare'' inner kernel, without an outer kernel.
 Given small matrices as operands, this lack of blocking and packing is often the correct choice.
 The overhead resulting from the data movement in the outer kernel is designed to be overshadowed by the speedup gained from improved cache performance.
 When input and output data are already small enough to be entirely resident in cache, the effort made to pack and block is shown to be an unnecessary expense.
@@ -255,9 +255,9 @@ First, however, the product operation used to implement the inner kernel must be
 Matrix multiplication's inner kernel is implementable through two operations: inner product and outer product.
 Both operations arrive at the same destination albeit via different processes.
 At the end of the computation, both methods will have performed exactly the same number of multiplications and additions.
-In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would perform the same number of stores and loads.
+In a hypothetical machine with unlimited resources, including vector registers of unlimited length, they would also perform the same number of stores and loads.
 In such a theoretical framework, at least in terms of computations performed, neither method can be said to be better.
-However, in a practical machine, it is impossible to load the entirety of a long row or of a long column into vector registers in order to fully compute a portion of the matrix.
+However, in a practical machine, it is impossible to load the entirety of a long row or column into vector registers in order to fully compute a portion of the matrix.
 
 Long dimension lengths make tiling a necessity.
 Tiling, as discussed in \rsec{blockPack}, breaks the overall multiplication into smaller, more manageable computations.
@@ -487,7 +487,7 @@ Automatic vectorisation means obvious optimisations such as using the best avail
 Less obvious issues are also solved automatically: handling operations that may have dimensions that are not a multiple of vector register automatically creates additional code pathways that make use of vectors at half width or less, eventually reducing down to scalar computation.
 Issues that are impossible to solve for handwritten kernels without writing an entirely new kernel, such as new instructions added to an \gls{isa}, are also immediately solved because the compiler knows which architecture to compile for and can use any instruction available on that architecture.
 Therefore, a kernel written within the compiler can be written at a higher and more generic level, as in an \gls{ir}, and achieve the same, or better, performance.
-It is for this reason that \rcha{method} presents a method built fully within a compiler without a hand-written kernel.
+It is for this reason that \rcha{method} presents a method built fully within a compiler without a handwritten kernel.
 
 \section{Summary}
 This chapter delves in-depth into the intricacies of matrix multiplication, an operation that seems quite simple at first glance.

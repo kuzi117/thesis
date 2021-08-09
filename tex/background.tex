@@ -54,7 +54,7 @@ It provides a high-throughput and low-latency method for calculating matrix mult
 The state of the art for hardware that performs matrix multiplication falls into two categories:
 \begin{enumerate*}[itemjoin*={{ and }}, label=\textbf{(\arabic*)}, after={.}]
   \item via external components (\eg \gls{gpu}, \gls{fpga}, or \gls{asic} such as Google's \gls{tpu})
-  \item via \gls{cpu} \gls{isa} extensions (\eg x86's \gls{amx} or ARM's NEON/\gls{sve})
+  \item via \gls{cpu} \gls{isa} extensions (\eg x86's \gls{amx} or ARM\textsuperscript{\textregistered{}}'s NEON\texttrademark{}/\gls{sve})
 \end{enumerate*}
 \Gls{mma} belongs to the second category given that the facility is built directly into the \gls{cpu}.
 Thus, the facility is amenable to tasks that would normally incur avoidable overhead, for example, while sending data to an external component such as a \gls{gpu}.
@@ -66,11 +66,11 @@ See \rcha{mma} for further discussion.
 Lattner originally positions \gls{llvm} as a ``unique multi-stage optimisation system'' that aims to ``support extensive inter-procedural and profile-driven optimisations, while being efficient enough for use in commercial compiler systems''~\autocite{lattner2002llvm}.
 \Gls{llvm}, now a mononym, has evolved into a project covering a wide range of compilation-related tools including frontends for many languages, an optimiser, backends for many platforms, a \glslink{linking}{linker}, debugger, and several other projects.
 
-Frontends exist for a multitude of languages including C/C++ (\code{clang}), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
+Frontends exist for a multitude of languages including C/C++ (\code{clang}\texttrademark), Fortran (\code{flang}), Swift (\code{swiftc}), and Rust (\code{rustc}).
 Backends also exist for a wide variety of platforms, such as x86, ARM, PowerPC, and WebAssembly.
 The \gls{llvm} optimiser, named \code{opt}, is a popular target for compiler research of all varieties, seeing advancements in various areas like register allocation~\autocite{lozano2019combinatorial,pereira2008register}, pointer analysis~\autocite{hardekopf2009semi,sui2016interprocedural}, and polyhedral optimisation~\autocite{grosser2011polly,alves2015runtime}.
 The framework has also been adopted by several large companies who have based their own products off the ever-improving set of open-source tools.
-Two examples of such products are \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA compiler.
+Two examples of such products are \gls{ibm}'s XL C/C++ compiler and Nvidia's CUDA\textsuperscript{\textregistered{}} compiler.
 
 \subsection{LLVM's Intermediate Representation}
 \label{sec:ir}

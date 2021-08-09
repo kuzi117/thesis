@@ -124,7 +124,8 @@
 
 % L
 \longnewglossaryentry{lane}{name={Lane},text={lane}}{
-  A way to refer to an element of a vector register or operation derived from the way circuit pathways leave and enter vector functional units in groups corresponding to an element, like the lanes of a roadway.
+  A way to refer to an element of a vector register or operation.
+  Derived from the way circuit pathways leave and enter vector functional units in groups corresponding to an element, like the lanes of a roadway.
   The number of lanes in a vector register, which has constant width, changes based on element width, \ie a 128 bit register with 32 bit elements has four lanes, with 64 bit elements it has two lanes.
 }
 \longnewglossaryentry{linking}{name={Linking},text={linking}}{
@@ -154,7 +155,7 @@ The procedure involves combining all \glspl{object file} into a single binary, r
   The act of encoding extra information into a string such that the result is unique and the information recoverable.
 }
 \longnewglossaryentry{matrix engine}{name=Matrix Engine, text={matrix engine}}{
-  A general term describing a set of new facilities on the most recent generation of \glspl{cpu} which focuses on matrix operations.
+  A general term describing a set of new facilities on the most recent generation of \glspl{cpu} which focus on matrix operations.
 }
 \newacronym[
   description={
@@ -209,7 +210,7 @@ The procedure involves combining all \glspl{object file} into a single binary, r
   }
 ]{soc}{SoC}{System on a chip}
 \longnewglossaryentry{spill}{name={Spill},text={spill}}{
-  The act of storing an in-use register to memory temporarily in order to free the register for another value.
+  The act of storing a \gls{live} register to memory temporarily in order to free the register for another value.
 }
 \newacronym[
   description={

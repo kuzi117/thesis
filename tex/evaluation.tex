@@ -10,7 +10,8 @@
 \label{cha:evaluation}
 This chapter presents an evaluation of the implementation developed in \rcha{method}.
 The results presented also represent one of the first evaluations of \gls{power10}'s \gls{mma} facility.
-Given that the evaluation was performed on a first-silicon version of \gls{power10} and, as such, the frequency may be different than what will be featured in commercially available versions, the results presented in this chapter are expected to be representative of the hardware that will eventually be available to consumers but the performance of the commercial machines may differ.
+The evaluation was performed on a first-silicon version of \gls{power10} and, as such, the frequency may be different than what will be featured in commercially available versions.
+The results presented in this chapter are expected to be representative of the hardware that will eventually be available to consumers but the performance of the commercial machines may differ.
 Possible changes between this version and commercial versions include clock frequency, firmware updates or even silicon updates.
 
 \section{Experimental Setup}
@@ -45,7 +46,7 @@ Because support for \gls{power10} was not available in mainstream \gls{llvm} whe
 This variant contains several platform-specific optimisations to improve \gls{power} code; all of these specific optimizations have been disabled so that results are representative of mainstream \gls{llvm}.
 
 \subsection{Experimental Methodology}
-Every measurement presented in this chapter was produced using the Google\texttrademark{} benchmark library~\autocite{googlebench}.\footnotemark
+Every measurement presented in this chapter was produced using the Google benchmark library~\autocite{googlebench}.\footnotemark
 \footnotetext{At commit ab74ae5e104f72fa957c1712707a06a781a974a6.}
 A single measurement is the result of timing the execution of a kernel many times until statistical stability is obtained.
 The framework implements a method of measuring a kernel by placing it in a loop whose exit condition is dynamically determined by the benchmark being executed.
@@ -282,16 +283,16 @@ The larger kernel, however, must use the value again in computing the second set
  %   \draw[pattern={Dots[angle=45,distance={7pt},xshift=.1pt, radius=1.25]}, shift={(11, 6)}] (0, 0) rectangle +(8, 2);
     \draw[xstep=2, ystep=2, shift={(3, 0)}, color={black!20!white}] (0, 0) grid +(16, 8);
     \draw[xstep=8, ystep=4, shift={(3, 0)}] (0, 0) grid +(16, 8);
-    \draw[decorate, decoration={brace, mirror}] (0, -0.3) -- node[below=2] {$K$} +(2, 0);
+    \draw[decorate, decoration={brace, mirror}] (0, -0.3) -- node[below=2] {$D$} +(2, 0);
   \end{tikzpicture}
   \caption[Large Kernel Operand Reuse]{Demonstration of operand reuse in large kernels.}
   \label{fig:opReuse}
 \end{figure}
 
 According to constraint \fbox{5} in \rsec{baseCase}, \glslink{spill}{spilling} an accumulator is expensive, and therefore an efficient solution must finish computing a block of accumulators before moving on to a different area of the matrix.
-Doing so requires that every operand along the dimension $K$ be brought to a register before any operand can be reused with a new block of accumulators.
+Doing so requires that every operand along the dimension $D$ be brought to a register before any operand can be reused with a new block of accumulators.
 For instance, an accumulator layout like that in \rfig{opReuse} requires six operand registers for each accumulation to be performed.
-Using only the 32 registers available while the accumulators are assembled, if $K \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there is not enough space for all values to remain in registers.
+Using only the 32 registers available while the accumulators are assembled, if $D \geq \left\lceil \frac{32}{6} \right\rceil = 6$, then there is not enough space for all values to remain in registers.
 And thus the cause for the multiple \glspl{spill} and reloads throughout the computation becomes apparent: operands from $A$ that are still \gls{live} are being forced out of registers and the compiler is choosing to \gls{spill} them.\footnotemark
 \footnotetext{The issue is identical for operands of $B$, though the reuse distance is greater.}
 
@@ -304,7 +305,7 @@ Regardless, the larger kernel's execution, optimised or not, is significantly in
 
 For smaller data types, however, \glslink{spill}{spilling} is the correct choice.
 Materialising an \code{i16} involves two loads and at least one instruction to shuffle the loaded data together.
-Rematerialising the value in the future becomes a simple load, significantly reducing register pressure and required memory bandwidth.
+Reproducing the value after spilling becomes a simple load, significantly reducing register pressure and required memory bandwidth.
 Both the original version and the load-sinking version correctly choose to \gls{spill} their values instead of \glslink{rematerialisation}{rematerialising} them.
 As with \code{float}, the increased number of memory operations explains the significant increase in execution time for the larger \code{i16} kernel in \rfig{floatSink}, but it does not, however, explain the large difference between the two version.
 The next section investigates this discrepancy.
@@ -353,8 +354,6 @@ The added truncation operation worsens the effect.
 All told, in the assembly code currently generated for \code{half}, the epilogue is roughly ten times the length of the same operation for \code{i16}.
 
 \subsubsection{Data Type: \texorpdfstring{\code{i4}}{i4}}
-For \code{i8}, degradations arise from \glspl{spill} due to extra register pressure but also from needing to merge four separate vectors (rank-four update).
-Despite these degradations, the generated code is fairly close to the ideal, handwritten assembly.
 The \gls{power10} \gls{isa} has instructions that merge vectors at a per-byte granularity, but not at a sub-byte granularity as is required for \code{i4} code generation.
 Therefore, to shuffle a vector of \code{i4} elements using the same \gls{ir} code generation, the backend generates significantly less performant code that includes vector rotations and scalarisation, with single bytes being moved individually to and from general purpose registers.
 The consequent slowdown negates much of the speedup that could be achieved via the \gls{mma} rank-eight update.
@@ -394,7 +393,7 @@ While injecting the proposed solution code into the original vectorisation frame
 
 For \code{half} vectors, it may be possible for the compiler to generate code in a similar fashion as is done for \code{i16} simply by reinterpreting data as \code{i16} via casts and manipulating the data in this state.
 The cast is not a conversion, simply a reinterpretation of the bits in a register and it is meaningful only within the \gls{llvm} framework.
-Such casting produces no new instructions.
+Such casting should produce no new instructions.
 The data can be casted back to \code{half} at no cost when it needs to be used in a computation.
 In theory, this casting produces much better assembly but may also trigger a very conservative response in the back-end of the compiler, worsening the code significantly with scalar element movement derived from a perceived conversion hazard.
 
@@ -431,7 +430,7 @@ Given the discussion in \rsec{orderExpectation}, more accumulations implies more
 A column-major orientation data layout for $A$ should be optimal.
 For \code{float}, a \gls{vsr}, which is a row-major $4 \times 1$ matrix according to the \gls{isa}, is indistinguishable from a single column of four elements when loaded from memory.
 Thus, if $A$ is laid out in column-major order, an operand can be created with a single load and no waste.
-However, if $A$ is laid out in row-major order, it is likely that $K \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
+However, if $A$ is laid out in row-major order, it is likely that $D \ne 1$ and thus the elements in the first column of $A$ are not consecutive in memory.
 Therefore, to create an operand, four loads must be issued, one for each element of the operand.
 Further overhead is incurred to move elements into the vector register either from scalar registers if four scalar loads were issued or to shuffle elements from four vectors that were loaded.
 Thus, a column-major order layout is highly preferred.
@@ -446,12 +445,13 @@ Thus, four loads must be issued when extracting operands from either a row-major
 In this case, either orientation is acceptable when operands are being built in isolation.
 However, if several operands are being built simultaneously, loads can be combined to increase efficiency.
 The need for shuffle instructions does not decrease, only the indices from which shuffles extract elements in a vector change.
+This is combination transformation is only possible if access orders match the expected access orders for larger types, \ie column major for $A$ and row major for $B$.
 This change can have a small, but noticeable, impact on the results.
 
 The initial expectation is that $C$ should be stored in row-major orientation.
 This is simply because the simplest method of using \gls{mma} places the operand from $A$ as the first argument and the operand from $B$ as the second argument in the outer product instruction.
 When used in this way, the elements in the accumulator are oriented in a row-major fashion and, after disassembling, there is no extra work required before storing the underlying vectors to memory.
-Transposing the values so that they can be stored into a column-major output-matrix requires extra shuffles.
+Transposing the output so that it can be stored into a column-major output-matrix requires extra shuffles.
 However, the theorem discussed in \rsec{arbitraryOrder} states that reversing the order of the arguments causes the result in the accumulator to be equivalent but in a column-major order.
 Thus, either access order can be used for $C$ without loss of performance.
 
@@ -523,7 +523,7 @@ Both the input and output memory efficiency as well as the in-register performan
 
 \subsection{Setup}
 Intuitively, leaving an accumulator unused means unused functional units and therefore wasted performance; thus, any layout which aspires to be a contender for best performance must use all eight accumulators.
-The implemented framework allows only for rectangular layouts.
+The implemented framework does not allow for irregularly shaped layouts.
 Combining these two restrictions creates four test cases: two rectangular layouts, $2 \times 4$ and $4 \times 2$, and two linear layouts, $1 \times 8$ and $8 \times 1$.
 
 Again, using the logic of \rsec{spillSolution}, the kernel size is fit to the accumulator layout.
@@ -552,8 +552,8 @@ These layouts reduce register pressure by requiring only six operands to be \gls
 With 32 registers available, using only six of these registers per accumulation allows for the operands needed for future accumulations to be brought to registers ahead of time or even for multiple sets of accumulations to be performed without intervening loads.
 
 However, the argument in \rsec{baseCase} is made under the assumption that the most efficient schedule for outer-product instructions is a large set of loads followed by as many outer products as possible.
-In this case, the more square layout should be more performant because it requires less operands per accumulation (six instead of eight) and therefore allows more accumulations to be setup simultaneously.
-If it is not the case the case a group of loads followed by outer products is not the most performant option, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effectively hidden.
+In this case, the rectangular layouts should be more performant because they require less operands per accumulation (six instead of eight) and therefore allow more accumulations to be setup simultaneously.
+If it is not the case that a group of loads followed by outer products is the most performant option, and instead interleaving loads with outer products is more performant, then either set of layouts can potentially be more performant, as long as the latency for the larger number of loads required to setup the linear layout can be effectively hidden.
 
 An important cause for slowdown is also the difference in raw element count between linear and rectangular layouts.
 A rectangular layout loads a total of $8 \times 32 + 16 \times 32 = 768$ elements while a linear layout loads a total of $4 \times 32 + 32 \times 32 = 1152$ elements.
@@ -608,11 +608,11 @@ Instead, changing the the source and usage of operand registers has simplified t
 This simplification has resulted in the removal of the initial \glspl{spill} present in every test case presented so far.
 In fact, given the kernel laid out for it, the assembly is very close to the handwritten assembly from Moreira \etal, lacking only the small code transformations to combine 128-bit vector loads which use consecutive addresses into a paired-vector 256-bit load.
 For comparison's sake, activating the load-sinking code transformation for the rectangular layouts produces assembly resembling almost exactly the assembly in the tested linear layouts.\footnotemark
-\footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to a code-transformation pass ordering issue, not deliberate choice.}
+{\interfootnotelinepenalty=10000\footnotetext{The load sinking assemblies also contain the more efficient paired-vector loads though it is likely due to a code-transformation pass ordering issue, not deliberate choice.}}
 By examining the assembly for the rectangular test case with load sinking, however, it is easy to see that the total number of vectors loaded between accumulations is less than that in the linear layout.
 In both cases the only instructions present are the loads and the outer products which means there are no instructions with which to hide a stall due to load latency.
 Thus it can be expected that equivalently-scheduled \code{float} testcases would follow the expected trend because, with less loads, there is less likely to be a load-based stall.
-Following the results in \rfig{floatSink}, fixing the \glslink{spill}{spilling} issue for the \code{float} square layouts should quarter the number of cycles required.
+Following the results in \rfig{floatSink}, fixing the \glslink{spill}{spilling} issue for the \code{float} rectangular layouts should quarter the number of cycles required.
 Such a decrease in the $2 \times 4$ and $4 \times 2$ bars would cause the \code{float} plot to follow the same trend as \code{i16} and \code{i8}.
 
 Regarding \code{i16} and \code{i8}, the shuffles necessary to build operands serve to add extra complication to the \glslink{live}{liveness} analysis and thus the same simplified schedule cannot be found for the linear layouts.
@@ -684,7 +684,7 @@ The \gls{lowering} decouples operations from each other as best as possible, ena
   \label{tab:mmaVsx}
 \end{table}
 
-\rfig{mmaVsx} and \rtab{mmaVsx} show the effect of \gls{mma} on \gls{lowering} of the \code{llvm.matrix.multiply.*} \gls{intrinsic}.
+\rfig{mmaVsx} and \rtab{mmaVsx} show the effect of \gls{mma} on the \gls{lowering} of the \code{llvm.matrix.multiply.*} \gls{intrinsic}.
 The \gls{lowering} for all four investigated types are significantly improved by using \gls{mma}.
 Comparing for each type the \gls{mma} \gls{lowering} and the most performant vectorised \gls{lowering}, there is a speedup, on average, of 12.9 times for \code{float}, 9.7 times for \code{i16}, 3.1 times for \code{half}, and 15.8 for \code{i8}.
 
@@ -712,7 +712,7 @@ As a result, three points of comparison are chosen.
 The first two are the \gls{intrinsic} \gls{lowering} for \code{float}, one with no transformations applied and the second with the load-sinking transformation applied.
 These two executables demonstrate the current and future state, respectively, of the proposed methodology.
 
-The final point of comparison is the hand-written single precision floating point kernel from Moreira \etal.
+The final point of comparison is the handwritten single precision floating point kernel from Moreira \etal.
 Since publishing their work on \gls{mma}, the kernels in question have been improved by the authors and thus are expected to surpass the performance presented in that work.
 This experiment compares against the performance of the newer version of the kernels.
 

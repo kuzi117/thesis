@@ -16,17 +16,17 @@ While multithreading reduces these functions' contribution to overall runtime si
 
 At the center of our capability to handle these expanding workloads is the \gls{matrix engine}.
 \Glspl{matrix engine} are a new accelerator facility, found in the most recent generation of \glspl{cpu}, that focuses on accelerating matrix multiplication.
-Currently, acceleration is done via external accelerators or via vector extensions to an \gls{isa}.''
-An external accelerator may be an \gls{asic} specialised to the task (\eg Google's \gls{tpu}~\autocite{abadi2016tensorflow}), a \gls{gpu}, or \ifglsused{fpga}{an}{a} \gls{fpga}.
+Currently, acceleration is done via external accelerators or via vector extensions to an \gls{isa}.
+An external accelerator may be an \gls{asic} specialised to the task (\eg Google\texttrademark{}'s \gls{tpu}\texttrademark{}~\autocite{abadi2016tensorflow}), a \gls{gpu}, or \ifglsused{fpga}{an}{a} \gls{fpga}.
 Vector extensions are part of the movement towards the \gls{simd} computing paradigm where multiple pieces of data are used and produced by a single instruction (see \rsec{simd}).
 An advantage of vector extensions in relation to external accelerators is that a vector extension can access data through the same memory hierarchy used by the \gls{cpu} while most external accelerators require data transfer through an interconnect with slower transfer speeds.
 
-The current state of the art when working with matrix operations is to choose one of several libraries that implement the \gls{blas} interface (\eg OpenBLAS~\autocite{xianyi2012model}, IBM's ESSL~\autocite{ibm2021engineering}, Intel's MKL~\autocite{wang2014intel,intel2021accelerate}, Nvidia's cuBLAS~\autocite{nvidia2021cublas}).
+The current state of the art when working with matrix operations is to choose one of several libraries that implement the \gls{blas} interface (\eg OpenBLAS~\autocite{xianyi2012model}, IBM's ESSL~\autocite{ibm2021engineering}, Intel\textsuperscript{\textregistered{}}'s MKL~\autocite{wang2014intel,intel2021accelerate}, Nvidia\textsuperscript{\textregistered{}}'s cuBLAS~\autocite{nvidia2021cublas}).
 These libraries can provide incredible speedups and, in parallel architectures, automatic parallelisation: a very attractive feature for large workloads.
 It has been a natural extension of these libraries to include the usage of matrix engines when targeting \glspl{cpu}.
 However, the development of most of these libraries rely on difficult-to-maintain assembly programs and their usage imposes extra requirements on systems.
 
-All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent varies~\autocite{zee2016blis}.
+All high-performance implementations of \gls{blas}-like libraries have handwritten assembly kernels at their core, though the extent of the kernel varies~\autocite{zee2016blis}.
 Nevertheless, each of these kernels must be produced and hand tuned for each new \gls{cpu} that the library needs to support.
 Creating these kernels requires engineers who are extremely knowledgeable about the \gls{isa} and the architectural details of a target \gls{cpu}.
 Thus, maintaining the code surrounding such a kernel as well as the kernel itself requires significant ongoing effort as developers try to obtain greater performance from the implementation.
@@ -40,7 +40,7 @@ Therefore, as a counterpoint, a method of transparently accelerating matrix mult
 When a matrix-multiplication kernel is created as part of a compiler, it no longer needs to be written in assembly.
 Relaxing this requirement means that kernels become \emph{\gls{cpu} agnostic} rather than \emph{\gls{cpu} dependent}.
 It will not be \emph{\gls{isa} agnostic} because a kernel, to obtain best performance, will still need to be written in terms of an \gls{isa}'s vector extension, tying it to the architecture, but it will not be tied to a specific version of the \gls{isa}.
-The change to \gls{cpu} agnostic does, however, mean that optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a hand-written kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
+The change to \gls{cpu} agnostic does, however, mean that optimisations that are based on architectural details such as register count or available functional units, which would typically be done manually in a handwritten kernel, can now be automatically performed and tuned to the \gls{cpu} by the compiler.
 This automation means that an appropriately written and parameterised kernel will also still be optimal in future hardware iterations.
 
 Kernels written as part of a compiler are also implicitly subject to all of the optimisations available in the compiler, now and in the future.
@@ -59,9 +59,9 @@ A compiler-only solution for matrix multiplication, while benefitting from preex
   \item forethought based on the constraints derived from this knowledge
   \item an actionable design built from this forethought
 \end{enumerate*}
-As in a hand-written solution, required knowledge includes an understanding of the matrix engine and vector extensions of the target architecture as well as how they interact with each other and with the memory hierarchy.
-However, because the kernel is written at a higher level within the compiler it counters many of the issues associated with the hand-written assembly version.
-Authors are now more productive by only having to focus on writing the kernel; registers and the data in them are now automatically managed, the instruction schedule can be optimised by the compiler to hide latencies, loops are unrolled according to architecture capacity, and more.
+As in a handwritten solution, required knowledge includes an understanding of the matrix engine and vector extensions of the target architecture as well as how they interact with each other and with the memory hierarchy.
+However, because the kernel is written at a higher level within the compiler, it counters many of the issues associated with the handwritten assembly version.
+Authors are now more productive by only having to focus on writing the kernel: registers and the data in them are now automatically managed, the instruction schedule can be optimised by the compiler to hide latencies, loops are unrolled according to architecture capacity, and more.
 The produced kernels are more portable, functioning on \glspl{cpu} with the same \gls{isa} (in some cases cross-\gls{isa}) with much of the infrastructure being portable between architectures.
 Finally, maintenance is also easier: higher level languages are more readable with less expertise required to interact with them.
 

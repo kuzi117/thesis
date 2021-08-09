@@ -22,13 +22,13 @@ The implemented lowering generates an efficient kernel for operands of any dimen
 A thorough performance evaluation and analysis of the algorithm follows in \rcha{evaluation}.
 An investigation and discussion of several shortcomings in the compiler backend for \gls{power} indicates where performance can be improved in future iterations of the \gls{llvm} framework.
 Accounting for these deficiencies, the remaining experiments narrow kernel parameters to find an optimal setting.
-This optimal setting is compared with the closest point of reference: the vectorised lowering of the same \gls{intrinsic} which makes use of the \gls{power} \glslink{isa}{ISA's} \gls{simd} capabilities in \gls{vsx}.
+This optimal setting is compared with the closest point of reference: the vectorised lowering of the same \gls{intrinsic} which makes use of the \gls{power} \gls{isa}'s \gls{simd} capabilities in \gls{vsx}.
 The comparison shows a speedup of at least 3.1 times for \code{half}, which is expected to improve drastically with improvements to the backend, up to a maximum of 15.8 times for \code{i8}.
 Moreover, a human-crafted kernel is only twice as fast as the current best \gls{lowering} of the \code{llvm.matrix.multiply.*} \gls{intrinsic}, a significant achievement.
-Furthering this comparison, there are strong indications that, after the noted \gls{spill} issues are resolved, the handwritten and compiler-generated kernels will have have identical performance.
+Furthering this comparison, there are strong indications that, after the noted \gls{spill} issues are resolved, the handwritten and compiler-generated kernels will have identical performance.
 
 The contribution of this thesis is part of a methodology that relies on a multi-level code generation strategy that separates the efficient utilization of the memory hierarchy at the macro level and the efficient utilization of the processing units and vector registers in the micro level.
 The design of the micro-kernel code generation presented in this thesis uses the \code{llvm.matrix.multiply.*} \gls{intrinsic} in \gls{llvm} as an interface.
-This solution is likely to also be the best methodology when targeting upcoming matrix-multiplication engines that will soon be available from other vendors.
+This solution is likely to also be the best methodology when targeting upcoming \glspl{matrix engine} that will soon be available from other vendors.
 Thus, the methodology presented in this thesis shall be relevant for these other machine architectures as well.
 \end{document}
