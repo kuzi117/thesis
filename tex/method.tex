@@ -313,7 +313,7 @@ All four operand vectors are extracted from \code{BTile} in a similar process on
 Outer products and accumulations begin on line~\ref{accsBegin} and end on line~\ref{accsEnd}.
 Each operation takes an accumulator as the first argument and multiplies the two extracted operands found in the second and third arguments.
 The \code{xvf32gerpp} \gls{intrinsic} returns a value with type \code{<512 x i1>}, the accumulator type.
-This represents the inputted accumulator with the operation accumulated on top.
+This represents the input accumulator with the operation accumulated on top.
 In this first iteration, the zeroed out accumulator will be duplicated for each operation.
 In the next iteration of accumulations, the returned accumulators will be used as the first argument.
 This process continues with each accumulation, creating a chain of return values to arguments, effectively showing the accumulation process.
