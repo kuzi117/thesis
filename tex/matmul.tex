@@ -471,7 +471,7 @@ Given a register that could contain the much larger output data in the dot-dashe
 \rcha{mma} shows how this improvement can be implemented using \gls{power10}'s \gls{mma}.
 
 \subsection{Implementation}
-Having looked at which kernel to implement, discussion can turn towards actual implementation.
+Having looked at which kernel to implement, the direction for the implementation must be decided.
 As discussed previously, libraries often have kernels handwritten in assembly.
 Kernel writers must implement all optimisations by hand.
 In doing so, they must review \gls{cpu} properties as well as consider the design of their outer kernel to determine to what degree an optimisation will affect the hardware.
