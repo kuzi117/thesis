@@ -29,6 +29,7 @@ Furthering this comparison, there are strong indications that, after the noted \
 
 The contribution of this thesis is part of a methodology that relies on a multi-level code generation strategy that separates the efficient utilization of the memory hierarchy at the macro level and the efficient utilization of the processing units and vector registers in the micro level.
 The design of the micro-kernel code generation presented in this thesis uses the \code{llvm.matrix.multiply.*} \gls{intrinsic} in \gls{llvm} as an interface.
-This solution is likely to also be the best methodology when targeting upcoming \glspl{matrix engine} that will soon be available from other vendors.
+In the future, this intrinsic will present an ideal entry point for the implementation of similar methodologies for new micro kernels targetting matrix engines in other \glspl{isa}.
+The combination of the simplicity of switching between kernels when compiling for different architectures as well as the isntant modularity within a macro kernel present clear and instantaneous benefits for implementations using this method.
 Thus, the methodology presented in this thesis shall be relevant for these other machine architectures as well.
 \end{document}
