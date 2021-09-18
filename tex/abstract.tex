@@ -6,12 +6,7 @@
 
 \begin{document}
 
-% environment for abstract.
-\begin{abstract} % Enforces spacing rules already.
-  % \begin{itemize}
-  %   \item $\leq 700$ words.
-  %   \item Text only.
-  % \end{itemize}
+\begin{abstract}
 \Gls{gemm} is used widely in many high-performance application domains.
 In many cases, these applications repeatedly execute their matrix-multiplication subroutine, as is the case in the implementation of a particle-physics simulator.
 The construction of deep-learning models in machine learning also often relies on multiple executions of \gls{gemm} to compute a convolution operation.
@@ -50,7 +45,6 @@ This thesis focuses on the micro-kernel code generation, though an implementatio
 This thesis also contributes a detailed performance study that indicates that this new code-generation strategy results in speed improvements between 3.1 and 15.8 times when compared with the closest alternative compiler-only code-generation implementation for some data types.
 There is also strong indication that, given several improvements in the compiler assembly-code generation, the compiler-generated kernel can match the performance of an expert's handcrafted solution.
 This thesis also features a detailed analysis of the experimental results --- especially for some data types for which the performance is surprising or lower than expected --- that reveals opportunities for changes in the compiler that have the potential to lead to improvements in the entire \gls{power} compilation stack.
-
 \end{abstract}
 
 \end{document}
