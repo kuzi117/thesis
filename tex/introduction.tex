@@ -44,7 +44,8 @@ The change to \gls{cpu} agnostic does, however, mean that optimisations that are
 This automation means that an appropriately written and parameterised kernel will also still be optimal in future hardware iterations.
 
 Kernels written as part of a compiler are also implicitly subject to all of the optimisations available in the compiler, now and in the future.
-Currently, these include optimisations such as loop switching, blocking, and unrolling which are known to have significant effects on matrix multiplication speed.
+Currently, these include optimisations such as loop interchange, blocking, and unrolling which are known to have significant effects on matrix multiplication speed~\autocite{velkoski2014performance,allen1984automatic,fabeiro2016writing,schreiber1990automatic}.
+For example, Velkoski \etal demonstrate a $\sim 2.5 \times$ speedup using unrolling alone for certain parameters; interchange and blocking have a much greater effect on memory-heirarchy usage, providing greater benefits as the operation size grows.
 In the backend, improvements to processes such as register allocation and instruction scheduling (reordering/pipelining) will be retroactively available to these kernels as well, completely transparently to the user.
 
 Furthermore, a crucial optimisation, loop fusion, is impossible with the current paradigm of library function calls.
