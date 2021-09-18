@@ -10,7 +10,7 @@
 \Gls{gemm} is used widely in many high-performance application domains.
 In many cases, these applications repeatedly execute their matrix-multiplication subroutine, as is the case in the implementation of a particle-physics simulator.
 The construction of deep-learning models in machine learning also often relies on multiple executions of \gls{gemm} to compute a convolution operation.
-This reliance on repeated executions causes matrix-multiplication operations to be a computational bottleneck in these applications, creating a strong motivation to improve the performance of \Gls{gemm}.
+This reliance on repeated executions causes matrix-multiplication operations to be a computational bottleneck in these applications, creating a strong motivation to improve the performance of \gls{gemm}.
 
 The state of the art for the efficient computation of \gls{gemm} consists of manual, programmer-directed replacement of matrix multiplication with calls to highly optimised \gls{blas}-like libraries.
 Such implementations contain kernels painstakingly written by hand in assembly.
